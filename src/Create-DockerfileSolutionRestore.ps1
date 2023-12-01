@@ -1,3 +1,4 @@
+
 param (
   [string]$solution = "eShopOnContainers-ServicesAndWebApps.sln"
 )
@@ -12,7 +13,9 @@ $outfile = "DockerfileSolutionRestore.txt"
 
 Write-Output "COPY ""$solution"" ""$solution""" > $outfile 
 
-Add-Content -Path $outfile ""
+Add-Content -Path $outfile "" # add new line \n
+# Select-String with pattern inside of file
+# Matches requir loop  ForEach-Object ,   $_.Matches.Groups[1]  corresponds to (.*?\.csproj) 
 Select-String -Path $solution -Pattern ', "(.*?\.csproj)"' | ForEach-Object { $_.Matches.Groups[1].Value.Replace("\", "/") } | Sort-Object | ForEach-Object {"COPY ""$_"" ""$_"""} | Out-File -FilePath $outfile -Append
 Add-Content -Path $outfile ""
 Select-String -Path $solution -Pattern ', "(.*?\.dcproj)"' | ForEach-Object { $_.Matches.Groups[1].Value.Replace("\", "/") } | Sort-Object | ForEach-Object {"COPY ""$_"" ""$_"""} | Out-File -FilePath $outfile -Append
