@@ -1,9 +1,12 @@
-﻿param (
+﻿# это тестовый файл для Create-DockerfileSolutionRestore.ps1
+# возвращает список проектов считывает их из файла sln
+
+param (
     [string]$solution = "eShopOnContainers-ServicesAndWebApps.sln"
 )
 $outfile = "b.txt"
 Write-Output "COPY ""$solution"" ""$solution""" > $outfile
-Add-Content -Path $outfile ""
+Add-Content -Path $outfile ""  #  добавляет пустую строку в b.txt
 #Select-String -Path $solution -Pattern ', "(.*?\.csproj)"'
-Select-String -Path $solution -Pattern ', "(.*?\.csproj)"' |  ForEach-Object { $_.Matches.Groups[1].Value} #|Out-File -FilePath $outfile -Append
-#Select-String -Path $solution -Pattern ', "(.*?\.csproj)"' | ForEach-Object { $_.Matches.Groups[1].Value.Replace("\", "/") } | Sort-Object | ForEach-Object {"COPY ""$_"" ""$_"""} | Out-File -FilePath $outfile -Append
+Select-String -Path $solution -Pattern ', "(.*?\.csproj)"' |  ForEach-Object { $_.Matches.Groups[1].Value} |Out-File -FilePath $outfile -Append  # дописывает список адресов  в b.txt
+Select-String -Path $solution -Pattern ', "(.*?\.csproj)"' | ForEach-Object { $_.Matches.Groups[1].Value.Replace("\", "/") } | Sort-Object | ForEach-Object {"COPY ""$_"" ""$_"""} | Out-File -FilePath $outfile -Append
