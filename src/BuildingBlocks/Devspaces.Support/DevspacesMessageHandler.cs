@@ -1,5 +1,7 @@
 ﻿namespace Devspaces.Support;
-
+/// <summary>
+/// для чего 
+/// </summary>
 public class DevspacesMessageHandler : DelegatingHandler
 {
     private const string DevspacesHeaderName = "azds-route-as";
@@ -8,7 +10,7 @@ public class DevspacesMessageHandler : DelegatingHandler
     {
         _httpContextAccessor = httpContextAccessor;
     }
-
+    // добавление заголовка 
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var req = _httpContextAccessor.HttpContext.Request;
