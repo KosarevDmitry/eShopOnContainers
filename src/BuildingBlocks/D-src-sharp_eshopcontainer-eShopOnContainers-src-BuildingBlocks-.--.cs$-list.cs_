@@ -1,0 +1,45 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks
+
+Search patterns:.*\.cs$
+Directory to include:all
+Only root dir: false
+
+Total files: 35
+---
+
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\DevspacesMessageHandler.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\GlobalUsings.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\HttpClientBuilderDevspacesExtensions.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\ServiceCollectionDevspacesExtensions.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus.Tests\Extensions\GenericTypeExtensionsTest.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus.Tests\InMemory_SubscriptionManager_Tests.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus.Tests\TestIntegrationEvent.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus.Tests\TestIntegrationEventHandler.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus.Tests\TestIntegrationOtherEventHandler.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus.Tests\Tests.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Abstractions\IDynamicIntegrationEventHandler.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Abstractions\IEventBus.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Abstractions\IIntegrationEventHandler.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Events\IntegrationEvent.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Extensions\GenericTypeExtensions.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\GlobalUsings.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\IEventBusSubscriptionsManager.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\InMemoryEventBusSubscriptionsManager.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\SubscriptionInfo.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusRabbitMQ\DefaultRabbitMQPersistentConnection.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusRabbitMQ\EventBusRabbitMQ.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusRabbitMQ\GlobalUsings.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusRabbitMQ\IRabbitMQPersistentConnection.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus\DefaultServiceBusPersisterConnection.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus\EventBusServiceBus.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus\GlobalUsings.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus\IServiceBusPersisterConnection.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\EventStateEnum.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\GlobalUsings.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\IntegrationEventLogContext.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\IntegrationEventLogEntry.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\Services\IIntegrationEventLogService.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\Services\IntegrationEventLogService.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\Utilities\ResilientTransaction.cs
+D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\WebHostCustomization\WebHost.Customization\WebHostExtensions.cs

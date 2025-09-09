@@ -5,6 +5,7 @@ public class WebContextSeed
 {
     public static void Seed(IApplicationBuilder applicationBuilder, IWebHostEnvironment env)
     {
+        DebugLogger.Logger.Log("No images and css file replacement occures because UseCustomizationData is false");
         var log = Serilog.Log.Logger;
 
         var settings = (AppSettings)applicationBuilder
@@ -23,7 +24,8 @@ public class WebContextSeed
     }
 
     static void GetPreconfiguredCSS(string contentRootPath, string webroot, ILogger log)
-    {
+    {  
+        DebugLogger.Logger.Snippet("copy css from other file");
         try
         {
             string overrideCssFile = Path.Combine(contentRootPath, "Setup", "override.css");
@@ -44,6 +46,7 @@ public class WebContextSeed
 
     static void GetPreconfiguredImages(string contentRootPath, string webroot, ILogger log)
     {
+        DebugLogger.Logger.Snippet("copy images from zip file");
         try
         {
             string imagesZipFile = Path.Combine(contentRootPath, "Setup", "images.zip");

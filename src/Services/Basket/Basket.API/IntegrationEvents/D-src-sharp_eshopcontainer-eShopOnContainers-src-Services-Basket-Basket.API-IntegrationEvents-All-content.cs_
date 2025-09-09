@@ -1,0 +1,204 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Basket\Basket.API\IntegrationEvents
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 5
+OrderStartedIntegrationEvent.cs
+ProductPriceChangedIntegrationEvent.cs
+UserCheckoutAcceptedIntegrationEvent.cs
+
+OrderStartedIntegrationEventHandler.cs
+ProductPriceChangedIntegrationEventHandler.cs
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Basket\Basket.API\IntegrationEvents\Events\OrderStartedIntegrationEvent.cs
+namespace Basket.API.IntegrationEvents.Events;
+
+// Integration Events notes:
+// An Event is "something that has happened in the past", therefore its name has to be
+// An Integration Event is an event that can cause side effects to other microservices, Bounded-Contexts or external systems.
+public record OrderStartedIntegrationEvent : IntegrationEvent
+{
+    public string UserId { get; init; }
+
+    public OrderStartedIntegrationEvent(string userId)
+        => UserId = userId;
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Basket\Basket.API\IntegrationEvents\Events\ProductPriceChangedIntegrationEvent.cs
+namespace Microsoft.eShopOnContainers.Services.Basket.API.IntegrationEvents.Events;
+
+// Integration Events notes:
+// An Event is "something that has happened in the past", therefore its name has to be
+// An Integration Event is an event that can cause side effects to other microservices, Bounded-Contexts or external systems.
+public record ProductPriceChangedIntegrationEvent : IntegrationEvent
+{
+    public int ProductId { get; private init; }
+
+    public decimal NewPrice { get; private init; }
+
+    public decimal OldPrice { get; private init; }
+
+    public ProductPriceChangedIntegrationEvent(int productId, decimal newPrice, decimal oldPrice)
+    {
+        ProductId = productId;
+        NewPrice = newPrice;
+        OldPrice = oldPrice;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Basket\Basket.API\IntegrationEvents\Events\UserCheckoutAcceptedIntegrationEvent.cs
+namespace Basket.API.IntegrationEvents.Events;
+
+public record UserCheckoutAcceptedIntegrationEvent : IntegrationEvent
+{
+    public string UserId { get; }
+
+    public string UserName { get; }
+
+    public int OrderNumber { get; init; }
+
+    public string City { get; init; }
+
+    public string Street { get; init; }
+
+    public string State { get; init; }
+
+    public string Country { get; init; }
+
+    public string ZipCode { get; init; }
+
+    public string CardNumber { get; init; }
+
+    public string CardHolderName { get; init; }
+
+    public DateTime CardExpiration { get; init; }
+
+    public string CardSecurityNumber { get; init; }
+
+    public int CardTypeId { get; init; }
+
+    public string Buyer { get; init; }
+
+    public Guid RequestId { get; init; }
+
+    public CustomerBasket Basket { get; }
+
+    public UserCheckoutAcceptedIntegrationEvent(string userId, string userName, string city, string street,
+        string state, string country, string zipCode, string cardNumber, string cardHolderName,
+        DateTime cardExpiration, string cardSecurityNumber, int cardTypeId, string buyer, Guid requestId,
+        CustomerBasket basket)
+    {
+        UserId = userId;
+        UserName = userName;
+        City = city;
+        Street = street;
+        State = state;
+        Country = country;
+        ZipCode = zipCode;
+        CardNumber = cardNumber;
+        CardHolderName = cardHolderName;
+        CardExpiration = cardExpiration;
+        CardSecurityNumber = cardSecurityNumber;
+        CardTypeId = cardTypeId;
+        Buyer = buyer;
+        Basket = basket;
+        RequestId = requestId;
+    }
+
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Basket\Basket.API\IntegrationEvents\EventHandling\OrderStartedIntegrationEventHandler.cs
+namespace Basket.API.IntegrationEvents.EventHandling;
+
+public class OrderStartedIntegrationEventHandler : IIntegrationEventHandler<OrderStartedIntegrationEvent>
+{
+    private readonly IBasketRepository _repository;
+    private readonly ILogger<OrderStartedIntegrationEventHandler> _logger;
+
+    public OrderStartedIntegrationEventHandler(
+        IBasketRepository repository,
+        ILogger<OrderStartedIntegrationEventHandler> logger)
+    {
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    public async Task Handle(OrderStartedIntegrationEvent @event)
+    {
+        using (LogContext.PushProperty("IntegrationEventContext", $"{@event.Id}-{Program.AppName}"))
+        {
+            _logger.LogInformation("----- Handling integration event: {IntegrationEventId} at {AppName} - ({@IntegrationEvent})", @event.Id, Program.AppName, @event);
+
+            await _repository.DeleteBasketAsync(@event.UserId.ToString());
+        }
+    }
+}
+
+
+
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Basket\Basket.API\IntegrationEvents\EventHandling\ProductPriceChangedIntegrationEventHandler.cs
+namespace Microsoft.eShopOnContainers.Services.Basket.API.IntegrationEvents.EventHandling;
+
+public class ProductPriceChangedIntegrationEventHandler : IIntegrationEventHandler<ProductPriceChangedIntegrationEvent>
+{
+    private readonly ILogger<ProductPriceChangedIntegrationEventHandler> _logger;
+    private readonly IBasketRepository _repository;
+
+    public ProductPriceChangedIntegrationEventHandler(
+        ILogger<ProductPriceChangedIntegrationEventHandler> logger,
+        IBasketRepository repository)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+    }
+
+    public async Task Handle(ProductPriceChangedIntegrationEvent @event)
+    {
+        using (LogContext.PushProperty("IntegrationEventContext", $"{@event.Id}-{Program.AppName}"))
+        {
+            _logger.LogInformation("----- Handling integration event: {IntegrationEventId} at {AppName} - ({@IntegrationEvent})", @event.Id, Program.AppName, @event);
+
+            var userIds = _repository.GetUsers();
+
+            foreach (var id in userIds)
+            {
+                var basket = await _repository.GetBasketAsync(id);
+
+                await UpdatePriceInBasketItems(@event.ProductId, @event.NewPrice, @event.OldPrice, basket);
+            }
+        }
+    }
+
+    private async Task UpdatePriceInBasketItems(int productId, decimal newPrice, decimal oldPrice, CustomerBasket basket)
+    {
+        var itemsToUpdate = basket?.Items?.Where(x => x.ProductId == productId).ToList();
+
+        if (itemsToUpdate != null)
+        {
+            _logger.LogInformation("----- ProductPriceChangedIntegrationEventHandler - Updating items in basket for user: {BuyerId} ({@Items})", basket.BuyerId, itemsToUpdate);
+
+            foreach (var item in itemsToUpdate)
+            {
+                if (item.UnitPrice == oldPrice)
+                {
+                    var originalPrice = item.UnitPrice;
+                    item.UnitPrice = newPrice;
+                    item.OldUnitPrice = originalPrice;
+                }
+            }
+            await _repository.UpdateBasketAsync(basket);
+        }
+    }
+}
+
+

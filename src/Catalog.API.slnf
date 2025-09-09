@@ -1,0 +1,12 @@
+{
+  "solution": {
+    "path": "eShopOnContainers-ServicesAndWebApps.sln",
+    "projects": [
+      "BuildingBlocks\\EventBus\\EventBusRabbitMQ\\EventBusRabbitMQ.csproj",
+      "BuildingBlocks\\EventBus\\EventBusServiceBus\\EventBusServiceBus.csproj",
+      "BuildingBlocks\\EventBus\\EventBus\\EventBus.csproj",
+      "BuildingBlocks\\EventBus\\IntegrationEventLogEF\\IntegrationEventLogEF.csproj",
+      "Services\\Catalog\\Catalog.API\\Catalog.API.csproj"
+    ]
+  }
+}

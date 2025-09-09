@@ -1,7 +1,7 @@
 
 {{- define "mongo-name" -}}
-{{- if .Values.inf.mongo.host -}}
-{{- .Values.inf.mongo.host -}}
+{{- if .Values.inf.rabbitmq.host -}}
+{{- .Values.inf.rabbitmq.host -}}
 {{- else -}}
 {{- printf "%s" "rabbitmq" -}}
 {{- end -}}

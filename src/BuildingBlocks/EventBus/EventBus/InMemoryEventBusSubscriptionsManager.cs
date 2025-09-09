@@ -3,11 +3,17 @@
 public partial class InMemoryEventBusSubscriptionsManager : IEventBusSubscriptionsManager
 {
 
-
+/// <summary>
+/// key - имя события - тип наследующего  от IntegrationEvent 
+/// List SubscriptionInfo - список оберток для типа
+/// который содержит метод handler для этого события
+/// </summary>
     private readonly Dictionary<string, List<SubscriptionInfo>> _handlers;
-    private readonly List<Type> _eventTypes;
+    private readonly List<Type> _eventTypes; // из string type не сделаешь,
+                                             // поэтому приходится поддерживать список типов тоже
 
-    public event EventHandler<string> OnEventRemoved;
+    public event EventHandler<string> OnEventRemoved; // когда в списке ни одного SubscriptionInfo ни остается,
+                                                      // вызывается этот делегат
 
     public InMemoryEventBusSubscriptionsManager()
     {
@@ -71,11 +77,11 @@ public partial class InMemoryEventBusSubscriptionsManager : IEventBusSubscriptio
 
 
     public void RemoveSubscription<T, TH>()
-        where TH : IIntegrationEventHandler<T>
         where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>
     {
+        var eventName       = GetEventKey<T>();
         var handlerToRemove = FindSubscriptionToRemove<T, TH>();
-        var eventName = GetEventKey<T>();
         DoRemoveHandler(eventName, handlerToRemove);
     }
 
@@ -148,6 +154,11 @@ public partial class InMemoryEventBusSubscriptionsManager : IEventBusSubscriptio
 
     public Type GetEventTypeByName(string eventName) => _eventTypes.SingleOrDefault(t => t.Name == eventName);
 
+    /// <summary>
+    ///  Get Type name
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns>string</returns>
     public string GetEventKey<T>()
     {
         return typeof(T).Name;

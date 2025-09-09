@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net7.0;</TargetFrameworks>
+    <IsAspNetCoreApp>true</IsAspNetCoreApp> 
+	<Description>DebugLogger</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsPackable>false</IsPackable>
+    <IsTrimmable>true</IsTrimmable>
+
+  </PropertyGroup>
+
+</Project>

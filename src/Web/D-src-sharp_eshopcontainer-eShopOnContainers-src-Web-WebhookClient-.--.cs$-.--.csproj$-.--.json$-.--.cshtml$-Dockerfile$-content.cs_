@@ -1,0 +1,1099 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient
+
+Search patterns:.*\.cs$, .*\.csproj$, .*\.json$, .*\.cshtml$, Dockerfile$
+Directory to include:all
+Only root dir: false
+
+Total files: 35
+appsettings.json
+
+IWebhooksClient.cs
+WebhooksClient.cs
+
+WebhookClient.csproj
+
+AccountController.cs
+WebhooksReceivedController.cs
+
+WebhookData.cs
+
+appsettings.Development.json
+
+Dockerfile
+
+Error.cshtml
+
+Error.cshtml.cs
+
+HttpClientAuthorizationDelegatingHandler.cs
+
+_ViewImports.cshtml
+
+Index.cshtml
+
+Index.cshtml.cs
+
+_Layout.cshtml
+
+WebhooksList.cshtml
+
+WebhooksList.cshtml.cs
+
+HeaderNames.cs
+
+_ValidationScriptsPartial.cshtml
+
+Privacy.cshtml
+
+Privacy.cshtml.cs
+
+Program.cs
+
+WebHookReceived.cs
+
+IHooksRepository.cs
+InMemoryHooksRepository.cs
+
+WebhookSubscriptionRequest.cs
+
+WebhookResponse.cs
+
+Settings.cs
+
+launchSettings.json
+
+_ViewStart.cshtml
+
+Startup.cs
+
+GlobalUsings.cs
+
+RegisterWebhook.cshtml
+
+RegisterWebhook.cshtml.cs
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\appsettings.Development.json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "System": "Information",
+      "Microsoft": "Information"
+    },
+    "Token": "6168DB8D-DC58-4094-AF24-483278923590"
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\appsettings.json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information"
+    }
+  },
+  "AllowedHosts": "*"
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Controllers\AccountController.cs
+namespace WebhookClient.Controllers;
+
+[Authorize]
+public class AccountController : Controller
+{
+    public async Task<IActionResult> SignIn(string returnUrl)
+    {
+        var user = User as ClaimsPrincipal;
+
+        var token = await HttpContext.GetTokenAsync("access_token");
+
+        if (token != null)
+        {
+            ViewData["access_token"] = token;
+        }
+
+        return RedirectToPage("/Index");
+    }
+
+    public async Task<IActionResult> Signout()
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
+        var homeUrl = Url.Page("/Index");
+        return new SignOutResult(OpenIdConnectDefaults.AuthenticationScheme,
+            new AuthenticationProperties { RedirectUri = homeUrl });
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Controllers\WebhooksReceivedController.cs
+namespace WebhookClient.Controllers;
+
+[ApiController]
+[Route("webhook-received")]
+public class WebhooksReceivedController : Controller
+{
+
+    private readonly Settings _settings;
+    private readonly ILogger _logger;
+    private readonly IHooksRepository _hooksRepository;
+
+    public WebhooksReceivedController(IOptions<Settings> settings, ILogger<WebhooksReceivedController> logger, IHooksRepository hooksRepository)
+    {
+        _settings = settings.Value;
+        _logger = logger;
+        _hooksRepository = hooksRepository;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> NewWebhook(WebhookData hook)
+    {
+        var header = Request.Headers[HeaderNames.WebHookCheckHeader];
+        var token = header.FirstOrDefault();
+
+        _logger.LogInformation("Received hook with token {Token}. My token is {MyToken}. Token validation is set to {ValidateToken}", token, _settings.Token, _settings.ValidateToken);
+
+        if (!_settings.ValidateToken || _settings.Token == token)
+        {
+            _logger.LogInformation("Received hook is going to be processed");
+            var newHook = new WebHookReceived()
+            {
+                Data = hook.Payload,
+                When = hook.When,
+                Token = token
+            };
+            await _hooksRepository.AddNew(newHook);
+            _logger.LogInformation("Received hook was processed.");
+            return Ok(newHook);
+        }
+
+        _logger.LogInformation("Received hook is NOT processed - Bad Request returned.");
+        return BadRequest();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
+
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+WORKDIR /src
+
+# It's important to keep lines from here down to "COPY . ." identical in all Dockerfiles
+# to take advantage of Docker's build cache, to speed up local container builds
+COPY "eShopOnContainers-ServicesAndWebApps.sln" "eShopOnContainers-ServicesAndWebApps.sln"
+
+COPY "ApiGateways/Mobile.Bff.Shopping/aggregator/Mobile.Shopping.HttpAggregator.csproj" "ApiGateways/Mobile.Bff.Shopping/aggregator/Mobile.Shopping.HttpAggregator.csproj"
+COPY "ApiGateways/Web.Bff.Shopping/aggregator/Web.Shopping.HttpAggregator.csproj" "ApiGateways/Web.Bff.Shopping/aggregator/Web.Shopping.HttpAggregator.csproj"
+COPY "BuildingBlocks/Devspaces.Support/Devspaces.Support.csproj" "BuildingBlocks/Devspaces.Support/Devspaces.Support.csproj"
+COPY "BuildingBlocks/EventBus/EventBus/EventBus.csproj" "BuildingBlocks/EventBus/EventBus/EventBus.csproj"
+COPY "BuildingBlocks/EventBus/EventBus.Tests/EventBus.Tests.csproj" "BuildingBlocks/EventBus/EventBus.Tests/EventBus.Tests.csproj"
+COPY "BuildingBlocks/EventBus/EventBusRabbitMQ/EventBusRabbitMQ.csproj" "BuildingBlocks/EventBus/EventBusRabbitMQ/EventBusRabbitMQ.csproj"
+COPY "BuildingBlocks/EventBus/EventBusServiceBus/EventBusServiceBus.csproj" "BuildingBlocks/EventBus/EventBusServiceBus/EventBusServiceBus.csproj"
+COPY "BuildingBlocks/EventBus/IntegrationEventLogEF/IntegrationEventLogEF.csproj" "BuildingBlocks/EventBus/IntegrationEventLogEF/IntegrationEventLogEF.csproj"
+COPY "BuildingBlocks/WebHostCustomization/WebHost.Customization/WebHost.Customization.csproj" "BuildingBlocks/WebHostCustomization/WebHost.Customization/WebHost.Customization.csproj"
+COPY "Services/Basket/Basket.API/Basket.API.csproj" "Services/Basket/Basket.API/Basket.API.csproj"
+COPY "Services/Basket/Basket.FunctionalTests/Basket.FunctionalTests.csproj" "Services/Basket/Basket.FunctionalTests/Basket.FunctionalTests.csproj"
+COPY "Services/Basket/Basket.UnitTests/Basket.UnitTests.csproj" "Services/Basket/Basket.UnitTests/Basket.UnitTests.csproj"
+COPY "Services/Catalog/Catalog.API/Catalog.API.csproj" "Services/Catalog/Catalog.API/Catalog.API.csproj"
+COPY "Services/Catalog/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj" "Services/Catalog/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj"
+COPY "Services/Catalog/Catalog.UnitTests/Catalog.UnitTests.csproj" "Services/Catalog/Catalog.UnitTests/Catalog.UnitTests.csproj"
+COPY "Services/Identity/Identity.API/Identity.API.csproj" "Services/Identity/Identity.API/Identity.API.csproj"
+COPY "Services/Ordering/Ordering.API/Ordering.API.csproj" "Services/Ordering/Ordering.API/Ordering.API.csproj"
+COPY "Services/Ordering/Ordering.BackgroundTasks/Ordering.BackgroundTasks.csproj" "Services/Ordering/Ordering.BackgroundTasks/Ordering.BackgroundTasks.csproj"
+COPY "Services/Ordering/Ordering.Domain/Ordering.Domain.csproj" "Services/Ordering/Ordering.Domain/Ordering.Domain.csproj"
+COPY "Services/Ordering/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj" "Services/Ordering/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj"
+COPY "Services/Ordering/Ordering.Infrastructure/Ordering.Infrastructure.csproj" "Services/Ordering/Ordering.Infrastructure/Ordering.Infrastructure.csproj"
+COPY "Services/Ordering/Ordering.SignalrHub/Ordering.SignalrHub.csproj" "Services/Ordering/Ordering.SignalrHub/Ordering.SignalrHub.csproj"
+COPY "Services/Ordering/Ordering.UnitTests/Ordering.UnitTests.csproj" "Services/Ordering/Ordering.UnitTests/Ordering.UnitTests.csproj"
+COPY "Services/Payment/Payment.API/Payment.API.csproj" "Services/Payment/Payment.API/Payment.API.csproj"
+COPY "Services/Webhooks/Webhooks.API/Webhooks.API.csproj" "Services/Webhooks/Webhooks.API/Webhooks.API.csproj"
+COPY "Tests/Services/Application.FunctionalTests/Application.FunctionalTests.csproj" "Tests/Services/Application.FunctionalTests/Application.FunctionalTests.csproj"
+COPY "Web/WebhookClient/WebhookClient.csproj" "Web/WebhookClient/WebhookClient.csproj"
+COPY "Web/WebMVC/WebMVC.csproj" "Web/WebMVC/WebMVC.csproj"
+COPY "Web/WebSPA/WebSPA.csproj" "Web/WebSPA/WebSPA.csproj"
+COPY "Web/WebStatus/WebStatus.csproj" "Web/WebStatus/WebStatus.csproj"
+
+COPY "docker-compose.dcproj" "docker-compose.dcproj"
+
+COPY "NuGet.config" "NuGet.config"
+
+RUN dotnet restore "eShopOnContainers-ServicesAndWebApps.sln"
+
+COPY . .
+WORKDIR /src/Web/WebhookClient
+RUN dotnet publish --no-restore -c Release -o /app
+
+FROM build AS publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app .
+ENTRYPOINT ["dotnet", "WebhookClient.dll"]
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\GlobalUsings.cs
+global using Microsoft.AspNetCore.Authentication;
+global using Microsoft.AspNetCore.Authentication.Cookies;
+global using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Mvc;
+global using System.Security.Claims;
+global using System.Threading.Tasks;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;
+global using System.Linq;
+global using WebhookClient.Models;
+global using WebhookClient.Services;
+global using System;
+global using System.Collections.Generic;
+global using System.Net.Http;
+global using System.Text.Json;
+global using Microsoft.AspNetCore.Http;
+global using System.Net.Http.Headers;
+global using System.Threading;
+global using Microsoft.AspNetCore;
+global using Microsoft.AspNetCore.Hosting;
+global using WebhookClient;
+global using Microsoft.AspNetCore.Builder;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Hosting;
+global using System.Net;
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\HeaderNames.cs
+namespace WebhookClient;
+
+static class HeaderNames
+{
+    public const string WebHookCheckHeader = "X-eshop-whtoken";
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\HttpClientAuthorizationDelegatingHandler.cs
+namespace WebhookClient;
+
+public class HttpClientAuthorizationDelegatingHandler
+        : DelegatingHandler
+{
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public HttpClientAuthorizationDelegatingHandler(IHttpContextAccessor httpContextAccessor)
+    {
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var authorizationHeader = _httpContextAccessor.HttpContext
+            .Request.Headers["Authorization"];
+
+        if (!string.IsNullOrEmpty(authorizationHeader))
+        {
+            request.Headers.Add("Authorization", new List<string>() { authorizationHeader });
+        }
+
+        var token = await GetToken();
+
+        if (token != null)
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        return await base.SendAsync(request, cancellationToken);
+    }
+
+    async Task<string> GetToken()
+    {
+        const string ACCESS_TOKEN = "access_token";
+
+        return await _httpContextAccessor.HttpContext
+            .GetTokenAsync(ACCESS_TOKEN);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Models\WebhookData.cs
+namespace WebhookClient.Models;
+
+public class WebhookData
+{
+    public DateTime When { get; set; }
+
+    public string Payload { get; set; }
+
+    public string Type { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Models\WebHookReceived.cs
+namespace WebhookClient.Models;
+
+public class WebHookReceived
+{
+    public DateTime When { get; set; }
+        
+    public string Data { get; set; }
+
+    public string Token { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Models\WebhookResponse.cs
+namespace WebhookClient.Models;
+
+public class WebhookResponse
+{
+    public DateTime Date { get; set; }
+    public string DestUrl { get; set; }
+    public string Token { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Models\WebhookSubscriptionRequest.cs
+namespace WebhookClient.Models;
+
+public class WebhookSubscriptionRequest
+{
+    public string Url { get; set; }
+    public string Token { get; set; }
+    public string Event { get; set; }
+    public string GrantUrl { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Pages\_ViewImports.cshtml
+@using WebhookClient
+@namespace WebhookClient.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Pages\_ViewStart.cshtml
+@{
+    Layout = "_Layout";
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Pages\Error.cshtml
+@page
+@model ErrorModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h1 class="text-danger">Error.</h1>
+<h2 class="text-danger">An error occurred while processing your request.</h2>
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+    </p>
+}
+
+<h3>Development Mode</h3>
+<p>
+    Swapping to the <strong>Development</strong> environment displays detailed information about the error that occurred.
+</p>
+<p>
+    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
+    It can result in displaying sensitive information from exceptions to end users.
+    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
+    and restarting the app.
+</p>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Pages\Error.cshtml.cs
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Diagnostics;
+
+namespace WebhookClient.Pages
+{
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public class ErrorModel : PageModel
+    {
+        public string RequestId { get; set; }
+
+        public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+
+        public void OnGet()
+        {
+            RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Pages\Index.cshtml
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<section class="esh-catalog-hero">
+</section>
+
+<div class="text-center">
+    <p>&nbsp;</p>
+    <img class="esh-app-footer-brand" src="~/images/brand.png" />
+    <h2>eShopOnContainers - Order Management</h2>
+    <p>
+        This is a <bold>sample</bold> web client that uses the Webhooks API to show you all orders that reached the "paid" status. This is accomplished by creating a Webhook
+        that will be called by eShopOnContainers core when the order reached this "paid" status. If not created you can create this webhook going to <a asp-page="RegisterWebhook">webhook registration</a>.
+    </p>
+    @if (!User.Identity.IsAuthenticated)
+    {
+        <a class="btn-primary btn" href="@Url.Action("SignIn", "Account")">Login</a>
+        <p>Why I need to login? You only need to login <bold>to setup a new webhook</bold>.</p>
+    }
+</div>
+
+<div class="table">
+    <h3>Current webhooks received (orders paid)</h3>
+    <p>(Data since last time web started up). <strong>Note: </strong>Must manually refresh this page.<p>
+    <table class="table">
+        @foreach (var webhook in Model.WebHooksReceived)
+        {
+            <tr>
+                <td>@webhook.When</td>
+                <td><pre>@webhook.Data</pre></td>
+                <td>@(webhook.Token ?? "--None--")</td>
+            </tr>
+        }
+    </table>
+</div>
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Pages\Index.cshtml.cs
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using WebhookClient.Models;
+using WebhookClient.Services;
+
+namespace WebhookClient.Pages
+{
+
+    public class IndexModel : PageModel
+    {
+        private readonly IHooksRepository _hooksRepository;
+
+        public IndexModel(IHooksRepository hooksRepository)
+        {
+            _hooksRepository = hooksRepository;
+        }
+
+        public IEnumerable<WebHookReceived> WebHooksReceived { get; private set; }
+
+        public async Task OnGet()
+        {
+            WebHooksReceived = await _hooksRepository.GetAll();
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Pages\Privacy.cshtml
+@page
+@model PrivacyModel
+@{
+    ViewData["Title"] = "Privacy Policy";
+}
+<h1>@ViewData["Title"]</h1>
+
+<p>Use this page to detail your site's privacy policy.</p>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Pages\Privacy.cshtml.cs
+using Microsoft.AspNetCore.Mvc.RazorPages;
+
+namespace WebhookClient.Pages
+{
+    public class PrivacyModel : PageModel
+    {
+        public void OnGet()
+        {
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Pages\RegisterWebhook.cshtml
+@page
+@model WebhookClient.Pages.RegisterWebhookModel
+@{
+    ViewData["Title"] = "RegisterWebhook";
+}
+
+<h3>Register a new webhook</h3>
+
+<p>This page registers the "OrderPaid" Webhook by sending a POST to the WebHooks API. Once the Webhook is set, you will be able to see new paid orders from the <a asp-page="Index">Index</a> page.</p>
+
+<form method="post">
+    <p>Token: <input type="text" asp-for="Token" /></p>
+    <input type="submit" value="send" />
+</form>
+
+@if (Model.ResponseCode != (int)System.Net.HttpStatusCode.OK)
+{
+    <p>Error @Model.ResponseCode (@Model.ResponseMessage) when calling the Webhooks API (@Model.RequestUrl) with GrantUrl: @Model.GrantUrl)</p>
+    <p>Data sent to the webhooks API was <raw>@Model.RequestBodyJson</raw></p>
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Pages\RegisterWebhook.cshtml.cs
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Options;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Formatting;
+using System.Threading.Tasks;
+using WebhookClient.Models;
+using System.Text.Json;
+
+namespace WebhookClient.Pages
+{
+    [Authorize]
+
+    public class RegisterWebhookModel : PageModel
+    {
+        private readonly Settings _settings;
+        private readonly IHttpClientFactory _httpClientFactory;
+
+        [BindProperty] public string Token { get; set; }
+
+        public int ResponseCode { get; set; }
+        public string RequestUrl { get; set; }
+        public string GrantUrl { get; set; }
+        public string ResponseMessage { get; set; }
+        public string RequestBodyJson { get; set; }
+
+        public RegisterWebhookModel(IOptions<Settings> settings, IHttpClientFactory httpClientFactory)
+        {
+            _settings = settings.Value;
+            _httpClientFactory = httpClientFactory;
+        }
+
+        public void OnGet()
+        {
+            ResponseCode = (int)HttpStatusCode.OK;
+            Token = _settings.Token;
+        }
+
+        public async Task<IActionResult> OnPost()
+        {
+            ResponseCode = (int)HttpStatusCode.OK;
+            var protocol = Request.IsHttps ? "https" : "http";
+            var selfurl = !string.IsNullOrEmpty(_settings.SelfUrl) ? _settings.SelfUrl : $"{protocol}://{Request.Host}/{Request.PathBase}";
+            if (!selfurl.EndsWith("/"))
+            {
+                selfurl = selfurl + "/";
+            }
+            var granturl = $"{selfurl}check";
+            var url = $"{selfurl}webhook-received";
+            var client = _httpClientFactory.CreateClient("GrantClient");
+
+            var payload = new WebhookSubscriptionRequest()
+            {
+                Event = "OrderPaid",
+                GrantUrl = granturl,
+                Url = url,
+                Token = Token
+            };
+            var response = await client.PostAsync<WebhookSubscriptionRequest>(_settings.WebhooksUrl + "/api/v1/webhooks", payload, new JsonMediaTypeFormatter());
+
+            if (response.IsSuccessStatusCode)
+            {
+                return RedirectToPage("WebhooksList");
+            }
+            else
+            {
+                RequestBodyJson = JsonSerializer.Serialize(payload);
+                ResponseCode = (int)response.StatusCode;
+                ResponseMessage = response.ReasonPhrase;
+                GrantUrl = granturl;
+                RequestUrl = $"{response.RequestMessage.Method} {response.RequestMessage.RequestUri}";
+            }
+
+            return Page();
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Pages\Shared\_Layout.cshtml
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Order Management</title>
+
+    <environment include="Development">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+    </environment>
+    <environment exclude="Development">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css"
+              asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
+              asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute"
+              crossorigin="anonymous"
+              integrity="sha256-eSi1q2PG6J7g7ib17yAaWMcrr5GrtohYChqibrV7PBE="/>
+    </environment>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-page="/Index">Order Management</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/RegisterWebhook">Register webhook</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/WebhooksList">Webhooks registered (in API)</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2019 - Order Management - <a asp-area="" asp-page="/RegisterWebhook">Register Webhook</a> | <a asp-area="" asp-page="/WebhooksList">Webhooks registered in API</a>
+        </div>
+    </footer>
+
+    <environment include="Development">
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"
+                asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
+                asp-fallback-test="window.jQuery"
+                crossorigin="anonymous"
+                integrity="sha512-36+AdBzCL+y6qjw5Tx7HgzeGCzC81MDDgaUP8ld2zhx58HdqXGoBd+tHdrBMiyjGQs0Hxs/MLZTu/eHNJJuWPw==">
+        </script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/js/bootstrap.bundle.min.js"
+                asp-fallback-src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"
+                asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal"
+                crossorigin="anonymous"
+                integrity="sha256-E/V4cWE4qvAeO5MOhjtGtqDzPndRO1LBk8lJ/PR7CA4=">
+        </script>
+    </environment>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Pages\Shared\_ValidationScriptsPartial.cshtml
+<environment include="Development">
+    <script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+</environment>
+<environment exclude="Development">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js"
+            asp-fallback-src="~/lib/jquery-validation/dist/jquery.validate.min.js"
+            asp-fallback-test="window.jQuery && window.jQuery.validator"
+            crossorigin="anonymous"
+            integrity="sha256-F6h55Qw6sweK+t7SiOJX+2bpSAa3b/fnlrVCJvmEj1A=">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.11/jquery.validate.unobtrusive.min.js"
+            asp-fallback-src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"
+            asp-fallback-test="window.jQuery && window.jQuery.validator && window.jQuery.validator.unobtrusive"
+            crossorigin="anonymous"
+            integrity="sha256-9GycpJnliUjJDVDqP0UEu/bsm9U+3dnQUH8+3W10vkY=">
+    </script>
+</environment>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Pages\WebhooksList.cshtml
+@page
+@model WebhookClient.Pages.WebhooksListModel
+@{
+    ViewData["Title"] = "WebhooksList";
+}
+
+<h1>List of Webhooks registered by user @User.Identity.Name</h1>
+
+<table class="table">
+    <thead class="thead-light">
+        <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Destination Url</th>
+            <th scope="col">Validation token</th>
+        </tr>
+    </thead>
+
+    @foreach (var whr in Model.Webhooks)
+    {
+        <tr>
+            <td>@whr.Date</td>
+            <td>@whr.DestUrl</td>
+            <td>@whr.Token</td>
+        </tr>
+    }
+
+</table>
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Pages\WebhooksList.cshtml.cs
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using WebhookClient.Models;
+using WebhookClient.Services;
+
+namespace WebhookClient.Pages
+{
+    public class WebhooksListModel : PageModel
+    {
+        private readonly IWebhooksClient _webhooksClient;
+
+        public IEnumerable<WebhookResponse> Webhooks { get; private set; }
+
+        public WebhooksListModel(IWebhooksClient webhooksClient)
+        {
+            _webhooksClient = webhooksClient;
+        }
+
+        public async Task OnGet()
+        {
+            Webhooks = await _webhooksClient.LoadWebhooks();
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Program.cs
+CreateWebHostBuilder(args).Build().Run();
+
+
+IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+    WebHost.CreateDefaultBuilder(args)
+        .UseStartup<Startup>();
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Properties\launchSettings.json
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:51921",
+      "sslPort": 44398
+    }
+  },
+  "profiles": {
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "WebhookClient": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:5001;http://localhost:5000"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchBrowser": true,
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}"
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Services\IHooksRepository.cs
+namespace WebhookClient.Services;
+
+public interface IHooksRepository
+{
+    Task<IEnumerable<WebHookReceived>> GetAll();
+    Task AddNew(WebHookReceived hook);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Services\InMemoryHooksRepository.cs
+namespace WebhookClient.Services;
+
+public class InMemoryHooksRepository : IHooksRepository
+{
+    private readonly List<WebHookReceived> _data;
+
+    public InMemoryHooksRepository() => _data = new List<WebHookReceived>();
+
+    public Task AddNew(WebHookReceived hook)
+    {
+        _data.Add(hook);
+        return Task.CompletedTask;
+    }
+
+    public Task<IEnumerable<WebHookReceived>> GetAll()
+    {
+        return Task.FromResult(_data.AsEnumerable());
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Services\IWebhooksClient.cs
+namespace WebhookClient.Services;
+
+public interface IWebhooksClient
+{
+    Task<IEnumerable<WebhookResponse>> LoadWebhooks();
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Services\WebhooksClient.cs
+namespace WebhookClient.Services;
+
+public class WebhooksClient : IWebhooksClient
+{
+
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly Settings _settings;
+    public WebhooksClient(IHttpClientFactory httpClientFactory, IOptions<Settings> settings)
+    {
+        _httpClientFactory = httpClientFactory;
+        _settings = settings.Value;
+    }
+    public async Task<IEnumerable<WebhookResponse>> LoadWebhooks()
+    {
+        var client = _httpClientFactory.CreateClient("GrantClient");
+        var response = await client.GetAsync(_settings.WebhooksUrl + "/api/v1/webhooks");
+        var json = await response.Content.ReadAsStringAsync();
+        var subscriptions = JsonSerializer.Deserialize<IEnumerable<WebhookResponse>>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+        return subscriptions;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Settings.cs
+namespace WebhookClient;
+
+public class Settings
+{
+    public string Token { get; set; }
+    public string IdentityUrl { get; set; }
+    public string CallBackUrl { get; set; }
+    public string WebhooksUrl { get; set; }
+    public string SelfUrl { get; set; }
+
+    public bool ValidateToken { get; set; }
+
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\Startup.cs
+namespace WebhookClient;
+
+public class Startup
+{
+    public Startup(IConfiguration configuration)
+    {
+        Configuration = configuration;
+    }
+
+    public IConfiguration Configuration { get; }
+
+    // This method gets called by the runtime. Use this method to add services to the container.
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddSession(opt =>
+            {
+                opt.Cookie.Name = ".eShopWebhooks.Session";
+            })
+            .AddConfiguration(Configuration)
+            .AddHttpClientServices(Configuration)
+            .AddCustomAuthentication(Configuration)
+            .AddTransient<IWebhooksClient, WebhooksClient>()
+            .AddSingleton<IHooksRepository, InMemoryHooksRepository>()
+            .AddMvc();
+
+        services.AddControllers();
+    }
+
+    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+
+        var pathBase = Configuration["PATH_BASE"];
+        if (!string.IsNullOrEmpty(pathBase))
+        {
+            app.UsePathBase(pathBase);
+        }
+
+        if (env.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+        }
+        else
+        {
+            app.UseExceptionHandler("/Error");
+            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+        }
+        app.Map("/check", capp =>
+        {
+            capp.Run(async (context) =>
+            {
+                if ("OPTIONS".Equals(context.Request.Method, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    var validateToken = bool.TrueString.Equals(Configuration["ValidateToken"], StringComparison.InvariantCultureIgnoreCase);
+                    var header = context.Request.Headers[HeaderNames.WebHookCheckHeader];
+                    var value = header.FirstOrDefault();
+                    var tokenToValidate = Configuration["Token"];
+                    if (!validateToken || value == tokenToValidate)
+                    {
+                        if (!string.IsNullOrWhiteSpace(tokenToValidate))
+                        {
+                            context.Response.Headers.Add(HeaderNames.WebHookCheckHeader, tokenToValidate);
+                        }
+                        context.Response.StatusCode = (int)HttpStatusCode.OK;
+                    }
+                    else
+                    {
+                        await context.Response.WriteAsync("Invalid token");
+                        context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    }
+                }
+                else
+                {
+                    context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                }
+            });
+        });
+
+        // Fix samesite issue when running eShop from docker-compose locally as by default http protocol is being used
+        // Refer to https://github.com/dotnet-architecture/eShopOnContainers/issues/1391
+        app.UseCookiePolicy(new CookiePolicyOptions { MinimumSameSitePolicy = SameSiteMode.Lax });
+
+        app.UseStaticFiles();
+        app.UseSession();
+        app.UseRouting();
+        app.UseAuthentication();
+        app.UseAuthorization();
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapDefaultControllerRoute();
+            endpoints.MapRazorPages();
+        });
+    }
+}
+
+static class ServiceExtensions
+{
+    public static IServiceCollection AddConfiguration(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions();
+        services.Configure<Settings>(configuration);
+        return services;
+    }
+    public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, IConfiguration configuration)
+    {
+        var identityUrl = configuration.GetValue<string>("IdentityUrl");
+        var callBackUrl = configuration.GetValue<string>("CallBackUrl");
+
+        // Add Authentication services          
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+        })
+        .AddCookie(setup => setup.ExpireTimeSpan = TimeSpan.FromHours(2))
+        .AddOpenIdConnect(options =>
+        {
+            options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.Authority = identityUrl.ToString();
+            options.SignedOutRedirectUri = callBackUrl.ToString();
+            options.ClientId = "webhooksclient";
+            options.ClientSecret = "secret";
+            options.ResponseType = "code";
+            options.SaveTokens = true;
+            options.GetClaimsFromUserInfoEndpoint = true;
+            options.RequireHttpsMetadata = false;
+            options.Scope.Add("openid");
+            options.Scope.Add("webhooks");
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection AddHttpClientServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+        services.AddTransient<HttpClientAuthorizationDelegatingHandler>();
+        services.AddHttpClient("extendedhandlerlifetime").SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+
+        //add http client services
+        services.AddHttpClient("GrantClient")
+                .SetHandlerLifetime(TimeSpan.FromMinutes(5))
+                .AddHttpMessageHandler<HttpClientAuthorizationDelegatingHandler>();
+
+        return services;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebhookClient\WebhookClient.csproj
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <UserSecretsId>36215d41-f31a-4aa6-9929-bd67d650e7b5</UserSecretsId>
+    <AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wp8+wpa81;</AssetTargetFallback>
+    <GenerateErrorForMissingTargetingPacks>false</GenerateErrorForMissingTargetingPacks>
+    <IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.0" />
+  </ItemGroup>
+
+</Project>
+
+

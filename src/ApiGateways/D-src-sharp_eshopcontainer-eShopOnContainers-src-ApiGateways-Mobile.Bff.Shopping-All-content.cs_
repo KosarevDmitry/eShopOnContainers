@@ -1,0 +1,1642 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 39
+Mobile.Shopping.HttpAggregator.csproj
+
+appsettings.json
+
+appsettings.localhost.json
+
+azds.yaml
+azds.yaml
+
+IOrderApiClient.cs
+OrderApiClient.cs
+
+UrlsConfig.cs
+
+configuration.json
+
+BasketController.cs
+HomeController.cs
+OrderController.cs
+
+BasketData.cs
+OrderData.cs
+OrderItemData.cs
+UpdateBasketItemData.cs
+UpdateBasketRequestItemData.cs
+
+Dockerfile
+
+Dockerfile.develop
+
+AuthorizeCheckOperationFilter.cs
+
+HttpClientAuthorizationDelegatingHandler.cs
+
+GrpcExceptionInterceptor.cs
+
+BasketDataItem.cs
+CatalogItem.cs
+
+Program.cs
+
+AddBasketItemRequest.cs
+UpdateBasketItemsRequest.cs
+UpdateBasketRequest.cs
+
+BasketService.cs
+CatalogService.cs
+IBasketService.cs
+ICatalogService.cs
+IOrderingService.cs
+OrderingService.cs
+
+launchSettings.json
+
+Startup.cs
+
+GlobalUsings.cs
+
+values.dev.yaml
+values.dev.yaml
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\appsettings.json
+{
+  "Logging": {
+    "IncludeScopes": false,
+    "Debug": {
+      "LogLevel": {
+        "Default": "Warning"
+      }
+    },
+    "Console": {
+      "LogLevel": {
+        "Default": "Warning"
+      }
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\appsettings.localhost.json
+{
+  "urls": {
+    "basket": "http://localhost:55105",
+    "catalog": "http://localhost:55101",
+    "orders": "http://localhost:55102",
+    "identity": "http://localhost:55105",
+    "grpcBasket": "http://localhost:5580",
+    "grpcCatalog": "http://localhost:81",
+    "grpcOrdering": "http://localhost:5581"
+  },
+  "IdentityUrlExternal": "http://localhost:5105",
+  "IdentityUrl": "http://localhost:5105",
+  "Logging": {
+    "IncludeScopes": false,
+    "Debug": {
+      "LogLevel": {
+        "Default": "Debug"
+      }
+    },
+    "Console": {
+      "LogLevel": {
+        "Default": "Debug"
+      }
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\azds.yaml
+kind: helm-release
+apiVersion: 1.1
+build:
+  context: ..\..\..\..
+  dockerfile: Dockerfile
+install:
+  chart: ../../../../k8s/helm/mobileshoppingagg
+  set:
+    image:
+      tag: $(tag)
+      pullPolicy: Never
+    ingress:
+      annotations:
+        kubernetes.io/ingress.class: traefik-azds
+      hosts:
+      # This expands to [space.s.]apigwms.<guid>.<region>.aksapp.io
+      - $(spacePrefix)eshop$(hostSuffix)
+    inf:
+      k8s:
+        dns: $(spacePrefix)eshop$(hostSuffix)      
+  values:
+  - values.dev.yaml?
+  - secrets.dev.yaml?
+  - app.yaml
+  - inf.yaml
+configurations:
+  develop:
+    build:
+      useGitIgnore: true
+      dockerfile: Dockerfile.develop
+    container:
+      syncTarget: /src
+      sync:
+      - '**/Pages/**'
+      - '**/Views/**'
+      - '**/wwwroot/**'
+      - '!**/*.{sln,csproj}'
+      command:
+      - dotnet
+      - run
+      - --no-restore
+      - --no-build
+      - --no-launch-profile
+      - -c
+      - ${Configuration:-Debug}
+      iterate:
+        processesToKill:
+        - dotnet
+        - vsdbg
+        buildCommands:
+        - - dotnet
+          - build
+          - --no-restore
+          - -c
+          - ${Configuration:-Debug}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Config\UrlsConfig.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Config;
+
+public class UrlsConfig
+{
+    public class CatalogOperations
+    {
+        public static string GetItemById(int id) => $"/api/v1/catalog/items/{id}";
+
+        public static string GetItemsById(IEnumerable<int> ids) => $"/api/v1/catalog/items?ids={string.Join(',', ids)}";
+    }
+
+    public class BasketOperations
+    {
+        public static string GetItemById(string id) => $"/api/v1/basket/{id}";
+
+        public static string UpdateBasket() => "/api/v1/basket";
+    }
+
+    public class OrdersOperations
+    {
+        public static string GetOrderDraft() => "/api/v1/orders/draft";
+    }
+
+    public string Basket { get; set; }
+
+    public string Catalog { get; set; }
+
+    public string Orders { get; set; }
+
+    public string GrpcBasket { get; set; }
+
+    public string GrpcCatalog { get; set; }
+
+    public string GrpcOrdering { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Controllers\BasketController.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Controllers;
+
+[Route("api/v1/[controller]")]
+[Authorize]
+[ApiController]
+public class BasketController : ControllerBase
+{
+    private readonly ICatalogService _catalog;
+    private readonly IBasketService _basket;
+
+    public BasketController(ICatalogService catalogService, IBasketService basketService)
+    {
+        _catalog = catalogService;
+        _basket = basketService;
+    }
+
+    [HttpPost]
+    [HttpPut]
+    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(BasketData), (int)HttpStatusCode.OK)]
+    public async Task<ActionResult<BasketData>> UpdateAllBasketAsync([FromBody] UpdateBasketRequest data)
+    {
+        if (data.Items == null || !data.Items.Any())
+        {
+            return BadRequest("Need to pass at least one basket line");
+        }
+
+        // Retrieve the current basket
+        var basket = await _basket.GetByIdAsync(data.BuyerId) ?? new BasketData(data.BuyerId);
+        var catalogItems = await _catalog.GetCatalogItemsAsync(data.Items.Select(x => x.ProductId));
+        // group by product id to avoid duplicates
+        var itemsCalculated = data
+                .Items
+                .GroupBy(x => x.ProductId, x => x, (k, i) => new { productId = k, items = i })
+                .Select(groupedItem =>
+                {
+                    var item = groupedItem.items.First();
+                    item.Quantity = groupedItem.items.Sum(i => i.Quantity);
+                    return item;
+                });
+
+        foreach (var bitem in itemsCalculated)
+        {
+            var catalogItem = catalogItems.SingleOrDefault(ci => ci.Id == bitem.ProductId);
+            if (catalogItem == null)
+            {
+                return BadRequest($"Basket refers to a non-existing catalog item ({bitem.ProductId})");
+            }
+
+            var itemInBasket = basket.Items.FirstOrDefault(x => x.ProductId == bitem.ProductId);
+            if (itemInBasket == null)
+            {
+                basket.Items.Add(new BasketDataItem()
+                {
+                    Id = bitem.Id,
+                    ProductId = catalogItem.Id,
+                    ProductName = catalogItem.Name,
+                    PictureUrl = catalogItem.PictureUri,
+                    UnitPrice = catalogItem.Price,
+                    Quantity = bitem.Quantity
+                });
+            }
+            else
+            {
+                itemInBasket.Quantity = bitem.Quantity;
+            }
+        }
+
+        await _basket.UpdateAsync(basket);
+
+        return basket;
+    }
+
+    [HttpPut]
+    [Route("items")]
+    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(BasketData), (int)HttpStatusCode.OK)]
+    public async Task<ActionResult<BasketData>> UpdateQuantitiesAsync([FromBody] UpdateBasketItemsRequest data)
+    {
+        if (!data.Updates.Any())
+        {
+            return BadRequest("No updates sent");
+        }
+
+        // Retrieve the current basket
+        var currentBasket = await _basket.GetByIdAsync(data.BasketId);
+        if (currentBasket == null)
+        {
+            return BadRequest($"Basket with id {data.BasketId} not found.");
+        }
+
+        // Update with new quantities
+        foreach (var update in data.Updates)
+        {
+            var basketItem = currentBasket.Items.SingleOrDefault(bitem => bitem.Id == update.BasketItemId);
+
+            if (basketItem == null)
+            {
+                return BadRequest($"Basket item with id {update.BasketItemId} not found");
+            }
+
+            basketItem.Quantity = update.NewQty;
+        }
+
+        // Save the updated basket
+        await _basket.UpdateAsync(currentBasket);
+
+        return currentBasket;
+    }
+
+    [HttpPost]
+    [Route("items")]
+    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType((int)HttpStatusCode.OK)]
+    public async Task<ActionResult> AddBasketItemAsync([FromBody] AddBasketItemRequest data)
+    {
+        if (data == null || data.Quantity == 0)
+        {
+            return BadRequest("Invalid payload");
+        }
+
+        // Step 1: Get the item from catalog
+        var item = await _catalog.GetCatalogItemAsync(data.CatalogItemId);
+
+        //item.PictureUri = 
+
+        // Step 2: Get current basket status
+        var currentBasket = (await _basket.GetByIdAsync(data.BasketId)) ?? new BasketData(data.BasketId);
+        // Step 3: Merge current status with new product
+        currentBasket.Items.Add(new BasketDataItem()
+        {
+            UnitPrice = item.Price,
+            PictureUrl = item.PictureUri,
+            ProductId = item.Id,
+            ProductName = item.Name,
+            Quantity = data.Quantity,
+            Id = Guid.NewGuid().ToString()
+        });
+
+        // Step 4: Update basket
+        await _basket.UpdateAsync(currentBasket);
+
+        return Ok();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Controllers\HomeController.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Controllers;
+
+[Route("")]
+public class HomeController : Controller
+{
+    [HttpGet]
+    public IActionResult Index()
+    {
+        return new RedirectResult("~/swagger");
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Controllers\OrderController.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Controllers;
+
+[Route("api/v1/[controller]")]
+[Authorize]
+[ApiController]
+public class OrderController : ControllerBase
+{
+    private readonly IBasketService _basketService;
+    private readonly IOrderingService _orderingService;
+
+    public OrderController(IBasketService basketService, IOrderingService orderingService)
+    {
+        _basketService = basketService;
+        _orderingService = orderingService;
+    }
+
+    [Route("draft/{basketId}")]
+    [HttpGet]
+    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(OrderData), (int)HttpStatusCode.OK)]
+    public async Task<ActionResult<OrderData>> GetOrderDraftAsync(string basketId)
+    {
+        if (string.IsNullOrEmpty(basketId))
+        {
+            return BadRequest("Need a valid basketid");
+        }
+        // Get the basket data and build a order draft based on it
+        var basket = await _basketService.GetByIdAsync(basketId);
+
+        if (basket == null)
+        {
+            return BadRequest($"No basket found for id {basketId}");
+        }
+
+        return await _orderingService.GetOrderDraftAsync(basket);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+WORKDIR /app
+EXPOSE 80
+
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+WORKDIR /src
+
+# It's important to keep lines from here down to "COPY . ." identical in all Dockerfiles
+# to take advantage of Docker's build cache, to speed up local container builds
+COPY "eShopOnContainers-ServicesAndWebApps.sln" "eShopOnContainers-ServicesAndWebApps.sln"
+
+COPY "ApiGateways/Mobile.Bff.Shopping/aggregator/Mobile.Shopping.HttpAggregator.csproj" "ApiGateways/Mobile.Bff.Shopping/aggregator/Mobile.Shopping.HttpAggregator.csproj"
+COPY "ApiGateways/Web.Bff.Shopping/aggregator/Web.Shopping.HttpAggregator.csproj" "ApiGateways/Web.Bff.Shopping/aggregator/Web.Shopping.HttpAggregator.csproj"
+COPY "BuildingBlocks/Devspaces.Support/Devspaces.Support.csproj" "BuildingBlocks/Devspaces.Support/Devspaces.Support.csproj"
+COPY "BuildingBlocks/EventBus/EventBus/EventBus.csproj" "BuildingBlocks/EventBus/EventBus/EventBus.csproj"
+COPY "BuildingBlocks/EventBus/EventBus.Tests/EventBus.Tests.csproj" "BuildingBlocks/EventBus/EventBus.Tests/EventBus.Tests.csproj"
+COPY "BuildingBlocks/EventBus/EventBusRabbitMQ/EventBusRabbitMQ.csproj" "BuildingBlocks/EventBus/EventBusRabbitMQ/EventBusRabbitMQ.csproj"
+COPY "BuildingBlocks/EventBus/EventBusServiceBus/EventBusServiceBus.csproj" "BuildingBlocks/EventBus/EventBusServiceBus/EventBusServiceBus.csproj"
+COPY "BuildingBlocks/EventBus/IntegrationEventLogEF/IntegrationEventLogEF.csproj" "BuildingBlocks/EventBus/IntegrationEventLogEF/IntegrationEventLogEF.csproj"
+COPY "BuildingBlocks/WebHostCustomization/WebHost.Customization/WebHost.Customization.csproj" "BuildingBlocks/WebHostCustomization/WebHost.Customization/WebHost.Customization.csproj"
+COPY "Services/Basket/Basket.API/Basket.API.csproj" "Services/Basket/Basket.API/Basket.API.csproj"
+COPY "Services/Basket/Basket.FunctionalTests/Basket.FunctionalTests.csproj" "Services/Basket/Basket.FunctionalTests/Basket.FunctionalTests.csproj"
+COPY "Services/Basket/Basket.UnitTests/Basket.UnitTests.csproj" "Services/Basket/Basket.UnitTests/Basket.UnitTests.csproj"
+COPY "Services/Catalog/Catalog.API/Catalog.API.csproj" "Services/Catalog/Catalog.API/Catalog.API.csproj"
+COPY "Services/Catalog/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj" "Services/Catalog/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj"
+COPY "Services/Catalog/Catalog.UnitTests/Catalog.UnitTests.csproj" "Services/Catalog/Catalog.UnitTests/Catalog.UnitTests.csproj"
+COPY "Services/Identity/Identity.API/Identity.API.csproj" "Services/Identity/Identity.API/Identity.API.csproj"
+COPY "Services/Ordering/Ordering.API/Ordering.API.csproj" "Services/Ordering/Ordering.API/Ordering.API.csproj"
+COPY "Services/Ordering/Ordering.BackgroundTasks/Ordering.BackgroundTasks.csproj" "Services/Ordering/Ordering.BackgroundTasks/Ordering.BackgroundTasks.csproj"
+COPY "Services/Ordering/Ordering.Domain/Ordering.Domain.csproj" "Services/Ordering/Ordering.Domain/Ordering.Domain.csproj"
+COPY "Services/Ordering/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj" "Services/Ordering/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj"
+COPY "Services/Ordering/Ordering.Infrastructure/Ordering.Infrastructure.csproj" "Services/Ordering/Ordering.Infrastructure/Ordering.Infrastructure.csproj"
+COPY "Services/Ordering/Ordering.SignalrHub/Ordering.SignalrHub.csproj" "Services/Ordering/Ordering.SignalrHub/Ordering.SignalrHub.csproj"
+COPY "Services/Ordering/Ordering.UnitTests/Ordering.UnitTests.csproj" "Services/Ordering/Ordering.UnitTests/Ordering.UnitTests.csproj"
+COPY "Services/Payment/Payment.API/Payment.API.csproj" "Services/Payment/Payment.API/Payment.API.csproj"
+COPY "Services/Webhooks/Webhooks.API/Webhooks.API.csproj" "Services/Webhooks/Webhooks.API/Webhooks.API.csproj"
+COPY "Tests/Services/Application.FunctionalTests/Application.FunctionalTests.csproj" "Tests/Services/Application.FunctionalTests/Application.FunctionalTests.csproj"
+COPY "Web/WebhookClient/WebhookClient.csproj" "Web/WebhookClient/WebhookClient.csproj"
+COPY "Web/WebMVC/WebMVC.csproj" "Web/WebMVC/WebMVC.csproj"
+COPY "Web/WebSPA/WebSPA.csproj" "Web/WebSPA/WebSPA.csproj"
+COPY "Web/WebStatus/WebStatus.csproj" "Web/WebStatus/WebStatus.csproj"
+
+COPY "docker-compose.dcproj" "docker-compose.dcproj"
+
+COPY "NuGet.config" "NuGet.config"
+
+RUN dotnet restore "eShopOnContainers-ServicesAndWebApps.sln"
+
+COPY . .
+WORKDIR /src/ApiGateways/Mobile.Bff.Shopping/aggregator
+RUN dotnet publish --no-restore -c Release -o /app
+
+FROM build AS publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app .
+ENTRYPOINT ["dotnet", "Mobile.Shopping.HttpAggregator.dll"]
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Dockerfile.develop
+FROM mcr.microsoft.com/dotnet/sdk:7.0
+ARG BUILD_CONFIGURATION=Debug
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV DOTNET_USE_POLLING_FILE_WATCHER=true
+EXPOSE 80
+
+WORKDIR /src
+COPY ["src/ApiGateways/Mobile.Bff.Shopping/aggregator/Mobile.Shopping.HttpAggregator.csproj", "src/ApiGateways/Mobile.Bff.Shopping/aggregator/"]
+COPY ["src/BuildingBlocks/Devspaces.Support/Devspaces.Support.csproj", "src/BuildingBlocks/Devspaces.Support/"]
+COPY ["src/NuGet.config", "src/NuGet.config"]
+
+RUN dotnet restore src/ApiGateways/Mobile.Bff.Shopping/aggregator/Mobile.Shopping.HttpAggregator.csproj -nowarn:msb3202,nu1503
+COPY . .
+WORKDIR "/src/src/ApiGateways/Mobile.Bff.Shopping/aggregator"
+RUN dotnet build -c $BUILD_CONFIGURATION
+
+CMD ["dotnet", "run", "--no-build", "--no-launch-profile", "-c", "$BUILD_CONFIGURATION", "--"]]
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Filters\AuthorizeCheckOperationFilter.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Filters
+{
+    namespace Basket.API.Infrastructure.Filters
+    {
+        public class AuthorizeCheckOperationFilter : IOperationFilter
+        {
+            public void Apply(OpenApiOperation operation, OperationFilterContext context)
+            {
+                // Check for authorize attribute
+                var hasAuthorize = context.MethodInfo.DeclaringType.GetCustomAttributes(true).OfType<AuthorizeAttribute>().Any() ||
+                                   context.MethodInfo.GetCustomAttributes(true).OfType<AuthorizeAttribute>().Any();
+
+                if (!hasAuthorize) return;
+
+                operation.Responses.TryAdd("401", new OpenApiResponse { Description = "Unauthorized" });
+                operation.Responses.TryAdd("403", new OpenApiResponse { Description = "Forbidden" });
+
+                var oAuthScheme = new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oauth2" }
+                };
+
+                operation.Security = new List<OpenApiSecurityRequirement>
+                {
+                    new()
+                    {
+                        [ oAuthScheme ] = new [] { "Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator" }
+                    }
+                };
+            }
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\GlobalUsings.cs
+global using CatalogApi;
+global using Devspaces.Support;
+global using Grpc.Core.Interceptors;
+global using Grpc.Core;
+global using GrpcBasket;
+global using GrpcOrdering;
+global using HealthChecks.UI.Client;
+global using Microsoft.AspNetCore.Authentication.JwtBearer;
+global using Microsoft.AspNetCore.Authentication;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Builder;
+global using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+global using Microsoft.AspNetCore.Hosting;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.AspNetCore;
+global using Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Config;
+global using Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Filters.Basket.API.Infrastructure.Filters;
+global using Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Infrastructure;
+global using Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Models;
+global using Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Services;
+global using Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Diagnostics.HealthChecks;
+global using Microsoft.Extensions.Hosting;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;
+global using Microsoft.OpenApi.Models;
+global using Serilog;
+global using Swashbuckle.AspNetCore.SwaggerGen;
+global using System.Collections.Generic;
+global using System.IdentityModel.Tokens.Jwt;
+global using System.Linq;
+global using System.Net.Http.Headers;
+global using System.Net.Http;
+global using System.Net;
+global using System.Text.Json;
+global using System.Threading.Tasks;
+global using System.Threading;
+global using System;
+global using Microsoft.IdentityModel.Tokens;
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Infrastructure\GrpcExceptionInterceptor.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Infrastructure;
+
+public class GrpcExceptionInterceptor : Interceptor
+{
+    private readonly ILogger<GrpcExceptionInterceptor> _logger;
+
+    public GrpcExceptionInterceptor(ILogger<GrpcExceptionInterceptor> logger)
+    {
+        _logger = logger;
+    }
+
+    public override AsyncUnaryCall<TResponse> AsyncUnaryCall<TRequest, TResponse>(
+        TRequest request,
+        ClientInterceptorContext<TRequest, TResponse> context,
+        AsyncUnaryCallContinuation<TRequest, TResponse> continuation)
+    {
+        var call = continuation(request, context);
+
+        return new AsyncUnaryCall<TResponse>(HandleResponse(call.ResponseAsync), call.ResponseHeadersAsync, call.GetStatus, call.GetTrailers, call.Dispose);
+    }
+
+    private async Task<TResponse> HandleResponse<TResponse>(Task<TResponse> t)
+    {
+        try
+        {
+            var response = await t;
+            return response;
+        }
+        catch (RpcException e)
+        {
+            _logger.LogError("Error calling via grpc: {Status} - {Message}", e.Status, e.Message);
+            return default;
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Infrastructure\HttpClientAuthorizationDelegatingHandler.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Infrastructure;
+
+public class HttpClientAuthorizationDelegatingHandler : DelegatingHandler
+{
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILogger<HttpClientAuthorizationDelegatingHandler> _logger;
+
+    public HttpClientAuthorizationDelegatingHandler(IHttpContextAccessor httpContextAccessor, ILogger<HttpClientAuthorizationDelegatingHandler> logger)
+    {
+        _httpContextAccessor = httpContextAccessor;
+        _logger = logger;
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        request.Version = new System.Version(2, 0);
+        request.Method = HttpMethod.Get;
+
+        var authorizationHeader = _httpContextAccessor.HttpContext
+            .Request.Headers["Authorization"];
+
+        if (!string.IsNullOrEmpty(authorizationHeader))
+        {
+            request.Headers.Add("Authorization", new List<string>() { authorizationHeader });
+        }
+
+        var token = await GetToken();
+
+        if (token != null)
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        return await base.SendAsync(request, cancellationToken);
+    }
+
+    async Task<string> GetToken()
+    {
+        const string ACCESS_TOKEN = "access_token";
+
+        return await _httpContextAccessor.HttpContext
+            .GetTokenAsync(ACCESS_TOKEN);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Mobile.Shopping.HttpAggregator.csproj
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <AssemblyName>Mobile.Shopping.HttpAggregator</AssemblyName>
+    <RootNamespace>Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator</RootNamespace>
+    <DockerComposeProjectPath>..\..\..\docker-compose.dcproj</DockerComposeProjectPath>
+    <GenerateErrorForMissingTargetingPacks>false</GenerateErrorForMissingTargetingPacks>
+    <IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="6.0.5" />
+    <PackageReference Include="AspNetCore.HealthChecks.Uris" Version="6.0.3" />
+    <PackageReference Include="Google.Protobuf" Version="3.21.9" />
+    <PackageReference Include="Grpc.AspNetCore.Server.ClientFactory" Version="2.50.0" />
+    <PackageReference Include="Grpc.Core" Version="2.46.5" />
+    <PackageReference Include="Grpc.Net.ClientFactory" Version="2.50.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.51.0-pre1" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.HealthChecks" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="7.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="6.1.0-dev-00289" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.1-dev-00896" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Devspaces.Support\Devspaces.Support.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="..\..\..\Services\Basket\Basket.API\Proto\basket.proto" GrpcServices="Client" />
+    <Protobuf Include="..\..\..\Services\Catalog\Catalog.API\Proto\catalog.proto" GrpcServices="Client" />
+    <Protobuf Include="..\..\..\Services\Ordering\Ordering.API\Proto\ordering.proto" GrpcServices="Client" />
+  </ItemGroup>
+
+</Project>
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Models\AddBasketItemRequest.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Models;
+
+public class AddBasketItemRequest
+{
+    public int CatalogItemId { get; set; }
+
+    public string BasketId { get; set; }
+
+    public int Quantity { get; set; }
+
+    public AddBasketItemRequest()
+    {
+        Quantity = 1;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Models\BasketData.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Models;
+
+public class BasketData
+{
+    public string BuyerId { get; set; }
+
+    public List<BasketDataItem> Items { get; set; } = new();
+
+    public BasketData()
+    {
+    }
+
+    public BasketData(string buyerId)
+    {
+        BuyerId = buyerId;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Models\BasketDataItem.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Models;
+
+public class BasketDataItem
+{
+    public string Id { get; set; }
+
+    public int ProductId { get; set; }
+
+    public string ProductName { get; set; }
+
+    public decimal UnitPrice { get; set; }
+
+    public decimal OldUnitPrice { get; set; }
+
+    public int Quantity { get; set; }
+
+    public string PictureUrl { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Models\CatalogItem.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Models;
+
+public class CatalogItem
+{
+    public int Id { get; set; }
+
+    public string Name { get; set; }
+
+    public decimal Price { get; set; }
+
+    public string PictureUri { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Models\OrderData.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Models;
+
+public class OrderData
+{
+    public string OrderNumber { get; set; }
+
+    public DateTime Date { get; set; }
+
+    public string Status { get; set; }
+
+    public decimal Total { get; set; }
+
+    public string Description { get; set; }
+
+    public string City { get; set; }
+
+    public string Street { get; set; }
+
+    public string State { get; set; }
+
+    public string Country { get; set; }
+
+    public string ZipCode { get; set; }
+
+    public string CardNumber { get; set; }
+
+    public string CardHolderName { get; set; }
+
+    public bool IsDraft { get; set; }
+
+    public DateTime CardExpiration { get; set; }
+
+    public string CardExpirationShort { get; set; }
+
+    public string CardSecurityNumber { get; set; }
+
+    public int CardTypeId { get; set; }
+
+    public string Buyer { get; set; }
+
+    public List<OrderItemData> OrderItems { get; } = new();
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Models\OrderItemData.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Models;
+
+public class OrderItemData
+{
+    public int ProductId { get; set; }
+
+    public string ProductName { get; set; }
+
+    public decimal UnitPrice { get; set; }
+
+    public decimal Discount { get; set; }
+
+    public int Units { get; set; }
+
+    public string PictureUrl { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Models\UpdateBasketItemData.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Models;
+
+public class UpdateBasketItemData
+{
+    public string BasketItemId { get; set; }
+
+    public int NewQty { get; set; }
+
+    public UpdateBasketItemData()
+    {
+        NewQty = 0;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Models\UpdateBasketItemsRequest.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Models;
+
+public class UpdateBasketItemsRequest
+{
+
+    public string BasketId { get; set; }
+
+    public ICollection<UpdateBasketItemData> Updates { get; set; }
+
+    public UpdateBasketItemsRequest()
+    {
+        Updates = new List<UpdateBasketItemData>();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Models\UpdateBasketRequest.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Models;
+
+public class UpdateBasketRequest
+{
+    public string BuyerId { get; set; }
+
+    public IEnumerable<UpdateBasketRequestItemData> Items { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Models\UpdateBasketRequestItemData.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Models;
+
+public class UpdateBasketRequestItemData
+{
+    public string Id { get; set; }          // Basket id
+
+    public int ProductId { get; set; }      // Catalog item id
+
+    public int Quantity { get; set; }       // Quantity
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Program.cs
+await ﻿BuildWebHost(args).RunAsync();
+IWebHost BuildWebHost(string[] args) =>
+    WebHost
+        .CreateDefaultBuilder(args)
+        .ConfigureAppConfiguration(cb =>
+        {
+            var sources = cb.Sources;
+            sources.Insert(3, new Microsoft.Extensions.Configuration.Json.JsonConfigurationSource()
+            {
+                Optional = true,
+                Path = "appsettings.localhost.json",
+                ReloadOnChange = false
+            });
+        })
+        .UseStartup<Startup>()
+        .UseSerilog((builderContext, config) =>
+        {
+            config
+                .MinimumLevel.Information()
+                .Enrich.FromLogContext()
+                .WriteTo.Console();
+        })
+        .Build();
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Properties\launchSettings.json
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:57425/",
+      "sslPort": 0
+    }
+  },
+  "profiles": {
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "launchUrl": "api/values",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "PurchaseForMvc": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "api/values",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://localhost:61632/"
+    },
+    "Azure Dev Spaces": {
+      "commandName": "AzureDevSpaces",
+      "launchBrowser": true,
+      "resourceGroup": "eshoptestedu",
+      "aksName": "eshoptestedu",
+      "subscriptionId": "e3035ac1-c06c-4daf-8939-57b3c5f1f759"
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Services\BasketService.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Services;
+
+public class BasketService : IBasketService
+{
+    private readonly Basket.BasketClient _basketClient;
+    private readonly ILogger<BasketService> _logger;
+
+    public BasketService(Basket.BasketClient basketClient, ILogger<BasketService> logger)
+    {
+        _basketClient = basketClient;
+        _logger = logger;
+    }
+
+    public async Task<BasketData> GetByIdAsync(string id)
+    {
+        _logger.LogDebug("grpc client created, request = {@id}", id);
+        var response = await _basketClient.GetBasketByIdAsync(new BasketRequest { Id = id });
+        _logger.LogDebug("grpc response {@response}", response);
+
+        return MapToBasketData(response);
+    }
+
+    public async Task UpdateAsync(BasketData currentBasket)
+    {
+        _logger.LogDebug("Grpc update basket currentBasket {@currentBasket}", currentBasket);
+        var request = MapToCustomerBasketRequest(currentBasket);
+        _logger.LogDebug("Grpc update basket request {@request}", request);
+
+        await _basketClient.UpdateBasketAsync(request);
+    }
+
+    private BasketData MapToBasketData(CustomerBasketResponse customerBasketRequest)
+    {
+        if (customerBasketRequest == null)
+        {
+            return null;
+        }
+
+        var map = new BasketData
+        {
+            BuyerId = customerBasketRequest.Buyerid
+        };
+
+        customerBasketRequest.Items.ToList().ForEach(item => map.Items.Add(new BasketDataItem
+        {
+            Id = item.Id,
+            OldUnitPrice = (decimal)item.Oldunitprice,
+            PictureUrl = item.Pictureurl,
+            ProductId = item.Productid,
+            ProductName = item.Productname,
+            Quantity = item.Quantity,
+            UnitPrice = (decimal)item.Unitprice
+        }));
+
+        return map;
+    }
+
+    private CustomerBasketRequest MapToCustomerBasketRequest(BasketData basketData)
+    {
+        if (basketData == null)
+        {
+            return null;
+        }
+
+        var map = new CustomerBasketRequest
+        {
+            Buyerid = basketData.BuyerId
+        };
+
+        basketData.Items.ToList().ForEach(item => map.Items.Add(new BasketItemResponse
+        {
+            Id = item.Id,
+            Oldunitprice = (double)item.OldUnitPrice,
+            Pictureurl = item.PictureUrl,
+            Productid = item.ProductId,
+            Productname = item.ProductName,
+            Quantity = item.Quantity,
+            Unitprice = (double)item.UnitPrice
+        }));
+
+        return map;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Services\CatalogService.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Services;
+
+public class CatalogService : ICatalogService
+{
+    private readonly Catalog.CatalogClient _client;
+
+    public CatalogService(Catalog.CatalogClient client)
+    {
+        _client = client;
+    }
+
+    public async Task<CatalogItem> GetCatalogItemAsync(int id)
+    {
+        var request = new CatalogItemRequest { Id = id };
+        var response = await _client.GetItemByIdAsync(request);
+        return MapToCatalogItemResponse(response);
+    }
+
+    public async Task<IEnumerable<CatalogItem>> GetCatalogItemsAsync(IEnumerable<int> ids)
+    {
+        var request = new CatalogItemsRequest { Ids = string.Join(",", ids), PageIndex = 1, PageSize = 10 };
+        var response = await _client.GetItemsByIdsAsync(request);
+        return response.Data.Select(MapToCatalogItemResponse);
+    }
+
+    private CatalogItem MapToCatalogItemResponse(CatalogItemResponse catalogItemResponse)
+    {
+        return new CatalogItem
+        {
+            Id = catalogItemResponse.Id,
+            Name = catalogItemResponse.Name,
+            PictureUri = catalogItemResponse.PictureUri,
+            Price = (decimal)catalogItemResponse.Price
+        };
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Services\IBasketService.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Services;
+
+public interface IBasketService
+{
+    Task<BasketData> GetByIdAsync(string id);
+
+    Task UpdateAsync(BasketData currentBasket);
+
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Services\ICatalogService.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Services;
+
+public interface ICatalogService
+{
+    Task<CatalogItem> GetCatalogItemAsync(int id);
+
+    Task<IEnumerable<CatalogItem>> GetCatalogItemsAsync(IEnumerable<int> ids);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Services\IOrderApiClient.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Services;
+
+public interface IOrderApiClient
+{
+    Task<OrderData> GetOrderDraftFromBasketAsync(BasketData basket);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Services\IOrderingService.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Services;
+
+public interface IOrderingService
+{
+    Task<OrderData> GetOrderDraftAsync(BasketData basketData);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Services\OrderApiClient.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Services;
+
+public class OrderApiClient : IOrderApiClient
+{
+    private readonly HttpClient _apiClient;
+    private readonly ILogger<OrderApiClient> _logger;
+    private readonly UrlsConfig _urls;
+
+    public OrderApiClient(HttpClient httpClient, ILogger<OrderApiClient> logger, IOptions<UrlsConfig> config)
+    {
+        _apiClient = httpClient;
+        _logger = logger;
+        _urls = config.Value;
+    }
+
+    public async Task<OrderData> GetOrderDraftFromBasketAsync(BasketData basket)
+    {
+        var uri = _urls.Orders + UrlsConfig.OrdersOperations.GetOrderDraft();
+        var content = new StringContent(JsonSerializer.Serialize(basket), System.Text.Encoding.UTF8, "application/json");
+        var response = await _apiClient.PostAsync(uri, content);
+
+        response.EnsureSuccessStatusCode();
+
+        var ordersDraftResponse = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<OrderData>(ordersDraftResponse, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Services\OrderingService.cs
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator.Services;
+
+public class OrderingService : IOrderingService
+{
+    private readonly OrderingGrpc.OrderingGrpcClient _orderingGrpcClient;
+    private readonly ILogger<OrderingService> _logger;
+
+    public OrderingService(OrderingGrpc.OrderingGrpcClient orderingGrpcClient, ILogger<OrderingService> logger)
+    {
+        _orderingGrpcClient = orderingGrpcClient;
+        _logger = logger;
+    }
+
+    public async Task<OrderData> GetOrderDraftAsync(BasketData basketData)
+    {
+        _logger.LogDebug(" grpc client created, basketData={@basketData}", basketData);
+
+        var command = MapToOrderDraftCommand(basketData);
+        var response = await _orderingGrpcClient.CreateOrderDraftFromBasketDataAsync(command);
+        _logger.LogDebug(" grpc response: {@response}", response);
+
+        return MapToResponse(response, basketData);
+    }
+
+    private OrderData MapToResponse(GrpcOrdering.OrderDraftDTO orderDraft, BasketData basketData)
+    {
+        if (orderDraft == null)
+        {
+            return null;
+        }
+
+        var data = new OrderData
+        {
+            Buyer = basketData.BuyerId,
+            Total = (decimal)orderDraft.Total,
+        };
+
+        orderDraft.OrderItems.ToList().ForEach(o => data.OrderItems.Add(new OrderItemData
+        {
+            Discount = (decimal)o.Discount,
+            PictureUrl = o.PictureUrl,
+            ProductId = o.ProductId,
+            ProductName = o.ProductName,
+            UnitPrice = (decimal)o.UnitPrice,
+            Units = o.Units,
+        }));
+
+        return data;
+    }
+
+    private CreateOrderDraftCommand MapToOrderDraftCommand(BasketData basketData)
+    {
+        var command = new CreateOrderDraftCommand
+        {
+            BuyerId = basketData.BuyerId,
+        };
+
+        basketData.Items.ForEach(i => command.Items.Add(new BasketItem
+        {
+            Id = i.Id,
+            OldUnitPrice = (double)i.OldUnitPrice,
+            PictureUrl = i.PictureUrl,
+            ProductId = i.ProductId,
+            ProductName = i.ProductName,
+            Quantity = i.Quantity,
+            UnitPrice = (double)i.UnitPrice,
+        }));
+
+        return command;
+    }
+
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\Startup.cs
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+
+namespace Microsoft.eShopOnContainers.Mobile.Shopping.HttpAggregator;
+
+public class Startup
+{
+    public Startup(IConfiguration configuration)
+    {
+        Configuration = configuration;
+    }
+
+    public IConfiguration Configuration { get; }
+
+    // This method gets called by the runtime. Use this method to add services to the container.
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy())
+            .AddUrlGroup(new Uri(Configuration["CatalogUrlHC"]), name: "catalogapi-check", tags: new string[] { "catalogapi" })
+            .AddUrlGroup(new Uri(Configuration["OrderingUrlHC"]), name: "orderingapi-check", tags: new string[] { "orderingapi" })
+            .AddUrlGroup(new Uri(Configuration["BasketUrlHC"]), name: "basketapi-check", tags: new string[] { "basketapi" })
+            .AddUrlGroup(new Uri(Configuration["IdentityUrlHC"]), name: "identityapi-check", tags: new string[] { "identityapi" })
+            .AddUrlGroup(new Uri(Configuration["PaymentUrlHC"]), name: "paymentapi-check", tags: new string[] { "paymentapi" });
+
+        services.AddCustomMvc(Configuration)
+                .AddCustomAuthentication(Configuration)
+                .AddDevspaces()
+                .AddHttpServices()
+                .AddGrpcServices();
+    }
+
+    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
+    {
+        var pathBase = Configuration["PATH_BASE"];
+
+        if (!string.IsNullOrEmpty(pathBase))
+        {
+            loggerFactory.CreateLogger<Startup>().LogDebug("Using PATH BASE '{pathBase}'", pathBase);
+            app.UsePathBase(pathBase); // зачем
+        }
+
+        if (env.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+        }
+
+        app.UseSwagger().UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint($"{ (!string.IsNullOrEmpty(pathBase) ? pathBase : string.Empty) }/swagger/v1/swagger.json", "Purchase BFF V1");
+
+            c.OAuthClientId("mobileshoppingaggswaggerui"); //посмотреть
+            c.OAuthClientSecret(string.Empty);
+            c.OAuthRealm(string.Empty);
+            c.OAuthAppName("Purchase BFF Swagger UI");
+        });
+
+        app.UseRouting();
+        app.UseCors("CorsPolicy");
+        app.UseAuthentication();
+        app.UseAuthorization();
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapDefaultControllerRoute();
+            endpoints.MapControllers();
+            endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
+            {
+                Predicate = _ => true, // вернет true без теста на ошибку
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
+            endpoints.MapHealthChecks("/liveness", new HealthCheckOptions
+            {
+                Predicate = r => r.Name.Contains("self")
+            });
+        });
+    }
+}
+
+public static class ServiceCollectionExtensions
+{
+    public static IServiceCollection AddCustomMvc(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions();
+        services.Configure<UrlsConfig>(configuration.GetSection("urls"));
+
+        services.AddControllers()
+                .AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true);
+
+        services.AddSwaggerGen(options =>
+        {
+            //options.DescribeAllEnumsAsStrings();
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "Shopping Aggregator for Mobile Clients",
+                Version = "v1",
+                Description = "Shopping Aggregator for Mobile Clients"
+            });
+            options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.OAuth2,
+                Flows = new OpenApiOAuthFlows()
+                {
+                    Implicit = new OpenApiOAuthFlow()
+                    {
+                        AuthorizationUrl = new Uri($"{configuration.GetValue<string>("IdentityUrlExternal")}/connect/authorize"),
+                        TokenUrl = new Uri($"{configuration.GetValue<string>("IdentityUrlExternal")}/connect/token"),
+
+                        Scopes = new Dictionary<string, string>()
+                        {
+                            { "mobileshoppingagg", "Shopping Aggregator for Mobile Clients" }
+                        }
+                    }
+                }
+            });
+
+            options.OperationFilter<AuthorizeCheckOperationFilter>();
+        });
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("CorsPolicy",
+                builder => builder
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .SetIsOriginAllowed((host) => true)
+                .AllowCredentials());
+        });
+
+        return services;
+    }
+    public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, IConfiguration configuration)
+    {
+        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Remove("sub");
+
+        var identityUrl = configuration.GetValue<string>("urls:identity");// get from appsettings.localhost.json
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+
+        })
+        .AddJwtBearer(options =>
+        {
+            options.Authority = identityUrl;
+            options.RequireHttpsMetadata = false;
+            options.Audience = "mobileshoppingagg";
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false
+            };
+        });
+
+        return services;
+    }
+    public static IServiceCollection AddCustomAuthorization(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("ApiScope", policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.RequireClaim("scope", "mobileshoppingagg");
+            });
+        });
+        return services;
+    }
+
+    public static IServiceCollection AddHttpServices(this IServiceCollection services)
+    {
+        //register delegating handlers
+        services.AddTransient<HttpClientAuthorizationDelegatingHandler>();
+        services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+        //register http services
+
+        services.AddHttpClient<IOrderApiClient, OrderApiClient>()
+                .AddDevspacesSupport();
+
+        return services;
+    }
+
+    public static IServiceCollection AddGrpcServices(this IServiceCollection services)
+    {
+        services.AddTransient<GrpcExceptionInterceptor>();
+
+        services.AddScoped<IBasketService, BasketService>();
+
+        services.AddGrpcClient<Basket.BasketClient>((services, options) =>
+        {
+            var basketApi = services.GetRequiredService<IOptions<UrlsConfig>>().Value.GrpcBasket;
+            options.Address = new Uri(basketApi);
+        }).AddInterceptor<GrpcExceptionInterceptor>();
+
+        services.AddScoped<ICatalogService, CatalogService>();
+
+        services.AddGrpcClient<Catalog.CatalogClient>((services, options) =>
+        {
+            var catalogApi = services.GetRequiredService<IOptions<UrlsConfig>>().Value.GrpcCatalog;
+            options.Address = new Uri(catalogApi);
+        }).AddInterceptor<GrpcExceptionInterceptor>();
+
+        services.AddScoped<IOrderingService, OrderingService>();
+
+        services.AddGrpcClient<OrderingGrpc.OrderingGrpcClient>((services, options) =>
+        {
+            var orderingApi = services.GetRequiredService<IOptions<UrlsConfig>>().Value.GrpcOrdering;
+            options.Address = new Uri(orderingApi);
+        }).AddInterceptor<GrpcExceptionInterceptor>();
+
+        return services;
+    }
+
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\aggregator\values.dev.yaml
+ingress:
+  enabled: true
+  tls: []
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\apigw\azds.yaml
+kind: helm-release
+apiVersion: 1.1
+build:
+  context: ..\..\..\..\
+  dockerfile: ..\..\..\ApiGateways\ApiGw-Base\Dockerfile
+install:
+  chart: ../../../../k8s/helm/apigwms
+  set:
+    replicaCount: 1
+    image:
+      tag: $(tag)
+      pullPolicy: Never
+    ingress:
+      annotations:
+        kubernetes.io/ingress.class: traefik-azds
+      hosts:
+      # This expands to [space.s.]webmvc.<guid>.<region>.aksapp.io
+      - $(spacePrefix)eshop$(hostSuffix)
+    inf:
+      k8s:
+        dns: $(spacePrefix)eshop$(hostSuffix)      
+  values:
+  - values.dev.yaml?
+  - secrets.dev.yaml?
+  - inf.yaml
+  - app.yaml
+configurations:
+  develop:
+    build:
+      useGitIgnore: true
+      dockerfile: ..\..\..\ApiGateways\ApiGw-Base\Dockerfile.develop
+      args:
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Debug}
+    container:
+      sync:
+      - '**/Pages/**'
+      - '**/Views/**'
+      - '**/wwwroot/**'
+      - '!**/*.{sln,csproj}'
+      command: [dotnet, run, --no-restore, --no-build, --no-launch-profile, -c, "${BUILD_CONFIGURATION:-Debug}"]
+      iterate:
+        processesToKill: [dotnet, vsdbg]
+        buildCommands:
+        - [dotnet, build, --no-restore, -c, "${BUILD_CONFIGURATION:-Debug}"]
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\apigw\configuration.json
+{
+    "ReRoutes": [
+      {
+        "DownstreamPathTemplate": "/api/{version}/{everything}",
+        "DownstreamScheme": "http",
+        "DownstreamHostAndPorts": [
+          {
+            "Host": "catalog.api",
+            "Port": 80
+          }
+        ],
+        "UpstreamPathTemplate": "/api/{version}/c/{everything}",
+        "UpstreamHttpMethod": [ "GET" ]
+      },
+      {
+        "DownstreamPathTemplate": "/api/{version}/{everything}",
+        "DownstreamScheme": "http",
+        "DownstreamHostAndPorts": [
+          {
+            "Host": "basket.api",
+            "Port": 80
+          }
+        ],
+        "UpstreamPathTemplate": "/api/{version}/b/{everything}",
+        "UpstreamHttpMethod": [],
+        "AuthenticationOptions": {
+          "AuthenticationProviderKey": "IdentityApiKey",
+          "AllowedScopes": []
+        }
+      },
+      {
+        "DownstreamPathTemplate": "/api/{version}/{everything}",
+        "DownstreamScheme": "http",
+        "DownstreamHostAndPorts": [
+          {
+            "Host": "ordering.api",
+            "Port": 80
+          }
+        ],
+        "UpstreamPathTemplate": "/api/{version}/o/{everything}",
+        "UpstreamHttpMethod": [],
+        "AuthenticationOptions": {
+          "AuthenticationProviderKey": "IdentityApiKey",
+          "AllowedScopes": []
+        }
+      },
+      {
+        "DownstreamPathTemplate": "/{everything}",
+        "DownstreamScheme": "http",
+        "DownstreamHostAndPorts": [
+          {
+            "Host": "mobileshoppingagg",
+            "Port": 80
+          }
+        ],
+        "UpstreamPathTemplate": "/{everything}",
+        "UpstreamHttpMethod": [ "POST", "PUT", "GET" ],
+        "AuthenticationOptions": {
+          "AuthenticationProviderKey": "IdentityApiKey",
+          "AllowedScopes": []
+        }
+      },
+      {
+        "DownstreamPathTemplate": "/{everything}",
+        "DownstreamScheme": "http",
+        "DownstreamHostAndPorts": [
+          {
+            "Host": "ordering.api",
+            "Port": 80
+          }
+        ],
+        "UpstreamPathTemplate": "/orders-api/{everything}",
+        "UpstreamHttpMethod": []
+      },
+      {
+        "DownstreamPathTemplate": "/{everything}",
+        "DownstreamScheme": "http",
+        "DownstreamHostAndPorts": [
+          {
+            "Host": "basket.api",
+            "Port": 80
+          }
+        ],
+        "UpstreamPathTemplate": "/basket-api/{everything}",
+        "UpstreamHttpMethod": []
+      },
+      {
+        "DownstreamPathTemplate": "/{everything}",
+        "DownstreamScheme": "http",
+        "DownstreamHostAndPorts": [
+          {
+            "Host": "catalog.api",
+            "Port": 80
+          }
+        ],
+        "UpstreamPathTemplate": "/catalog-api/{everything}",
+        "UpstreamHttpMethod": []
+      },
+      {
+        "DownstreamPathTemplate": "/{everything}",
+        "DownstreamScheme": "http",
+        "DownstreamHostAndPorts": [
+          {
+            "Host": "payment.api",
+            "Port": 80
+          }
+        ],
+        "UpstreamPathTemplate": "/payment-api/{everything}",
+        "UpstreamHttpMethod": []
+      }
+  
+    ],
+      "GlobalConfiguration": {
+        "RequestIdKey": "OcRequestId",
+        "AdministrationPath": "/administration"
+      }
+    }
+    
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\ApiGateways\Mobile.Bff.Shopping\apigw\values.dev.yaml
+ocelot:
+  configPath: /src/src/ApiGateways/ApiGw-Base/configuration
+
+

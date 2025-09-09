@@ -1,0 +1,972 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 25
+Address.cs
+
+Buyer.cs
+
+Ordering.Domain.csproj
+
+Entity.cs
+
+Enumeration.cs
+
+BuyerPaymentMethodVerifiedDomainEvent.cs
+OrderCancelledDomainEvent.cs
+OrderShippedDomainEvent.cs
+OrderStartedDomainEvent.cs
+OrderStatusChangedToAwaitingValidationDomainEvent.cs
+OrderStatusChangedToPaidDomainEvent.cs
+OrderStatusChangedToStockConfirmedDomainEvent.cs
+
+OrderingDomainException.cs
+
+OrderItem.cs
+
+PaymentMethod.cs
+
+ValueObject.cs
+
+Order.cs
+
+IBuyerRepository.cs
+IOrderRepository.cs
+IRepository.cs
+
+IAggregateRoot.cs
+
+OrderStatus.cs
+
+CardType.cs
+
+GlobalUsings.cs
+
+IUnitOfWork.cs
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\AggregatesModel\BuyerAggregate\Buyer.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.BuyerAggregate;
+
+public class Buyer
+    : Entity, IAggregateRoot
+{
+    public string IdentityGuid { get; private set; }
+
+    public string Name { get; private set; }
+
+    private List<PaymentMethod> _paymentMethods;
+
+    public IEnumerable<PaymentMethod> PaymentMethods => _paymentMethods.AsReadOnly();
+
+    protected Buyer()
+    {
+
+        _paymentMethods = new List<PaymentMethod>();
+    }
+
+    public Buyer(string identity, string name) : this()
+    {
+        IdentityGuid = !string.IsNullOrWhiteSpace(identity) ? identity : throw new ArgumentNullException(nameof(identity));
+        Name = !string.IsNullOrWhiteSpace(name) ? name : throw new ArgumentNullException(nameof(name));
+    }
+
+    public PaymentMethod VerifyOrAddPaymentMethod(
+        int cardTypeId, string alias, string cardNumber,
+        string securityNumber, string cardHolderName, DateTime expiration, int orderId)
+    {
+        var existingPayment = _paymentMethods
+            .SingleOrDefault(p => p.IsEqualTo(cardTypeId, cardNumber, expiration));
+
+        if (existingPayment != null)
+        {
+            AddDomainEvent(new BuyerAndPaymentMethodVerifiedDomainEvent(this, existingPayment, orderId));
+
+            return existingPayment;
+        }
+
+        var payment = new PaymentMethod(cardTypeId, alias, cardNumber, securityNumber, cardHolderName, expiration);
+
+        _paymentMethods.Add(payment);
+
+        AddDomainEvent(new BuyerAndPaymentMethodVerifiedDomainEvent(this, payment, orderId));
+
+        return payment;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\AggregatesModel\BuyerAggregate\CardType.cs
+using Microsoft.eShopOnContainers.Services.Ordering.Domain.SeedWork;
+
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.BuyerAggregate;
+
+public class CardType
+    : Enumeration
+{
+    public static CardType Amex = new(1, nameof(Amex));
+    public static CardType Visa = new(2, nameof(Visa));
+    public static CardType MasterCard = new(3, nameof(MasterCard));
+
+    public CardType(int id, string name)
+        : base(id, name)
+    {
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\AggregatesModel\BuyerAggregate\IBuyerRepository.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.BuyerAggregate;
+
+//This is just the RepositoryContracts or Interface defined at the Domain Layer
+//as requisite for the Buyer Aggregate
+
+public interface IBuyerRepository : IRepository<Buyer>
+{
+    Buyer Add(Buyer buyer);
+    Buyer Update(Buyer buyer);
+    Task<Buyer> FindAsync(string BuyerIdentityGuid);
+    Task<Buyer> FindByIdAsync(string id);
+}
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\AggregatesModel\BuyerAggregate\PaymentMethod.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.BuyerAggregate;
+
+public class PaymentMethod
+    : Entity
+{
+    private string _alias;
+    private string _cardNumber;
+    private string _securityNumber;
+    private string _cardHolderName;
+    private DateTime _expiration;
+
+    private int _cardTypeId;
+    public CardType CardType { get; private set; }
+
+
+    protected PaymentMethod() { }
+
+    public PaymentMethod(int cardTypeId, string alias, string cardNumber, string securityNumber, string cardHolderName, DateTime expiration)
+    {
+
+        _cardNumber = !string.IsNullOrWhiteSpace(cardNumber) ? cardNumber : throw new OrderingDomainException(nameof(cardNumber));
+        _securityNumber = !string.IsNullOrWhiteSpace(securityNumber) ? securityNumber : throw new OrderingDomainException(nameof(securityNumber));
+        _cardHolderName = !string.IsNullOrWhiteSpace(cardHolderName) ? cardHolderName : throw new OrderingDomainException(nameof(cardHolderName));
+
+        if (expiration < DateTime.UtcNow)
+        {
+            throw new OrderingDomainException(nameof(expiration));
+        }
+
+        _alias = alias;
+        _expiration = expiration;
+        _cardTypeId = cardTypeId;
+    }
+
+    public bool IsEqualTo(int cardTypeId, string cardNumber, DateTime expiration)
+    {
+        return _cardTypeId == cardTypeId
+            && _cardNumber == cardNumber
+            && _expiration == expiration;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\AggregatesModel\OrderAggregate\Address.cs
+using Microsoft.eShopOnContainers.Services.Ordering.Domain.SeedWork;
+
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
+
+public class Address : ValueObject
+{
+    public String Street { get; private set; }
+    public String City { get; private set; }
+    public String State { get; private set; }
+    public String Country { get; private set; }
+    public String ZipCode { get; private set; }
+
+    public Address() { }
+
+    public Address(string street, string city, string state, string country, string zipcode)
+    {
+        Street = street;
+        City = city;
+        State = state;
+        Country = country;
+        ZipCode = zipcode;
+    }
+
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        // Using a yield return statement to return each element one at a time
+        yield return Street;
+        yield return City;
+        yield return State;
+        yield return Country;
+        yield return ZipCode;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\AggregatesModel\OrderAggregate\IOrderRepository.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
+
+//This is just the RepositoryContracts or Interface defined at the Domain Layer
+//as requisite for the Order Aggregate
+
+public interface IOrderRepository : IRepository<Order>
+{
+    Order Add(Order order);
+
+    void Update(Order order);
+
+    Task<Order> GetAsync(int orderId);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\AggregatesModel\OrderAggregate\Order.cs
+using Microsoft.eShopOnContainers.Services.Ordering.Domain.Events;
+
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
+
+public class Order
+    : Entity, IAggregateRoot
+{
+    // DDD Patterns comment
+    // Using private fields, allowed since EF Core 1.1, is a much better encapsulation
+    // aligned with DDD Aggregates and Domain Entities (Instead of properties and property collections)
+    private DateTime _orderDate;
+
+    // Address is a Value Object pattern example persisted as EF Core 2.0 owned entity
+    public Address Address { get; private set; }
+
+    public int? GetBuyerId => _buyerId;
+    private int? _buyerId;
+
+    public OrderStatus OrderStatus { get; private set; }
+    private int _orderStatusId;
+
+    private string _description;
+
+
+
+    // Draft orders have this set to true. Currently we don't check anywhere the draft status of an Order, but we could do it if needed
+    private bool _isDraft;
+
+    // DDD Patterns comment
+    // Using a private collection field, better for DDD Aggregate's encapsulation
+    // so OrderItems cannot be added from "outside the AggregateRoot" directly to the collection,
+    // but only through the method OrderAggrergateRoot.AddOrderItem() which includes behaviour.
+    private readonly List<OrderItem> _orderItems;
+    public IReadOnlyCollection<OrderItem> OrderItems => _orderItems;
+
+    private int? _paymentMethodId;
+
+    public static Order NewDraft()
+    {
+        var order = new Order();
+        order._isDraft = true;
+        return order;
+    }
+
+    protected Order()
+    {
+        _orderItems = new List<OrderItem>();
+        _isDraft = false;
+    }
+
+    public Order(string userId, string userName, Address address, int cardTypeId, string cardNumber, string cardSecurityNumber,
+            string cardHolderName, DateTime cardExpiration, int? buyerId = null, int? paymentMethodId = null) : this()
+    {
+        _buyerId = buyerId;
+        _paymentMethodId = paymentMethodId;
+        _orderStatusId = OrderStatus.Submitted.Id;
+        _orderDate = DateTime.UtcNow;
+        Address = address;
+
+        // Add the OrderStarterDomainEvent to the domain events collection 
+        // to be raised/dispatched when comitting changes into the Database [ After DbContext.SaveChanges() ]
+        AddOrderStartedDomainEvent(userId, userName, cardTypeId, cardNumber,
+                                    cardSecurityNumber, cardHolderName, cardExpiration);
+    }
+
+    // DDD Patterns comment
+    // This Order AggregateRoot's method "AddOrderitem()" should be the only way to add Items to the Order,
+    // so any behavior (discounts, etc.) and validations are controlled by the AggregateRoot 
+    // in order to maintain consistency between the whole Aggregate. 
+    public void AddOrderItem(int productId, string productName, decimal unitPrice, decimal discount, string pictureUrl, int units = 1)
+    {
+        var existingOrderForProduct = _orderItems.Where(o => o.ProductId == productId)
+            .SingleOrDefault();
+
+        if (existingOrderForProduct != null)
+        {
+            //if previous line exist modify it with higher discount  and units..
+
+            if (discount > existingOrderForProduct.GetCurrentDiscount())
+            {
+                existingOrderForProduct.SetNewDiscount(discount);
+            }
+
+            existingOrderForProduct.AddUnits(units);
+        }
+        else
+        {
+            //add validated new order item
+
+            var orderItem = new OrderItem(productId, productName, unitPrice, discount, pictureUrl, units);
+            _orderItems.Add(orderItem);
+        }
+    }
+
+    public void SetPaymentId(int id)
+    {
+        _paymentMethodId = id;
+    }
+
+    public void SetBuyerId(int id)
+    {
+        _buyerId = id;
+    }
+
+    public void SetAwaitingValidationStatus()
+    {
+        if (_orderStatusId == OrderStatus.Submitted.Id)
+        {
+            AddDomainEvent(new OrderStatusChangedToAwaitingValidationDomainEvent(Id, _orderItems));
+            _orderStatusId = OrderStatus.AwaitingValidation.Id;
+        }
+    }
+
+    public void SetStockConfirmedStatus()
+    {
+        if (_orderStatusId == OrderStatus.AwaitingValidation.Id)
+        {
+            AddDomainEvent(new OrderStatusChangedToStockConfirmedDomainEvent(Id));
+
+            _orderStatusId = OrderStatus.StockConfirmed.Id;
+            _description = "All the items were confirmed with available stock.";
+        }
+    }
+
+    public void SetPaidStatus()
+    {
+        if (_orderStatusId == OrderStatus.StockConfirmed.Id)
+        {
+            AddDomainEvent(new OrderStatusChangedToPaidDomainEvent(Id, OrderItems));
+
+            _orderStatusId = OrderStatus.Paid.Id;
+            _description = "The payment was performed at a simulated \"American Bank checking bank account ending on XX35071\"";
+        }
+    }
+
+    public void SetShippedStatus()
+    {
+        if (_orderStatusId != OrderStatus.Paid.Id)
+        {
+            StatusChangeException(OrderStatus.Shipped);
+        }
+
+        _orderStatusId = OrderStatus.Shipped.Id;
+        _description = "The order was shipped.";
+        AddDomainEvent(new OrderShippedDomainEvent(this));
+    }
+
+    public void SetCancelledStatus()
+    {
+        if (_orderStatusId == OrderStatus.Paid.Id ||
+            _orderStatusId == OrderStatus.Shipped.Id)
+        {
+            StatusChangeException(OrderStatus.Cancelled);
+        }
+
+        _orderStatusId = OrderStatus.Cancelled.Id;
+        _description = $"The order was cancelled.";
+        AddDomainEvent(new OrderCancelledDomainEvent(this));
+    }
+
+    public void SetCancelledStatusWhenStockIsRejected(IEnumerable<int> orderStockRejectedItems)
+    {
+        if (_orderStatusId == OrderStatus.AwaitingValidation.Id)
+        {
+            _orderStatusId = OrderStatus.Cancelled.Id;
+
+            var itemsStockRejectedProductNames = OrderItems
+                .Where(c => orderStockRejectedItems.Contains(c.ProductId))
+                .Select(c => c.GetOrderItemProductName());
+
+            var itemsStockRejectedDescription = string.Join(", ", itemsStockRejectedProductNames);
+            _description = $"The product items don't have stock: ({itemsStockRejectedDescription}).";
+        }
+    }
+
+    private void AddOrderStartedDomainEvent(string userId, string userName, int cardTypeId, string cardNumber,
+            string cardSecurityNumber, string cardHolderName, DateTime cardExpiration)
+    {
+        var orderStartedDomainEvent = new OrderStartedDomainEvent(this, userId, userName, cardTypeId,
+                                                                    cardNumber, cardSecurityNumber,
+                                                                    cardHolderName, cardExpiration);
+
+        this.AddDomainEvent(orderStartedDomainEvent);
+    }
+
+    private void StatusChangeException(OrderStatus orderStatusToChange)
+    {
+        throw new OrderingDomainException($"Is not possible to change the order status from {OrderStatus.Name} to {orderStatusToChange.Name}.");
+    }
+
+    public decimal GetTotal()
+    {
+        return _orderItems.Sum(o => o.GetUnits() * o.GetUnitPrice());
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\AggregatesModel\OrderAggregate\OrderItem.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
+
+public class OrderItem
+    : Entity
+{
+    // DDD Patterns comment
+    // Using private fields, allowed since EF Core 1.1, is a much better encapsulation
+    // aligned with DDD Aggregates and Domain Entities (Instead of properties and property collections)
+    private string _productName;
+    private string _pictureUrl;
+    private decimal _unitPrice;
+    private decimal _discount;
+    private int _units;
+
+    public int ProductId { get; private set; }
+
+    protected OrderItem() { }
+
+    public OrderItem(int productId, string productName, decimal unitPrice, decimal discount, string PictureUrl, int units = 1)
+    {
+        if (units <= 0)
+        {
+            throw new OrderingDomainException("Invalid number of units");
+        }
+
+        if ((unitPrice * units) < discount)
+        {
+            throw new OrderingDomainException("The total of order item is lower than applied discount");
+        }
+
+        ProductId = productId;
+
+        _productName = productName;
+        _unitPrice = unitPrice;
+        _discount = discount;
+        _units = units;
+        _pictureUrl = PictureUrl;
+    }
+
+    public string GetPictureUri() => _pictureUrl;
+
+    public decimal GetCurrentDiscount()
+    {
+        return _discount;
+    }
+
+    public int GetUnits()
+    {
+        return _units;
+    }
+
+    public decimal GetUnitPrice()
+    {
+        return _unitPrice;
+    }
+
+    public string GetOrderItemProductName() => _productName;
+
+    public void SetNewDiscount(decimal discount)
+    {
+        if (discount < 0)
+        {
+            throw new OrderingDomainException("Discount is not valid");
+        }
+
+        _discount = discount;
+    }
+
+    public void AddUnits(int units)
+    {
+        if (units < 0)
+        {
+            throw new OrderingDomainException("Invalid units");
+        }
+
+        _units += units;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\AggregatesModel\OrderAggregate\OrderStatus.cs
+using Microsoft.eShopOnContainers.Services.Ordering.Domain.SeedWork;
+
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
+
+public class OrderStatus
+    : Enumeration
+{
+    public static OrderStatus Submitted = new OrderStatus(1, nameof(Submitted).ToLowerInvariant());
+    public static OrderStatus AwaitingValidation = new OrderStatus(2, nameof(AwaitingValidation).ToLowerInvariant());
+    public static OrderStatus StockConfirmed = new OrderStatus(3, nameof(StockConfirmed).ToLowerInvariant());
+    public static OrderStatus Paid = new OrderStatus(4, nameof(Paid).ToLowerInvariant());
+    public static OrderStatus Shipped = new OrderStatus(5, nameof(Shipped).ToLowerInvariant());
+    public static OrderStatus Cancelled = new OrderStatus(6, nameof(Cancelled).ToLowerInvariant());
+
+    public OrderStatus(int id, string name)
+        : base(id, name)
+    {
+    }
+
+    public static IEnumerable<OrderStatus> List() =>
+        new[] { Submitted, AwaitingValidation, StockConfirmed, Paid, Shipped, Cancelled };
+
+    public static OrderStatus FromName(string name)
+    {
+        var state = List()
+            .SingleOrDefault(s => String.Equals(s.Name, name, StringComparison.CurrentCultureIgnoreCase));
+
+        if (state == null)
+        {
+            throw new OrderingDomainException($"Possible values for OrderStatus: {String.Join(",", List().Select(s => s.Name))}");
+        }
+
+        return state;
+    }
+
+    public static OrderStatus From(int id)
+    {
+        var state = List().SingleOrDefault(s => s.Id == id);
+
+        if (state == null)
+        {
+            throw new OrderingDomainException($"Possible values for OrderStatus: {String.Join(",", List().Select(s => s.Name))}");
+        }
+
+        return state;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\Events\BuyerPaymentMethodVerifiedDomainEvent.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.Events;
+
+public class BuyerAndPaymentMethodVerifiedDomainEvent
+    : INotification
+{
+    public Buyer Buyer { get; private set; }
+    public PaymentMethod Payment { get; private set; }
+    public int OrderId { get; private set; }
+
+    public BuyerAndPaymentMethodVerifiedDomainEvent(Buyer buyer, PaymentMethod payment, int orderId)
+    {
+        Buyer = buyer;
+        Payment = payment;
+        OrderId = orderId;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\Events\OrderCancelledDomainEvent.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.Events;
+
+public class OrderCancelledDomainEvent : INotification
+{
+    public Order Order { get; }
+
+    public OrderCancelledDomainEvent(Order order)
+    {
+        Order = order;
+    }
+}
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\Events\OrderShippedDomainEvent.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.Events;
+
+public class OrderShippedDomainEvent : INotification
+{
+    public Order Order { get; }
+
+    public OrderShippedDomainEvent(Order order)
+    {
+        Order = order;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\Events\OrderStartedDomainEvent.cs
+
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.Events
+{
+    public class OrderStartedDomainEvent : INotification
+    {
+        public string UserId { get; }
+        public string UserName { get; }
+        public int CardTypeId { get; }
+        public string CardNumber { get; }
+        public string CardSecurityNumber { get; }
+        public string CardHolderName { get; }
+        public DateTime CardExpiration { get; }
+        public Order Order { get; }
+
+        public OrderStartedDomainEvent(Order order, string userId, string userName,
+                                       int cardTypeId, string cardNumber,
+                                       string cardSecurityNumber, string cardHolderName,
+                                       DateTime cardExpiration)
+        {
+            Order = order;
+            UserId = userId;
+            UserName = userName;
+            CardTypeId = cardTypeId;
+            CardNumber = cardNumber;
+            CardSecurityNumber = cardSecurityNumber;
+            CardHolderName = cardHolderName;
+            CardExpiration = cardExpiration;
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\Events\OrderStatusChangedToAwaitingValidationDomainEvent.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.Events;
+
+public class OrderStatusChangedToAwaitingValidationDomainEvent
+        : INotification
+{
+    public int OrderId { get; }
+    public IEnumerable<OrderItem> OrderItems { get; }
+
+    public OrderStatusChangedToAwaitingValidationDomainEvent(int orderId,
+        IEnumerable<OrderItem> orderItems)
+    {
+        OrderId = orderId;
+        OrderItems = orderItems;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\Events\OrderStatusChangedToPaidDomainEvent.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.Events;
+  
+public class OrderStatusChangedToPaidDomainEvent
+    : INotification
+{
+    public int OrderId { get; }
+    public IEnumerable<OrderItem> OrderItems { get; }
+
+    public OrderStatusChangedToPaidDomainEvent(int orderId,
+        IEnumerable<OrderItem> orderItems)
+    {
+        OrderId = orderId;
+        OrderItems = orderItems;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\Events\OrderStatusChangedToStockConfirmedDomainEvent.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.Events;
+
+public class OrderStatusChangedToStockConfirmedDomainEvent
+    : INotification
+{
+    public int OrderId { get; }
+
+    public OrderStatusChangedToStockConfirmedDomainEvent(int orderId)
+        => OrderId = orderId;
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\Exceptions\OrderingDomainException.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.Exceptions;
+
+public class OrderingDomainException : Exception
+{
+    public OrderingDomainException()
+    { }
+
+    public OrderingDomainException(string message)
+        : base(message)
+    { }
+
+    public OrderingDomainException(string message, Exception innerException)
+        : base(message, innerException)
+    { }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\GlobalUsings.cs
+global using global::Microsoft.eShopOnContainers.Services.Ordering.Domain.Exceptions;
+global using MediatR;
+global using Microsoft.eShopOnContainers.Services.Ordering.Domain.Seedwork;
+global using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.BuyerAggregate;
+global using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
+global using Microsoft.eShopOnContainers.Services.Ordering.Domain.Events;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Reflection;
+global using System.Threading.Tasks;
+global using System.Threading;
+global using System;
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\Ordering.Domain.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+    <PackageReference Include="MediatR" Version="11.1.0" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.7.0" />
+  </ItemGroup>
+
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\SeedWork\Entity.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.Seedwork;
+
+public abstract class Entity
+{
+    int? _requestedHashCode;
+    int _Id;
+    public virtual int Id
+    {
+        get
+        {
+            return _Id;
+        }
+        protected set
+        {
+            _Id = value;
+        }
+    }
+
+    private List<INotification> _domainEvents;
+    public IReadOnlyCollection<INotification> DomainEvents => _domainEvents?.AsReadOnly();
+
+    public void AddDomainEvent(INotification eventItem)
+    {
+        _domainEvents = _domainEvents ?? new List<INotification>();
+        _domainEvents.Add(eventItem);
+    }
+
+    public void RemoveDomainEvent(INotification eventItem)
+    {
+        _domainEvents?.Remove(eventItem);
+    }
+
+    public void ClearDomainEvents()
+    {
+        _domainEvents?.Clear();
+    }
+
+    public bool IsTransient()
+    {
+        return this.Id == default(Int32);
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (obj == null || !(obj is Entity))
+            return false;
+
+        if (Object.ReferenceEquals(this, obj))
+            return true;
+
+        if (this.GetType() != obj.GetType())
+            return false;
+
+        Entity item = (Entity)obj;
+
+        if (item.IsTransient() || this.IsTransient())
+            return false;
+        else
+            return item.Id == this.Id;
+    }
+
+    public override int GetHashCode()
+    {
+        if (!IsTransient())
+        {
+            if (!_requestedHashCode.HasValue)
+                _requestedHashCode = this.Id.GetHashCode() ^ 31; // XOR for random distribution (http://blogs.msdn.com/b/ericlippert/archive/2011/02/28/guidelines-and-rules-for-gethashcode.aspx)
+
+            return _requestedHashCode.Value;
+        }
+        else
+            return base.GetHashCode();
+
+    }
+    public static bool operator ==(Entity left, Entity right)
+    {
+        if (Object.Equals(left, null))
+            return (Object.Equals(right, null)) ? true : false;
+        else
+            return left.Equals(right);
+    }
+
+    public static bool operator !=(Entity left, Entity right)
+    {
+        return !(left == right);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\SeedWork\Enumeration.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.SeedWork;
+
+public abstract class Enumeration : IComparable
+{
+    public string Name { get; private set; }
+
+    public int Id { get; private set; }
+
+    protected Enumeration(int id, string name) => (Id, Name) = (id, name);
+
+    public override string ToString() => Name;
+        
+    public static IEnumerable<T> GetAll<T>() where T : Enumeration =>
+        typeof(T).GetFields(BindingFlags.Public |
+                            BindingFlags.Static |
+                            BindingFlags.DeclaredOnly)
+                    .Select(f => f.GetValue(null))
+                    .Cast<T>();
+        
+    public override bool Equals(object obj)
+    {
+        if (obj is not Enumeration otherValue)
+        {
+            return false;
+        }
+
+        var typeMatches = GetType().Equals(obj.GetType());
+        var valueMatches = Id.Equals(otherValue.Id);
+
+        return typeMatches && valueMatches;
+    }
+
+    public override int GetHashCode() => Id.GetHashCode();
+
+    public static int AbsoluteDifference(Enumeration firstValue, Enumeration secondValue)
+    {
+        var absoluteDifference = Math.Abs(firstValue.Id - secondValue.Id);
+        return absoluteDifference;
+    }
+
+    public static T FromValue<T>(int value) where T : Enumeration
+    {
+        var matchingItem = Parse<T, int>(value, "value", item => item.Id == value);
+        return matchingItem;
+    }
+
+    public static T FromDisplayName<T>(string displayName) where T : Enumeration
+    {
+        var matchingItem = Parse<T, string>(displayName, "display name", item => item.Name == displayName);
+        return matchingItem;
+    }
+
+    private static T Parse<T, K>(K value, string description, Func<T, bool> predicate) where T : Enumeration
+    {
+        var matchingItem = GetAll<T>().FirstOrDefault(predicate);
+
+        if (matchingItem == null)
+            throw new InvalidOperationException($"'{value}' is not a valid {description} in {typeof(T)}");
+
+        return matchingItem;
+    }
+
+    public int CompareTo(object other) => Id.CompareTo(((Enumeration)other).Id);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\SeedWork\IAggregateRoot.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.Seedwork;
+
+public interface IAggregateRoot { }
+
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\SeedWork\IRepository.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.Seedwork;
+
+public interface IRepository<T> where T : IAggregateRoot
+{
+    IUnitOfWork UnitOfWork { get; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\SeedWork\IUnitOfWork.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.Seedwork;
+
+public interface IUnitOfWork : IDisposable
+{
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken));
+    Task<bool> SaveEntitiesAsync(CancellationToken cancellationToken = default(CancellationToken));
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Domain\SeedWork\ValueObject.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.SeedWork;
+
+public abstract class ValueObject
+{
+    protected static bool EqualOperator(ValueObject left, ValueObject right)
+    {
+        if (ReferenceEquals(left, null) ^ ReferenceEquals(right, null))
+        {
+            return false;
+        }
+        return ReferenceEquals(left, null) || left.Equals(right);
+    }
+
+    protected static bool NotEqualOperator(ValueObject left, ValueObject right)
+    {
+        return !(EqualOperator(left, right));
+    }
+
+    protected abstract IEnumerable<object> GetEqualityComponents();
+
+    public override bool Equals(object obj)
+    {
+        if (obj == null || obj.GetType() != GetType())
+        {
+            return false;
+        }
+
+        var other = (ValueObject)obj;
+
+        return this.GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
+    }
+
+    public override int GetHashCode()
+    {
+        return GetEqualityComponents()
+            .Select(x => x != null ? x.GetHashCode() : 0)
+            .Aggregate((x, y) => x ^ y);
+    }
+
+    public ValueObject GetCopy()
+    {
+        return this.MemberwiseClone() as ValueObject;
+    }
+}
+
+

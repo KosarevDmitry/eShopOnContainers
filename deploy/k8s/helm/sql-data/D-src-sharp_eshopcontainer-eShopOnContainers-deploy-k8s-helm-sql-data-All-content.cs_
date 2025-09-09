@@ -1,0 +1,211 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\sql-data
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 8
+.helmignore
+
+_helpers.tpl
+
+_names.tpl
+
+Chart.yaml
+
+deployment.yaml
+
+NOTES.txt
+
+service.yaml
+
+values.yaml
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\sql-data\.helmignore
+# Patterns to ignore when building packages.
+# This supports shell glob matching, relative path matching, and
+# negation (prefixed with !). Only one pattern per line.
+.DS_Store
+# Common VCS dirs
+.git/
+.gitignore
+.bzr/
+.bzrignore
+.hg/
+.hgignore
+.svn/
+# Common backup files
+*.swp
+*.bak
+*.tmp
+*~
+# Various IDEs
+.project
+.idea/
+*.tmproj
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\sql-data\Chart.yaml
+apiVersion: v1
+appVersion: "1.0"
+description: A Helm chart for Kubernetes
+name: sql-data
+version: 0.1.0
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\sql-data\templates\_helpers.tpl
+{{/* vim: set filetype=mustache: */}}
+{{/*
+Expand the name of the chart.
+*/}}
+{{- define "sql-data.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "sql-data.fullname" -}}
+{{- if .Values.fullnameOverride -}}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "sql-data.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\sql-data\templates\_names.tpl
+
+{{- define "sql-name" -}}
+{{- if .Values.inf.sql.host -}}
+{{- .Values.inf.sql.host -}}
+{{- else -}}
+{{- printf "%s" "sql-data" -}}
+{{- end -}}
+{{- end -}}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\sql-data\templates\deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "sql-data.fullname" . }}
+  labels:
+    app: {{ template "sql-data.name" . }}
+    chart: {{ template "sql-data.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "sql-data.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "sql-data.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          - name: ACCEPT_EULA
+            value: "Y"
+          - name: MSSQL_PID      // why here - and next without  just need  no matter why it is
+            value: {{ .Values.inf.sql.common.pid }}  // Developer why ?
+          - name: MSSQL_SA_PASSWORD
+            value: {{ .Values.inf.sql.common.pwd }}
+          ports:
+            - name: http
+              containerPort: 1433
+              protocol: TCP
+          resources:
+{{ toYaml .Values.resources | indent 12 }}  // empy
+    {{- with .Values.nodeSelector }}  // intend why
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\sql-data\templates\NOTES.txt
+eShop SQL Server Installed
+--------------------------
+
+SQL server is not exposed outside the cluster. If need to access it from outside, use:
+
+export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app={{ template "sql-data.name" . }},release={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+echo "Visit http://127.0.0.1:8080 to use your application"
+kubectl port-forward $POD_NAME 8080:80
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\sql-data\templates\service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "sql-name" . }}
+  labels:
+    app: {{ template "sql-data.name" . }}
+    chart: {{ template "sql-data.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ template "sql-data.name" . }}
+    release: {{ .Release.Name }}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\sql-data\values.yaml
+replicaCount: 1
+
+image:
+  repository: mcr.microsoft.com/mssql/server
+  tag: 2019-latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 1433
+
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+

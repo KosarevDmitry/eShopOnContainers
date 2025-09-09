@@ -44,7 +44,7 @@ public class BasketService : IBasketService
         var response = await _apiClient.PostAsync(uri, basketContent);
 
         response.EnsureSuccessStatusCode();
-
+        // :: only after ensureSuccess
         return basket;
     }
 

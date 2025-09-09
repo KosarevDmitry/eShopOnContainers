@@ -72,6 +72,10 @@
 	  <None Include="Views\_ViewImports.cshtml" />
 	  <None Include="Views\_ViewStart.cshtml" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\DebugLogger\src\DebugLogger.csproj" />
+	</ItemGroup>
 	<ProjectExtensions>
 		<VisualStudio>
 			<UserProperties appsettings_1json__JsonSchema="" />

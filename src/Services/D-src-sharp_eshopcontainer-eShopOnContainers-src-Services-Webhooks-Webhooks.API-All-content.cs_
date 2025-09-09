@@ -1,0 +1,1487 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 38
+appsettings.json
+
+azds.yaml
+
+WebhooksContext.cs
+
+HomeController.cs
+WebhooksController.cs
+
+WebhookData.cs
+
+20190118091148_Initial.Designer.cs
+
+appsettings.Development.json
+
+Dockerfile
+
+Dockerfile.develop
+
+OrderStatusChangedToPaidIntegrationEvent.cs
+OrderStatusChangedToShippedIntegrationEvent.cs
+ProductPriceChangedIntegrationEvent.cs
+
+WebhooksDomainException.cs
+
+AuthorizeCheckOperationFilter.cs
+HttpGlobalExceptionFilter.cs
+
+OrderStatusChangedToPaidIntegrationEventHandler.cs
+OrderStatusChangedToShippedIntegrationEventHandler.cs
+ProductPriceChangedIntegrationEventHandler.cs
+
+Webhooks.API.csproj
+
+20190118091148_Initial.cs
+
+Program.cs
+
+WebhookSubscriptionRequest.cs
+
+InternalServerErrorObjectResult.cs
+
+IWebhooksRetriever.cs
+WebhooksRetriever.cs
+
+IWebhooksSender.cs
+WebhooksSender.cs
+
+GrantUrlTesterService.cs
+IdentityService.cs
+IGrantUrlTesterService.cs
+IIdentityService.cs
+
+launchSettings.json
+
+WebhooksContextModelSnapshot.cs
+
+Startup.cs
+
+WebhookSubscription.cs
+
+WebhookType.cs
+
+GlobalUsings.cs
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\appsettings.Development.json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "System": "Information",
+      "Microsoft": "Information"
+    }
+  },
+  "ConnectionString": "Server=tcp:127.0.0.1,5433;Initial Catalog=Microsoft.eShopOnContainers.Services.CatalogDb;User Id=sa;Password=Pass@word;TrustServerCertificate=true"
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\appsettings.json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "SubscriptionClientName": "Webhooks",
+  "EventBusRetryCount": 5
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\azds.yaml
+kind: helm-release
+apiVersion: 1.1
+build:
+  context: ..\..\..\..
+  dockerfile: Dockerfile
+install:
+  chart: ../../../../k8s/helm/webhooks-api
+  set:
+    image:
+      tag: $(tag)
+      pullPolicy: Never
+    ingress:
+      annotations:
+        kubernetes.io/ingress.class: traefik-azds
+      hosts:
+      - $(spacePrefix)eshop$(hostSuffix)
+    inf:
+      k8s:
+        dns: $(spacePrefix)eshop$(hostSuffix)      
+  values:
+  - values.dev.yaml?
+  - secrets.dev.yaml?
+  - inf.yaml
+  - app.yaml
+configurations:
+  develop:
+    build:
+      useGitIgnore: true
+      dockerfile: Dockerfile.develop
+    container:
+      syncTarget: /src
+      sync:
+      - '**/Pages/**'
+      - '**/Views/**'
+      - '**/wwwroot/**'
+      - '!**/*.{sln,csproj}'
+      command:
+      - dotnet
+      - run
+      - --no-restore
+      - --no-build
+      - --no-launch-profile
+      - -c
+      - ${Configuration:-Debug}
+      iterate:
+        processesToKill:
+        - dotnet
+        - vsdbg
+        buildCommands:
+        - - dotnet
+          - build
+          - --no-restore
+          - -c
+          - ${Configuration:-Debug}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Controllers\HomeController.cs
+namespace Webhooks.API.Controllers;
+
+public class HomeController : Controller
+{
+    // GET: /<controller>/
+    public IActionResult Index()
+    {
+        return new RedirectResult("~/swagger");
+    }
+
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Controllers\WebhooksController.cs
+namespace Webhooks.API.Controllers;
+
+[Route("api/v1/[controller]")]
+[ApiController]
+public class WebhooksController : ControllerBase
+{
+    private readonly WebhooksContext _dbContext;
+    private readonly IIdentityService _identityService;
+    private readonly IGrantUrlTesterService _grantUrlTester;
+
+    public WebhooksController(WebhooksContext dbContext, IIdentityService identityService, IGrantUrlTesterService grantUrlTester)
+    {
+        _dbContext = dbContext;
+        _identityService = identityService;
+        _grantUrlTester = grantUrlTester;
+    }
+
+    [Authorize]
+    [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<WebhookSubscription>), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> ListByUser()
+    {
+        var userId = _identityService.GetUserIdentity();
+        var data = await _dbContext.Subscriptions.Where(s => s.UserId == userId).ToListAsync();
+        return Ok(data);
+    }
+
+    [Authorize]
+    [HttpGet("{id:int}")]
+    [ProducesResponseType(typeof(WebhookSubscription), (int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.NotFound)]
+    public async Task<IActionResult> GetByUserAndId(int id)
+    {
+        var userId = _identityService.GetUserIdentity();
+        var subscription = await _dbContext.Subscriptions.SingleOrDefaultAsync(s => s.Id == id && s.UserId == userId);
+        if (subscription != null)
+        {
+            return Ok(subscription);
+        }
+        return NotFound($"Subscriptions {id} not found");
+    }
+
+    [Authorize]
+    [HttpPost]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
+    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(418)]
+    public async Task<IActionResult> SubscribeWebhook(WebhookSubscriptionRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        var grantOk = await _grantUrlTester.TestGrantUrl(request.Url, request.GrantUrl, request.Token ?? string.Empty);
+
+        if (grantOk)
+        {
+            var subscription = new WebhookSubscription()
+            {
+                Date = DateTime.UtcNow,
+                DestUrl = request.Url,
+                Token = request.Token,
+                Type = Enum.Parse<WebhookType>(request.Event, ignoreCase: true),
+                UserId = _identityService.GetUserIdentity()
+            };
+
+            _dbContext.Add(subscription);
+            await _dbContext.SaveChangesAsync();
+            return CreatedAtAction("GetByUserAndId", new { id = subscription.Id }, subscription);
+        }
+        else
+        {
+            return StatusCode(418, "Grant url can't be validated");
+        }
+    }
+
+    [Authorize]
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType((int)HttpStatusCode.Accepted)]
+    [ProducesResponseType((int)HttpStatusCode.NotFound)]
+    public async Task<IActionResult> UnsubscribeWebhook(int id)
+    {
+        var userId = _identityService.GetUserIdentity();
+        var subscription = await _dbContext.Subscriptions.SingleOrDefaultAsync(s => s.Id == id && s.UserId == userId);
+
+        if (subscription != null)
+        {
+            _dbContext.Remove(subscription);
+            await _dbContext.SaveChangesAsync();
+            return Accepted();
+        }
+
+        return NotFound($"Subscriptions {id} not found");
+    }
+
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Controllers\WebhookSubscriptionRequest.cs
+namespace Webhooks.API.Controllers;
+
+public class WebhookSubscriptionRequest : IValidatableObject
+{
+    public string Url { get; set; }
+    public string Token { get; set; }
+    public string Event { get; set; }
+    public string GrantUrl { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (!Uri.IsWellFormedUriString(GrantUrl, UriKind.Absolute))
+        {
+            yield return new ValidationResult("GrantUrl is not valid", new[] { nameof(GrantUrl) });
+        }
+
+        if (!Uri.IsWellFormedUriString(Url, UriKind.Absolute))
+        {
+            yield return new ValidationResult("Url is not valid", new[] { nameof(Url) });
+        }
+
+        var isOk = Enum.TryParse<WebhookType>(Event, ignoreCase: true, result: out WebhookType whtype);
+        if (!isOk)
+        {
+            yield return new ValidationResult($"{Event} is invalid event name", new[] { nameof(Event) });
+        }
+    }
+
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+WORKDIR /app
+EXPOSE 80
+
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+WORKDIR /src
+
+# It's important to keep lines from here down to "COPY . ." identical in all Dockerfiles
+# to take advantage of Docker's build cache, to speed up local container builds
+COPY "eShopOnContainers-ServicesAndWebApps.sln" "eShopOnContainers-ServicesAndWebApps.sln"
+
+COPY "ApiGateways/Mobile.Bff.Shopping/aggregator/Mobile.Shopping.HttpAggregator.csproj" "ApiGateways/Mobile.Bff.Shopping/aggregator/Mobile.Shopping.HttpAggregator.csproj"
+COPY "ApiGateways/Web.Bff.Shopping/aggregator/Web.Shopping.HttpAggregator.csproj" "ApiGateways/Web.Bff.Shopping/aggregator/Web.Shopping.HttpAggregator.csproj"
+COPY "BuildingBlocks/Devspaces.Support/Devspaces.Support.csproj" "BuildingBlocks/Devspaces.Support/Devspaces.Support.csproj"
+COPY "BuildingBlocks/EventBus/EventBus/EventBus.csproj" "BuildingBlocks/EventBus/EventBus/EventBus.csproj"
+COPY "BuildingBlocks/EventBus/EventBus.Tests/EventBus.Tests.csproj" "BuildingBlocks/EventBus/EventBus.Tests/EventBus.Tests.csproj"
+COPY "BuildingBlocks/EventBus/EventBusRabbitMQ/EventBusRabbitMQ.csproj" "BuildingBlocks/EventBus/EventBusRabbitMQ/EventBusRabbitMQ.csproj"
+COPY "BuildingBlocks/EventBus/EventBusServiceBus/EventBusServiceBus.csproj" "BuildingBlocks/EventBus/EventBusServiceBus/EventBusServiceBus.csproj"
+COPY "BuildingBlocks/EventBus/IntegrationEventLogEF/IntegrationEventLogEF.csproj" "BuildingBlocks/EventBus/IntegrationEventLogEF/IntegrationEventLogEF.csproj"
+COPY "BuildingBlocks/WebHostCustomization/WebHost.Customization/WebHost.Customization.csproj" "BuildingBlocks/WebHostCustomization/WebHost.Customization/WebHost.Customization.csproj"
+COPY "Services/Basket/Basket.API/Basket.API.csproj" "Services/Basket/Basket.API/Basket.API.csproj"
+COPY "Services/Basket/Basket.FunctionalTests/Basket.FunctionalTests.csproj" "Services/Basket/Basket.FunctionalTests/Basket.FunctionalTests.csproj"
+COPY "Services/Basket/Basket.UnitTests/Basket.UnitTests.csproj" "Services/Basket/Basket.UnitTests/Basket.UnitTests.csproj"
+COPY "Services/Catalog/Catalog.API/Catalog.API.csproj" "Services/Catalog/Catalog.API/Catalog.API.csproj"
+COPY "Services/Catalog/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj" "Services/Catalog/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj"
+COPY "Services/Catalog/Catalog.UnitTests/Catalog.UnitTests.csproj" "Services/Catalog/Catalog.UnitTests/Catalog.UnitTests.csproj"
+COPY "Services/Identity/Identity.API/Identity.API.csproj" "Services/Identity/Identity.API/Identity.API.csproj"
+COPY "Services/Ordering/Ordering.API/Ordering.API.csproj" "Services/Ordering/Ordering.API/Ordering.API.csproj"
+COPY "Services/Ordering/Ordering.BackgroundTasks/Ordering.BackgroundTasks.csproj" "Services/Ordering/Ordering.BackgroundTasks/Ordering.BackgroundTasks.csproj"
+COPY "Services/Ordering/Ordering.Domain/Ordering.Domain.csproj" "Services/Ordering/Ordering.Domain/Ordering.Domain.csproj"
+COPY "Services/Ordering/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj" "Services/Ordering/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj"
+COPY "Services/Ordering/Ordering.Infrastructure/Ordering.Infrastructure.csproj" "Services/Ordering/Ordering.Infrastructure/Ordering.Infrastructure.csproj"
+COPY "Services/Ordering/Ordering.SignalrHub/Ordering.SignalrHub.csproj" "Services/Ordering/Ordering.SignalrHub/Ordering.SignalrHub.csproj"
+COPY "Services/Ordering/Ordering.UnitTests/Ordering.UnitTests.csproj" "Services/Ordering/Ordering.UnitTests/Ordering.UnitTests.csproj"
+COPY "Services/Payment/Payment.API/Payment.API.csproj" "Services/Payment/Payment.API/Payment.API.csproj"
+COPY "Services/Webhooks/Webhooks.API/Webhooks.API.csproj" "Services/Webhooks/Webhooks.API/Webhooks.API.csproj"
+COPY "Tests/Services/Application.FunctionalTests/Application.FunctionalTests.csproj" "Tests/Services/Application.FunctionalTests/Application.FunctionalTests.csproj"
+COPY "Web/WebhookClient/WebhookClient.csproj" "Web/WebhookClient/WebhookClient.csproj"
+COPY "Web/WebMVC/WebMVC.csproj" "Web/WebMVC/WebMVC.csproj"
+COPY "Web/WebSPA/WebSPA.csproj" "Web/WebSPA/WebSPA.csproj"
+COPY "Web/WebStatus/WebStatus.csproj" "Web/WebStatus/WebStatus.csproj"
+
+COPY "docker-compose.dcproj" "docker-compose.dcproj"
+
+COPY "NuGet.config" "NuGet.config"
+
+RUN dotnet restore "eShopOnContainers-ServicesAndWebApps.sln"
+
+COPY . .
+WORKDIR /src/Services/Webhooks/Webhooks.API
+RUN dotnet publish --no-restore -c Release -o /app
+
+FROM build AS publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app .
+ENTRYPOINT ["dotnet", "Webhooks.API.dll"]
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Dockerfile.develop
+FROM mcr.microsoft.com/dotnet/sdk:6.0
+ARG BUILD_CONFIGURATION=Debug
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV DOTNET_USE_POLLING_FILE_WATCHER=true
+EXPOSE 80
+
+WORKDIR /src
+
+COPY ["BuildingBlocks/EventBus/EventBus/EventBus.csproj", "BuildingBlocks/EventBus/EventBus/"]
+COPY ["BuildingBlocks/EventBus/EventBusRabbitMQ/EventBusRabbitMQ.csproj", "BuildingBlocks/EventBus/EventBusRabbitMQ/"]
+COPY ["BuildingBlocks/EventBus/EventBusServiceBus/EventBusServiceBus.csproj", "BuildingBlocks/EventBus/EventBusServiceBus/"]
+COPY ["BuildingBlocks/EventBus/IntegrationEventLogEF/IntegrationEventLogEF.csproj", "BuildingBlocks/EventBus/IntegrationEventLogEF/"]
+COPY ["BuildingBlocks/WebHostCustomization/WebHost.Customization/WebHost.Customization.csproj", "BuildingBlocks/WebHostCustomization/WebHost.Customization/"]
+COPY ["BuildingBlocks/Devspaces.Support/Devspaces.Support.csproj", "BuildingBlocks/Devspaces.Support/"]
+COPY ["Services/Webhooks/Webhooks.API/Webhooks.API.csproj", "Services/Webhooks/Webhooks.API/"]
+COPY ["NuGet.config", "NuGet.config"]
+
+RUN dotnet restore Services/Webhooks/Webhooks.API/Webhooks.API.csproj -nowarn:msb3202,nu1503
+COPY . .
+WORKDIR "/src/Services/Webhooks/Webhooks.API"
+RUN dotnet build -c $BUILD_CONFIGURATION
+
+ENTRYPOINT ["dotnet", "run", "--no-build", "--no-launch-profile", "-c", "$BUILD_CONFIGURATION", "--"]
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Exceptions\WebhooksDomainException.cs
+namespace Webhooks.API.Exceptions;
+
+public class WebhooksDomainException : Exception
+{
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\GlobalUsings.cs
+global using Autofac.Extensions.DependencyInjection;
+global using Autofac;
+global using Devspaces.Support;
+global using HealthChecks.UI.Client;
+global using Microsoft.AspNetCore.Authentication.JwtBearer;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Builder;
+global using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+global using Microsoft.AspNetCore.Hosting;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Mvc.Filters;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.AspNetCore;
+global using Azure.Messaging.ServiceBus;
+global using Microsoft.EntityFrameworkCore.Design;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBusRabbitMQ;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus;
+global using Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF.Services;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Diagnostics.HealthChecks;
+global using Microsoft.Extensions.Hosting;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.OpenApi.Models;
+global using RabbitMQ.Client;
+global using Swashbuckle.AspNetCore.SwaggerGen;
+global using System.Collections.Generic;
+global using System.ComponentModel.DataAnnotations;
+global using System.Data.Common;
+global using System.IdentityModel.Tokens.Jwt;
+global using System.Linq;
+global using System.Net.Http;
+global using System.Net;
+global using System.Reflection;
+global using System.Text.Json;
+global using System.Text;
+global using System.Threading.Tasks;
+global using System.Threading;
+global using System;
+global using Webhooks.API.Exceptions;
+global using Webhooks.API.Infrastructure.ActionResult;
+global using Webhooks.API.Infrastructure;
+global using Webhooks.API.IntegrationEvents;
+global using Webhooks.API.Model;
+global using Webhooks.API.Services;
+global using Webhooks.API;
+global using Microsoft.IdentityModel.Tokens;
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Infrastructure\ActionResult\InternalServerErrorObjectResult.cs
+namespace Webhooks.API.Infrastructure.ActionResult;
+
+class InternalServerErrorObjectResult : ObjectResult
+{
+    public InternalServerErrorObjectResult(object error) : base(error)
+    {
+        StatusCode = StatusCodes.Status500InternalServerError;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Infrastructure\AuthorizeCheckOperationFilter.cs
+namespace Webhooks.API.Infrastructure;
+
+public class AuthorizeCheckOperationFilter : IOperationFilter
+{
+    public void Apply(OpenApiOperation operation, OperationFilterContext context)
+    {
+        // Check for authorize attribute
+        var hasAuthorize = context.MethodInfo.DeclaringType.GetCustomAttributes(true).OfType<AuthorizeAttribute>().Any() ||
+                            context.MethodInfo.GetCustomAttributes(true).OfType<AuthorizeAttribute>().Any();
+
+        if (!hasAuthorize) return;
+
+        operation.Responses.TryAdd("401", new OpenApiResponse { Description = "Unauthorized" });
+        operation.Responses.TryAdd("403", new OpenApiResponse { Description = "Forbidden" });
+
+        var oAuthScheme = new OpenApiSecurityScheme
+        {
+            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oauth2" }
+        };
+
+        operation.Security = new List<OpenApiSecurityRequirement>
+            {
+                new()
+                {
+                    [ oAuthScheme ] = new [] { "webhooksapi" }
+                }
+            };
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Infrastructure\HttpGlobalExceptionFilter.cs
+namespace Webhooks.API.Infrastructure;
+
+public class HttpGlobalExceptionFilter : IExceptionFilter
+{
+    private readonly IWebHostEnvironment _env;
+    private readonly ILogger<HttpGlobalExceptionFilter> _logger;
+
+    public HttpGlobalExceptionFilter(IWebHostEnvironment env, ILogger<HttpGlobalExceptionFilter> logger)
+    {
+        _env = env;
+        _logger = logger;
+    }
+
+    public void OnException(ExceptionContext context)
+    {
+        _logger.LogError(new EventId(context.Exception.HResult),
+            context.Exception,
+            context.Exception.Message);
+
+        if (context.Exception.GetType() == typeof(WebhooksDomainException))
+        {
+            var problemDetails = new ValidationProblemDetails()
+            {
+                Instance = context.HttpContext.Request.Path,
+                Status = StatusCodes.Status400BadRequest,
+                Detail = "Please refer to the errors property for additional details."
+            };
+
+            problemDetails.Errors.Add("DomainValidations", new [] { context.Exception.Message });
+
+            context.Result = new BadRequestObjectResult(problemDetails);
+            context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        }
+        else
+        {
+            var json = new JsonErrorResponse
+            {
+                Messages = new[] { "An error occurred." }
+            };
+
+            if (_env.IsDevelopment())
+            {
+                json.DeveloperMessage = context.Exception;
+            }
+
+            context.Result = new InternalServerErrorObjectResult(json);
+            context.HttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+        }
+        context.ExceptionHandled = true;
+    }
+
+    private class JsonErrorResponse
+    {
+        public string[] Messages { get; set; }
+
+        public object DeveloperMessage { get; set; }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Infrastructure\WebhooksContext.cs
+namespace Webhooks.API.Infrastructure;
+
+public class WebhooksContext : DbContext
+{
+
+    public WebhooksContext(DbContextOptions<WebhooksContext> options) : base(options)
+    {
+    }
+    public DbSet<WebhookSubscription> Subscriptions { get; set; }
+}
+
+public class WebhooksContextDesignFactory : IDesignTimeDbContextFactory<WebhooksContext>
+{
+    public WebhooksContext CreateDbContext(string[] args)
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<WebhooksContext>()
+            .UseSqlServer("Server=.;Initial Catalog=Microsoft.eShopOnContainers.Services.CatalogDb;Integrated Security=true");
+
+        return new WebhooksContext(optionsBuilder.Options);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\IntegrationEvents\OrderStatusChangedToPaidIntegrationEvent.cs
+namespace Webhooks.API.IntegrationEvents;
+
+public record OrderStatusChangedToPaidIntegrationEvent : IntegrationEvent
+{
+    public int OrderId { get; }
+    public IEnumerable<OrderStockItem> OrderStockItems { get; }
+
+    public OrderStatusChangedToPaidIntegrationEvent(int orderId,
+        IEnumerable<OrderStockItem> orderStockItems)
+    {
+        OrderId = orderId;
+        OrderStockItems = orderStockItems;
+    }
+}
+
+public record OrderStockItem
+{
+    public int ProductId { get; }
+    public int Units { get; }
+
+    public OrderStockItem(int productId, int units)
+    {
+        ProductId = productId;
+        Units = units;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\IntegrationEvents\OrderStatusChangedToPaidIntegrationEventHandler.cs
+namespace Webhooks.API.IntegrationEvents;
+
+public class OrderStatusChangedToPaidIntegrationEventHandler : IIntegrationEventHandler<OrderStatusChangedToPaidIntegrationEvent>
+{
+    private readonly IWebhooksRetriever _retriever;
+    private readonly IWebhooksSender _sender;
+    private readonly ILogger _logger;
+    public OrderStatusChangedToPaidIntegrationEventHandler(IWebhooksRetriever retriever, IWebhooksSender sender, ILogger<OrderStatusChangedToShippedIntegrationEventHandler> logger)
+    {
+        _retriever = retriever;
+        _sender = sender;
+        _logger = logger;
+    }
+
+    public async Task Handle(OrderStatusChangedToPaidIntegrationEvent @event)
+    {
+        var subscriptions = await _retriever.GetSubscriptionsOfType(WebhookType.OrderPaid);
+        _logger.LogInformation("Received OrderStatusChangedToShippedIntegrationEvent and got {SubscriptionsCount} subscriptions to process", subscriptions.Count());
+        var whook = new WebhookData(WebhookType.OrderPaid, @event);
+        await _sender.SendAll(subscriptions, whook);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\IntegrationEvents\OrderStatusChangedToShippedIntegrationEvent.cs
+namespace Webhooks.API.IntegrationEvents;
+
+public record OrderStatusChangedToShippedIntegrationEvent : IntegrationEvent
+{
+    public int OrderId { get; private init; }
+    public string OrderStatus { get; private init; }
+    public string BuyerName { get; private init; }
+
+    public OrderStatusChangedToShippedIntegrationEvent(int orderId, string orderStatus, string buyerName)
+    {
+        OrderId = orderId;
+        OrderStatus = orderStatus;
+        BuyerName = buyerName;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\IntegrationEvents\OrderStatusChangedToShippedIntegrationEventHandler.cs
+namespace Webhooks.API.IntegrationEvents;
+
+public class OrderStatusChangedToShippedIntegrationEventHandler : IIntegrationEventHandler<OrderStatusChangedToShippedIntegrationEvent>
+{
+    private readonly IWebhooksRetriever _retriever;
+    private readonly IWebhooksSender _sender;
+    private readonly ILogger _logger;
+    public OrderStatusChangedToShippedIntegrationEventHandler(IWebhooksRetriever retriever, IWebhooksSender sender, ILogger<OrderStatusChangedToShippedIntegrationEventHandler> logger)
+    {
+        _retriever = retriever;
+        _sender = sender;
+        _logger = logger;
+    }
+
+    public async Task Handle(OrderStatusChangedToShippedIntegrationEvent @event)
+    {
+        var subscriptions = await _retriever.GetSubscriptionsOfType(WebhookType.OrderShipped);
+        _logger.LogInformation("Received OrderStatusChangedToShippedIntegrationEvent and got {SubscriptionCount} subscriptions to process", subscriptions.Count());
+        var whook = new WebhookData(WebhookType.OrderShipped, @event);
+        await _sender.SendAll(subscriptions, whook);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\IntegrationEvents\ProductPriceChangedIntegrationEvent.cs
+namespace Webhooks.API.IntegrationEvents;
+
+public record ProductPriceChangedIntegrationEvent : IntegrationEvent
+{
+    public int ProductId { get; private init; }
+
+    public decimal NewPrice { get; private init; }
+
+    public decimal OldPrice { get; private init; }
+
+    public ProductPriceChangedIntegrationEvent(int productId, decimal newPrice, decimal oldPrice)
+    {
+        ProductId = productId;
+        NewPrice = newPrice;
+        OldPrice = oldPrice;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\IntegrationEvents\ProductPriceChangedIntegrationEventHandler.cs
+namespace Webhooks.API.IntegrationEvents;
+
+public class ProductPriceChangedIntegrationEventHandler : IIntegrationEventHandler<ProductPriceChangedIntegrationEvent>
+{
+    public async Task Handle(ProductPriceChangedIntegrationEvent @event)
+    {
+        int i = 0;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Migrations\20190118091148_Initial.cs
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
+using System;
+
+namespace Webhooks.API.Migrations
+{
+    public partial class Initial : Migration
+    {
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "Subscriptions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    Type = table.Column<int>(nullable: false),
+                    Date = table.Column<DateTime>(nullable: false),
+                    DestUrl = table.Column<string>(nullable: true),
+                    Token = table.Column<string>(nullable: true),
+                    UserId = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Subscriptions", x => x.Id);
+                });
+        }
+
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "Subscriptions");
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Migrations\20190118091148_Initial.Designer.cs
+// <auto-generated />
+using System;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Webhooks.API.Infrastructure;
+
+namespace Webhooks.API.Migrations
+{
+    [DbContext(typeof(WebhooksContext))]
+    [Migration("20190118091148_Initial")]
+    partial class Initial
+    {
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "2.2.1-servicing-10028")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128)
+                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            modelBuilder.Entity("Webhooks.API.Model.WebhookSubscription", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTime>("Date");
+
+                    b.Property<string>("DestUrl");
+
+                    b.Property<string>("Token");
+
+                    b.Property<int>("Type");
+
+                    b.Property<string>("UserId");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Subscriptions");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Migrations\WebhooksContextModelSnapshot.cs
+// <auto-generated />
+using System;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Webhooks.API.Infrastructure;
+
+namespace Webhooks.API.Migrations
+{
+    [DbContext(typeof(WebhooksContext))]
+    partial class WebhooksContextModelSnapshot : ModelSnapshot
+    {
+        protected override void BuildModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "2.2.1-servicing-10028")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128)
+                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            modelBuilder.Entity("Webhooks.API.Model.WebhookSubscription", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTime>("Date");
+
+                    b.Property<string>("DestUrl");
+
+                    b.Property<string>("Token");
+
+                    b.Property<int>("Type");
+
+                    b.Property<string>("UserId");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Subscriptions");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Model\WebhookData.cs
+namespace Webhooks.API.Model;
+
+public class WebhookData
+{
+    public DateTime When { get; }
+
+    public string Payload { get; }
+
+    public string Type { get; }
+
+    public WebhookData(WebhookType hookType, object data)
+    {
+        When = DateTime.UtcNow;
+        Type = hookType.ToString();
+        Payload = JsonSerializer.Serialize(data);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Model\WebhookSubscription.cs
+namespace Webhooks.API.Model;
+
+public class WebhookSubscription
+{
+    public int Id { get; set; }
+
+    public WebhookType Type { get; set; }
+    public DateTime Date { get; set; }
+    public string DestUrl { get; set; }
+    public string Token { get; set; }
+    public string UserId { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Model\WebhookType.cs
+namespace Webhooks.API.Model;
+
+public enum WebhookType
+{
+    CatalogItemPriceChange = 1,
+    OrderShipped = 2,
+    OrderPaid = 3
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Program.cs
+CreateWebHostBuilder(args).Build()
+    .MigrateDbContext<WebhooksContext>((_, __) => { })
+    .Run();
+
+
+IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+            WebHost.CreateDefaultBuilder(args)
+                .UseStartup<Startup>()
+                .ConfigureAppConfiguration((builderContext, config) =>
+                {
+                    config.AddEnvironmentVariables();
+                })
+                .ConfigureLogging((hostingContext, builder) =>
+                {
+                    builder.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                    builder.AddConsole();
+                    builder.AddDebug();
+                    builder.AddAzureWebAppDiagnostics();
+                });
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Properties\launchSettings.json
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:62486",
+      "sslPort": 0
+    }
+  },
+  "profiles": {
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "Webhooks.API": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://localhost:5000"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchBrowser": true,
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}"
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Services\GrantUrlTesterService.cs
+namespace Webhooks.API.Services;
+
+class GrantUrlTesterService : IGrantUrlTesterService
+{
+    private readonly IHttpClientFactory _clientFactory;
+    private readonly ILogger _logger;
+    public GrantUrlTesterService(IHttpClientFactory factory, ILogger<IGrantUrlTesterService> logger)
+    {
+        _clientFactory = factory;
+        _logger = logger;
+    }
+
+    public async Task<bool> TestGrantUrl(string urlHook, string url, string token)
+    {
+        if (!CheckSameOrigin(urlHook, url))
+        {
+            _logger.LogWarning("Url of the hook ({UrlHook} and the grant url ({Url} do not belong to same origin)", urlHook, url);
+            return false;
+        }
+
+
+        var client = _clientFactory.CreateClient("GrantClient");
+        var msg = new HttpRequestMessage(HttpMethod.Options, url);
+        msg.Headers.Add("X-eshop-whtoken", token);
+        _logger.LogInformation("Sending the OPTIONS message to {Url} with token \"{Token}\"", url, token ?? string.Empty);
+        try
+        {
+            var response = await client.SendAsync(msg);
+            var tokenReceived = response.Headers.TryGetValues("X-eshop-whtoken", out var tokenValues) ? tokenValues.FirstOrDefault() : null;
+            var tokenExpected = string.IsNullOrWhiteSpace(token) ? null : token;
+            _logger.LogInformation("Response code is {StatusCode} for url {Url} and token in header was {TokenReceived} (expected token was {TokenExpected})", response.StatusCode, url, tokenReceived, tokenExpected);
+            return response.IsSuccessStatusCode && tokenReceived == tokenExpected;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Exception {TypeName} when sending OPTIONS request. Url can't be granted.", ex.GetType().Name);
+            return false;
+        }
+    }
+
+    private bool CheckSameOrigin(string urlHook, string url)
+    {
+        var firstUrl = new Uri(urlHook, UriKind.Absolute);
+        var secondUrl = new Uri(url, UriKind.Absolute);
+
+        return firstUrl.Scheme == secondUrl.Scheme &&
+            firstUrl.Port == secondUrl.Port &&
+            firstUrl.Host == secondUrl.Host;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Services\IdentityService.cs
+namespace Webhooks.API.Services;
+
+public class IdentityService : IIdentityService
+{
+    private readonly IHttpContextAccessor _context;
+
+    public IdentityService(IHttpContextAccessor context)
+    {
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+    }
+
+    public string GetUserIdentity()
+    {
+        return _context.HttpContext.User.FindFirst("sub").Value;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Services\IGrantUrlTesterService.cs
+namespace Webhooks.API.Services;
+
+public interface IGrantUrlTesterService
+{
+    Task<bool> TestGrantUrl(string urlHook, string url, string token);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Services\IIdentityService.cs
+namespace Webhooks.API.Services;
+
+public interface IIdentityService
+{
+    string GetUserIdentity();
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Services\IWebhooksRetriever.cs
+namespace Webhooks.API.Services;
+
+public interface IWebhooksRetriever
+{
+
+    Task<IEnumerable<WebhookSubscription>> GetSubscriptionsOfType(WebhookType type);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Services\IWebhooksSender.cs
+namespace Webhooks.API.Services;
+
+public interface IWebhooksSender
+{
+    Task SendAll(IEnumerable<WebhookSubscription> receivers, WebhookData data);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Services\WebhooksRetriever.cs
+namespace Webhooks.API.Services;
+
+public class WebhooksRetriever : IWebhooksRetriever
+{
+    private readonly WebhooksContext _db;
+    public WebhooksRetriever(WebhooksContext db)
+    {
+        _db = db;
+    }
+    public async Task<IEnumerable<WebhookSubscription>> GetSubscriptionsOfType(WebhookType type)
+    {
+        var data = await _db.Subscriptions.Where(s => s.Type == type).ToListAsync();
+        return data;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Services\WebhooksSender.cs
+namespace Webhooks.API.Services;
+
+public class WebhooksSender : IWebhooksSender
+{
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger _logger;
+    public WebhooksSender(IHttpClientFactory httpClientFactory, ILogger<WebhooksSender> logger)
+    {
+        _httpClientFactory = httpClientFactory;
+        _logger = logger;
+    }
+
+    public async Task SendAll(IEnumerable<WebhookSubscription> receivers, WebhookData data)
+    {
+        var client = _httpClientFactory.CreateClient();
+        var json = JsonSerializer.Serialize(data);
+        var tasks = receivers.Select(r => OnSendData(r, json, client));
+        await Task.WhenAll(tasks.ToArray());
+    }
+
+    private Task OnSendData(WebhookSubscription subs, string jsonData, HttpClient client)
+    {
+        var request = new HttpRequestMessage()
+        {
+            RequestUri = new Uri(subs.DestUrl, UriKind.Absolute),
+            Method = HttpMethod.Post,
+            Content = new StringContent(jsonData, Encoding.UTF8, "application/json")
+        };
+
+        if (!string.IsNullOrWhiteSpace(subs.Token))
+        {
+            request.Headers.Add("X-eshop-whtoken", subs.Token);
+        }
+        _logger.LogDebug("Sending hook to {DestUrl} of type {Type}", subs.Type.ToString(), subs.Type.ToString());
+        return client.SendAsync(request);
+    }
+
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Startup.cs
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+
+namespace Webhooks.API;
+public class Startup
+{
+    public IConfiguration Configuration { get; }
+
+    public Startup(IConfiguration configuration)
+    {
+        Configuration = configuration;
+    }
+
+
+    public IServiceProvider ConfigureServices(IServiceCollection services)
+    {
+        services
+            .AddAppInsight(Configuration)
+            .AddCustomRouting(Configuration)
+            .AddCustomDbContext(Configuration)
+            .AddSwagger(Configuration)
+            .AddCustomHealthCheck(Configuration)
+            .AddDevspaces()
+            .AddHttpClientServices(Configuration)
+            .AddIntegrationServices(Configuration)
+            .AddEventBus(Configuration)
+            .AddCustomAuthentication(Configuration)
+            .AddSingleton<IHttpContextAccessor, HttpContextAccessor>()
+            .AddTransient<IIdentityService, IdentityService>()
+            .AddTransient<IGrantUrlTesterService, GrantUrlTesterService>()
+            .AddTransient<IWebhooksRetriever, WebhooksRetriever>()
+            .AddTransient<IWebhooksSender, WebhooksSender>();
+
+        var container = new ContainerBuilder();
+        container.Populate(services);
+        return new AutofacServiceProvider(container.Build());
+    }
+
+    public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
+    {        
+        var pathBase = Configuration["PATH_BASE"];
+
+        if (!string.IsNullOrEmpty(pathBase))
+        {
+            loggerFactory.CreateLogger("init").LogDebug("Using PATH BASE '{PathBase}'", pathBase);
+            app.UsePathBase(pathBase);
+        }
+
+        app.UseRouting();
+        app.UseCors("CorsPolicy");
+        ConfigureAuth(app);
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapDefaultControllerRoute();
+            endpoints.MapControllers();
+            endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
+            endpoints.MapHealthChecks("/liveness", new HealthCheckOptions
+            {
+                Predicate = r => r.Name.Contains("self")
+            });
+        });
+
+        app.UseSwagger()
+            .UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint($"{ (!string.IsNullOrEmpty(pathBase) ? pathBase : string.Empty) }/swagger/v1/swagger.json", "Webhooks.API V1");
+                c.OAuthClientId("webhooksswaggerui");
+                c.OAuthAppName("WebHooks Service Swagger UI");
+            });
+
+        ConfigureEventBus(app);
+    }
+
+    protected virtual void ConfigureAuth(IApplicationBuilder app)
+    {
+        app.UseAuthentication();
+        app.UseAuthorization();
+    }
+
+    protected virtual void ConfigureEventBus(IApplicationBuilder app)
+    {
+        var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
+        eventBus.Subscribe<ProductPriceChangedIntegrationEvent, ProductPriceChangedIntegrationEventHandler>();
+        eventBus.Subscribe<OrderStatusChangedToShippedIntegrationEvent, OrderStatusChangedToShippedIntegrationEventHandler>();
+        eventBus.Subscribe<OrderStatusChangedToPaidIntegrationEvent, OrderStatusChangedToPaidIntegrationEventHandler>();
+    }
+}
+
+internal static class CustomExtensionMethods
+{
+    public static IServiceCollection AddAppInsight(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddApplicationInsightsTelemetry(configuration);
+        services.AddApplicationInsightsKubernetesEnricher();
+
+        return services;
+    }
+
+    public static IServiceCollection AddCustomRouting(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddControllers(options =>
+        {
+            options.Filters.Add(typeof(HttpGlobalExceptionFilter));
+        });
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("CorsPolicy",
+                builder => builder
+                .SetIsOriginAllowed((host) => true)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials());
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection AddCustomDbContext(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddEntityFrameworkSqlServer()
+            .AddDbContext<WebhooksContext>(options =>
+        {
+            options.UseSqlServer(configuration["ConnectionString"],
+                                    sqlServerOptionsAction: sqlOptions =>
+                                    {
+                                        sqlOptions.MigrationsAssembly(typeof(Startup).GetTypeInfo().Assembly.GetName().Name);
+                                        //Configuring Connection Resiliency: https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency 
+                                        sqlOptions.EnableRetryOnFailure(maxRetryCount: 15, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
+                                    });
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection AddSwagger(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSwaggerGen(options =>
+        {            
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "eShopOnContainers - Webhooks HTTP API",
+                Version = "v1",
+                Description = "The Webhooks Microservice HTTP API. This is a simple webhooks CRUD registration entrypoint"
+            });
+
+            options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.OAuth2,
+                Flows = new OpenApiOAuthFlows()
+                {
+                    Implicit = new OpenApiOAuthFlow()
+                    {
+                        AuthorizationUrl = new Uri($"{configuration.GetValue<string>("IdentityUrlExternal")}/connect/authorize"),
+                        TokenUrl = new Uri($"{configuration.GetValue<string>("IdentityUrlExternal")}/connect/token"),
+                        Scopes = new Dictionary<string, string>()
+                        {
+                            {  "webhooks", "Webhooks API" }
+                        }
+                    }
+                }
+            });
+
+            options.OperationFilter<AuthorizeCheckOperationFilter>();
+        });
+
+        return services;
+    }
+    public static IServiceCollection AddEventBus(this IServiceCollection services, IConfiguration configuration)
+    {
+        if (configuration.GetValue<bool>("AzureServiceBusEnabled"))
+        {
+            services.AddSingleton<IEventBus, EventBusServiceBus>(sp =>
+            {
+                var serviceBusPersisterConnection = sp.GetRequiredService<IServiceBusPersisterConnection>();
+                var iLifetimeScope = sp.GetRequiredService<ILifetimeScope>();
+                var logger = sp.GetRequiredService<ILogger<EventBusServiceBus>>();
+                var eventBusSubscriptionManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
+                string subscriptionName = configuration["SubscriptionClientName"];
+
+                return new EventBusServiceBus(serviceBusPersisterConnection, logger,
+                    eventBusSubscriptionManager, iLifetimeScope, subscriptionName);
+            });
+
+        }
+        else
+        {
+            services.AddSingleton<IEventBus, EventBusRabbitMQ>(sp =>
+            {
+                var subscriptionClientName = configuration["SubscriptionClientName"];
+                var rabbitMQPersistentConnection = sp.GetRequiredService<IRabbitMQPersistentConnection>();
+                var iLifetimeScope = sp.GetRequiredService<ILifetimeScope>();
+                var logger = sp.GetRequiredService<ILogger<EventBusRabbitMQ>>();
+                var eventBusSubscriptionManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
+
+                var retryCount = 5;
+                if (!string.IsNullOrEmpty(configuration["EventBusRetryCount"]))
+                {
+                    retryCount = int.Parse(configuration["EventBusRetryCount"]);
+                }
+
+                return new EventBusRabbitMQ(rabbitMQPersistentConnection, logger, iLifetimeScope, eventBusSubscriptionManager, subscriptionClientName, retryCount);
+            });
+        }
+
+        services.AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
+        services.AddTransient<ProductPriceChangedIntegrationEventHandler>();
+        services.AddTransient<OrderStatusChangedToShippedIntegrationEventHandler>();
+        services.AddTransient<OrderStatusChangedToPaidIntegrationEventHandler>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddCustomHealthCheck(this IServiceCollection services, IConfiguration configuration)
+    {
+        var hcBuilder = services.AddHealthChecks();
+
+        hcBuilder
+            .AddCheck("self", () => HealthCheckResult.Healthy())
+            .AddSqlServer(
+                configuration["ConnectionString"],
+                name: "WebhooksApiDb-check",
+                tags: new string[] { "webhooksdb" });
+
+        return services;
+    }
+
+    public static IServiceCollection AddHttpClientServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+        services.AddHttpClient("extendedhandlerlifetime").SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+        //add http client services
+        services.AddHttpClient("GrantClient")
+                .SetHandlerLifetime(TimeSpan.FromMinutes(5))
+                .AddDevspacesSupport();
+        return services;
+    }
+
+    public static IServiceCollection AddIntegrationServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddTransient<Func<DbConnection, IIntegrationEventLogService>>(
+                sp => (DbConnection c) => new IntegrationEventLogService(c));
+
+            if (configuration.GetValue<bool>("AzureServiceBusEnabled"))
+            {
+                services.AddSingleton<IServiceBusPersisterConnection>(sp =>
+                {
+                    var subscriptionClientName = configuration["SubscriptionClientName"];
+                    return new DefaultServiceBusPersisterConnection(configuration["EventBusConnection"]);
+                });
+            }
+            else
+            {
+                services.AddSingleton<IRabbitMQPersistentConnection>(sp =>
+                {
+                    var logger = sp.GetRequiredService<ILogger<DefaultRabbitMQPersistentConnection>>();
+
+                    var factory = new ConnectionFactory()
+                    {
+                        HostName = configuration["EventBusConnection"],
+                        DispatchConsumersAsync = true
+                    };
+
+                    if (!string.IsNullOrEmpty(configuration["EventBusUserName"]))
+                    {
+                        factory.UserName = configuration["EventBusUserName"];
+                    }
+
+                    if (!string.IsNullOrEmpty(configuration["EventBusPassword"]))
+                    {
+                        factory.Password = configuration["EventBusPassword"];
+                    }
+
+                    var retryCount = 5;
+                    if (!string.IsNullOrEmpty(configuration["EventBusRetryCount"]))
+                    {
+                        retryCount = int.Parse(configuration["EventBusRetryCount"]);
+                    }
+
+                    return new DefaultRabbitMQPersistentConnection(factory, logger, retryCount);
+                });
+            }
+
+            return services;
+    }
+
+    public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, IConfiguration configuration)
+    {
+        // prevent from mapping "sub" claim to nameidentifier.
+        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Remove("sub");
+
+        var identityUrl = configuration.GetValue<string>("IdentityUrl");
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+
+        }).AddJwtBearer(options =>
+        {
+            options.Authority = identityUrl;
+            options.RequireHttpsMetadata = false;
+            options.Audience = "webhooks";
+            options.TokenValidationParameters.ValidateAudience = false;
+        });
+
+        return services;
+    }
+
+
+    public static IServiceCollection AddCustomAuthorization(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("ApiScope", policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.RequireClaim("scope", "webhooks");
+            });
+        });
+        return services;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Webhooks\Webhooks.API\Webhooks.API.csproj
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wp8+wpa81;</AssetTargetFallback>
+    <GenerateErrorForMissingTargetingPacks>false</GenerateErrorForMissingTargetingPacks>
+    <IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="6.0.2" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="6.0.5" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0-beta1" />
+    <PackageReference Include="Microsoft.ApplicationInsights.DependencyCollector" Version="2.22.0-beta1" />
+    <PackageReference Include="Microsoft.ApplicationInsights.Kubernetes" Version="3.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.HealthChecks" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.AzureAppServices" Version="7.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Devspaces.Support\Devspaces.Support.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\EventBus\EventBusRabbitMQ\EventBusRabbitMQ.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\EventBus\EventBusServiceBus\EventBusServiceBus.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\EventBus\EventBus\EventBus.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\EventBus\IntegrationEventLogEF\IntegrationEventLogEF.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\WebHostCustomization\WebHost.Customization\WebHost.Customization.csproj" />
+  </ItemGroup>
+
+</Project>
+
+

@@ -102,13 +102,16 @@ public static class ProgramExtensions
             .AddEnvironmentVariables();
 
         var config = builder.Build();
-
+        DebugLogger.Logger.Log("Add data to vault");
         if (config.GetValue<bool>("UseVault", false))
         {
+            // :: can use new DefaultAzureCredential();
+            // :: see  D:\src\AspNetCore.Docs\aspnetcore\security\key-vault-configuration\samples
             TokenCredential credential = new ClientSecretCredential(
-                config["Vault:TenantId"],
+                config["Vault:TenantId"], // there is no tenantId in the appsettings.json
                 config["Vault:ClientId"],
-                config["Vault:ClientSecret"]);
+                config["Vault:ClientSecret"]); 
+           
             builder.AddAzureKeyVault(new Uri($"https://{config["Vault:Name"]}.vault.azure.net/"), credential);
         }
 

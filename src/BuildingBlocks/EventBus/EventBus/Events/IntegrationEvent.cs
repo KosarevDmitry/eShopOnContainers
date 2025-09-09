@@ -1,5 +1,8 @@
 ﻿namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
 
+/// <summary>
+/// только guid и дата создания 
+/// </summary>
 public record IntegrationEvent
 {        
     public IntegrationEvent()
@@ -8,7 +11,7 @@ public record IntegrationEvent
         CreationDate = DateTime.UtcNow;
     }
 
-    [JsonConstructor]
+    [JsonConstructor] // нужно посмотреть что какие аттрибуты еще есть
     public IntegrationEvent(Guid id, DateTime createDate)
     {
         Id = id;

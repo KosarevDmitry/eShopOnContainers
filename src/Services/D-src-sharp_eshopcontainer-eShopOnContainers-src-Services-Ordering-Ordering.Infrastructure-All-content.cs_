@@ -1,0 +1,724 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 16
+BuyerEntityTypeConfiguration.cs
+CardTypeEntityTypeConfiguration.cs
+ClientRequestEntityTypeConfiguration.cs
+OrderEntityTypeConfiguration.cs
+OrderItemEntityTypeConfiguration.cs
+OrderStatusEntityTypeConfiguration.cs
+PaymentMethodEntityTypeConfiguration.cs
+
+OrderingContext.cs
+
+MediatorExtension.cs
+
+Ordering.Infrastructure.csproj
+
+IRequestManager.cs
+RequestManager.cs
+
+BuyerRepository.cs
+OrderRepository.cs
+
+ClientRequest.cs
+
+GlobalUsings.cs
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\EntityConfigurations\BuyerEntityTypeConfiguration.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.EntityConfigurations;
+
+class BuyerEntityTypeConfiguration
+    : IEntityTypeConfiguration<Buyer>
+{
+    public void Configure(EntityTypeBuilder<Buyer> buyerConfiguration)
+    {
+        buyerConfiguration.ToTable("buyers", OrderingContext.DEFAULT_SCHEMA);
+
+        buyerConfiguration.HasKey(b => b.Id);
+
+        buyerConfiguration.Ignore(b => b.DomainEvents);
+
+        buyerConfiguration.Property(b => b.Id)
+            .UseHiLo("buyerseq", OrderingContext.DEFAULT_SCHEMA);
+
+        buyerConfiguration.Property(b => b.IdentityGuid)
+            .HasMaxLength(200)
+            .IsRequired();
+
+        buyerConfiguration.HasIndex("IdentityGuid")
+            .IsUnique(true);
+
+        buyerConfiguration.Property(b => b.Name);
+
+        buyerConfiguration.HasMany(b => b.PaymentMethods)
+            .WithOne()
+            .HasForeignKey("BuyerId")
+            .OnDelete(DeleteBehavior.Cascade);
+
+        var navigation = buyerConfiguration.Metadata.FindNavigation(nameof(Buyer.PaymentMethods));
+
+        navigation.SetPropertyAccessMode(PropertyAccessMode.Field);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\EntityConfigurations\CardTypeEntityTypeConfiguration.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.EntityConfigurations;
+
+class CardTypeEntityTypeConfiguration
+    : IEntityTypeConfiguration<CardType>
+{
+    public void Configure(EntityTypeBuilder<CardType> cardTypesConfiguration)
+    {
+        cardTypesConfiguration.ToTable("cardtypes", OrderingContext.DEFAULT_SCHEMA);
+
+        cardTypesConfiguration.HasKey(ct => ct.Id);
+
+        cardTypesConfiguration.Property(ct => ct.Id)
+            .HasDefaultValue(1)
+            .ValueGeneratedNever()
+            .IsRequired();
+
+        cardTypesConfiguration.Property(ct => ct.Name)
+            .HasMaxLength(200)
+            .IsRequired();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\EntityConfigurations\ClientRequestEntityTypeConfiguration.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.EntityConfigurations;
+
+class ClientRequestEntityTypeConfiguration
+    : IEntityTypeConfiguration<ClientRequest>
+{
+    public void Configure(EntityTypeBuilder<ClientRequest> requestConfiguration)
+    {
+        requestConfiguration.ToTable("requests", OrderingContext.DEFAULT_SCHEMA);
+        requestConfiguration.HasKey(cr => cr.Id);
+        requestConfiguration.Property(cr => cr.Name).IsRequired();
+        requestConfiguration.Property(cr => cr.Time).IsRequired();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\EntityConfigurations\OrderEntityTypeConfiguration.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.EntityConfigurations;
+
+class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
+{
+    public void Configure(EntityTypeBuilder<Order> orderConfiguration)
+    {
+        orderConfiguration.ToTable("orders", OrderingContext.DEFAULT_SCHEMA);
+
+        orderConfiguration.HasKey(o => o.Id);
+
+        orderConfiguration.Ignore(b => b.DomainEvents);
+
+        orderConfiguration.Property(o => o.Id)
+            .UseHiLo("orderseq", OrderingContext.DEFAULT_SCHEMA);
+
+        //Address value object persisted as owned entity type supported since EF Core 2.0
+        orderConfiguration
+            .OwnsOne(o => o.Address, a =>
+            {
+                // Explicit configuration of the shadow key property in the owned type 
+                // as a workaround for a documented issue in EF Core 5: https://github.com/dotnet/efcore/issues/20740
+                a.Property<int>("OrderId")
+                .UseHiLo("orderseq", OrderingContext.DEFAULT_SCHEMA);
+                a.WithOwner();
+            });
+
+        orderConfiguration
+            .Property<int?>("_buyerId")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("BuyerId")
+            .IsRequired(false);
+
+        orderConfiguration
+            .Property<DateTime>("_orderDate")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("OrderDate")
+            .IsRequired();
+
+        orderConfiguration
+            .Property<int>("_orderStatusId")
+            // .HasField("_orderStatusId")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("OrderStatusId")
+            .IsRequired();
+
+        orderConfiguration
+            .Property<int?>("_paymentMethodId")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("PaymentMethodId")
+            .IsRequired(false);
+
+        orderConfiguration.Property<string>("Description").IsRequired(false);
+
+        var navigation = orderConfiguration.Metadata.FindNavigation(nameof(Order.OrderItems));
+
+        // DDD Patterns comment:
+        //Set as field (New since EF 1.1) to access the OrderItem collection property through its field
+        navigation.SetPropertyAccessMode(PropertyAccessMode.Field);
+
+        orderConfiguration.HasOne<PaymentMethod>()
+            .WithMany()
+            // .HasForeignKey("PaymentMethodId")
+            .HasForeignKey("_paymentMethodId")
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        orderConfiguration.HasOne<Buyer>()
+            .WithMany()
+            .IsRequired(false)
+            // .HasForeignKey("BuyerId");
+            .HasForeignKey("_buyerId");
+
+        orderConfiguration.HasOne(o => o.OrderStatus)
+            .WithMany()
+            // .HasForeignKey("OrderStatusId");
+            .HasForeignKey("_orderStatusId");
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\EntityConfigurations\OrderItemEntityTypeConfiguration.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.EntityConfigurations;
+
+class OrderItemEntityTypeConfiguration
+    : IEntityTypeConfiguration<OrderItem>
+{
+    public void Configure(EntityTypeBuilder<OrderItem> orderItemConfiguration)
+    {
+        orderItemConfiguration.ToTable("orderItems", OrderingContext.DEFAULT_SCHEMA);
+
+        orderItemConfiguration.HasKey(o => o.Id);
+
+        orderItemConfiguration.Ignore(b => b.DomainEvents);
+
+        orderItemConfiguration.Property(o => o.Id)
+            .UseHiLo("orderitemseq");
+
+        orderItemConfiguration.Property<int>("OrderId")
+            .IsRequired();
+
+        orderItemConfiguration
+            .Property<decimal>("_discount")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("Discount")
+            .IsRequired();
+
+        orderItemConfiguration.Property<int>("ProductId")
+            .IsRequired();
+
+        orderItemConfiguration
+            .Property<string>("_productName")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("ProductName")
+            .IsRequired();
+
+        orderItemConfiguration
+            .Property<decimal>("_unitPrice")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("UnitPrice")
+            .IsRequired();
+
+        orderItemConfiguration
+            .Property<int>("_units")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("Units")
+            .IsRequired();
+
+        orderItemConfiguration
+            .Property<string>("_pictureUrl")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("PictureUrl")
+            .IsRequired(false);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\EntityConfigurations\OrderStatusEntityTypeConfiguration.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.EntityConfigurations;
+
+class OrderStatusEntityTypeConfiguration
+    : IEntityTypeConfiguration<OrderStatus>
+{
+    public void Configure(EntityTypeBuilder<OrderStatus> orderStatusConfiguration)
+    {
+        orderStatusConfiguration.ToTable("orderstatus", OrderingContext.DEFAULT_SCHEMA);
+
+        orderStatusConfiguration.HasKey(o => o.Id);
+
+        orderStatusConfiguration.Property(o => o.Id)
+            .HasDefaultValue(1)
+            .ValueGeneratedNever()
+            .IsRequired();
+
+        orderStatusConfiguration.Property(o => o.Name)
+            .HasMaxLength(200)
+            .IsRequired();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\EntityConfigurations\PaymentMethodEntityTypeConfiguration.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.EntityConfigurations;
+
+class PaymentMethodEntityTypeConfiguration
+    : IEntityTypeConfiguration<PaymentMethod>
+{
+    public void Configure(EntityTypeBuilder<PaymentMethod> paymentConfiguration)
+    {
+        paymentConfiguration.ToTable("paymentmethods", OrderingContext.DEFAULT_SCHEMA);
+
+        paymentConfiguration.HasKey(b => b.Id);
+
+        paymentConfiguration.Ignore(b => b.DomainEvents);
+
+        paymentConfiguration.Property(b => b.Id)
+            .UseHiLo("paymentseq", OrderingContext.DEFAULT_SCHEMA);
+
+        paymentConfiguration.Property<int>("BuyerId")
+            .IsRequired();
+
+        paymentConfiguration
+            .Property<string>("_cardHolderName")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("CardHolderName")
+            .HasMaxLength(200)
+            .IsRequired();
+
+        paymentConfiguration
+            .Property<string>("_alias")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("Alias")
+            .HasMaxLength(200)
+            .IsRequired();
+
+        paymentConfiguration
+            .Property<string>("_cardNumber")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("CardNumber")
+            .HasMaxLength(25)
+            .IsRequired();
+
+        paymentConfiguration
+            .Property<DateTime>("_expiration")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("Expiration")
+            .HasMaxLength(25)
+            .IsRequired();
+
+        paymentConfiguration
+            .Property<int>("_cardTypeId")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("CardTypeId")
+            .IsRequired();
+
+        paymentConfiguration.HasOne(p => p.CardType)
+            .WithMany()
+            .HasForeignKey("_cardTypeId");
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\GlobalUsings.cs
+global using MediatR;
+global using Microsoft.EntityFrameworkCore.Design;
+global using Microsoft.EntityFrameworkCore.Metadata.Builders;
+global using Microsoft.EntityFrameworkCore.Storage;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.BuyerAggregate;
+global using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
+global using Microsoft.eShopOnContainers.Services.Ordering.Domain.Seedwork;
+global using Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.Idempotency;
+global using Microsoft.eShopOnContainers.Services.Ordering.Infrastructure;
+global using Microsoft.eShopOnContainers.Services.Ordering.Domain.Exceptions;
+global using Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.EntityConfigurations;
+global using System.Data;
+global using System.Linq;
+global using System.Threading.Tasks;
+global using System.Threading;
+global using System;
+global using System.Collections.Generic;
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\Idempotency\ClientRequest.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.Idempotency;
+
+public class ClientRequest
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; }
+    public DateTime Time { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\Idempotency\IRequestManager.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.Idempotency;
+
+public interface IRequestManager
+{
+    Task<bool> ExistAsync(Guid id);
+
+    Task CreateRequestForCommandAsync<T>(Guid id);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\Idempotency\RequestManager.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.Idempotency;
+
+public class RequestManager : IRequestManager
+{
+    private readonly OrderingContext _context;
+
+    public RequestManager(OrderingContext context)
+    {
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+    }
+
+
+    public async Task<bool> ExistAsync(Guid id)
+    {
+        var request = await _context.
+            FindAsync<ClientRequest>(id);
+
+        return request != null;
+    }
+
+    public async Task CreateRequestForCommandAsync<T>(Guid id)
+    {
+        var exists = await ExistAsync(id);
+
+        var request = exists ?
+            throw new OrderingDomainException($"Request with {id} already exists") :
+            new ClientRequest()
+            {
+                Id = id,
+                Name = typeof(T).Name,
+                Time = DateTime.UtcNow
+            };
+
+        _context.Add(request);
+
+        await _context.SaveChangesAsync();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\MediatorExtension.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure;
+
+static class MediatorExtension
+{
+    public static async Task DispatchDomainEventsAsync(this IMediator mediator, OrderingContext ctx)
+    {
+        var domainEntities = ctx.ChangeTracker
+            .Entries<Entity>()
+            .Where(x => x.Entity.DomainEvents != null && x.Entity.DomainEvents.Any());
+
+        var domainEvents = domainEntities
+            .SelectMany(x => x.Entity.DomainEvents)
+            .ToList();
+
+        domainEntities.ToList()
+            .ForEach(entity => entity.Entity.ClearDomainEvents());
+
+        foreach (var domainEvent in domainEvents)
+            await mediator.Publish(domainEvent);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\Ordering.Infrastructure.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ordering.Domain\Ordering.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="11.1.0" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
+  </ItemGroup>
+
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\OrderingContext.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure;
+
+public class OrderingContext : DbContext, IUnitOfWork
+{
+    public const string DEFAULT_SCHEMA = "ordering";
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<PaymentMethod> Payments { get; set; }
+    public DbSet<Buyer> Buyers { get; set; }
+    public DbSet<CardType> CardTypes { get; set; }
+    public DbSet<OrderStatus> OrderStatus { get; set; }
+
+    private readonly IMediator _mediator;
+    private IDbContextTransaction _currentTransaction;
+
+    public OrderingContext(DbContextOptions<OrderingContext> options) : base(options) { }
+
+    public IDbContextTransaction GetCurrentTransaction() => _currentTransaction;
+
+    public bool HasActiveTransaction => _currentTransaction != null;
+
+    public OrderingContext(DbContextOptions<OrderingContext> options, IMediator mediator) : base(options)
+    {
+        _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+
+
+        System.Diagnostics.Debug.WriteLine("OrderingContext::ctor ->" + this.GetHashCode());
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new ClientRequestEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new PaymentMethodEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new OrderEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new OrderItemEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new CardTypeEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new OrderStatusEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new BuyerEntityTypeConfiguration());
+    }
+
+    public async Task<bool> SaveEntitiesAsync(CancellationToken cancellationToken = default(CancellationToken))
+    {
+        // Dispatch Domain Events collection. 
+        // Choices:
+        // A) Right BEFORE committing data (EF SaveChanges) into the DB will make a single transaction including  
+        // side effects from the domain event handlers which are using the same DbContext with "InstancePerLifetimeScope" or "scoped" lifetime
+        // B) Right AFTER committing data (EF SaveChanges) into the DB will make multiple transactions. 
+        // You will need to handle eventual consistency and compensatory actions in case of failures in any of the Handlers. 
+        await _mediator.DispatchDomainEventsAsync(this);
+
+        // After executing this line all the changes (from the Command Handler and Domain Event Handlers) 
+        // performed through the DbContext will be committed
+        var result = await base.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
+    public async Task<IDbContextTransaction> BeginTransactionAsync()
+    {
+        if (_currentTransaction != null) return null;
+
+        _currentTransaction = await Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+
+        return _currentTransaction;
+    }
+
+    public async Task CommitTransactionAsync(IDbContextTransaction transaction)
+    {
+        if (transaction == null) throw new ArgumentNullException(nameof(transaction));
+        if (transaction != _currentTransaction) throw new InvalidOperationException($"Transaction {transaction.TransactionId} is not current");
+
+        try
+        {
+            await SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            RollbackTransaction();
+            throw;
+        }
+        finally
+        {
+            if (_currentTransaction != null)
+            {
+                _currentTransaction.Dispose();
+                _currentTransaction = null;
+            }
+        }
+    }
+
+    public void RollbackTransaction()
+    {
+        try
+        {
+            _currentTransaction?.Rollback();
+        }
+        finally
+        {
+            if (_currentTransaction != null)
+            {
+                _currentTransaction.Dispose();
+                _currentTransaction = null;
+            }
+        }
+    }
+}
+
+public class OrderingContextDesignFactory : IDesignTimeDbContextFactory<OrderingContext>
+{
+    public OrderingContext CreateDbContext(string[] args)
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<OrderingContext>()
+            .UseSqlServer("Server=.;Initial Catalog=Microsoft.eShopOnContainers.Services.OrderingDb;Integrated Security=true");
+
+        return new OrderingContext(optionsBuilder.Options, new NoMediator());
+    }
+
+    class NoMediator : IMediator
+    {
+        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStreamRequest<TResponse> request, CancellationToken cancellationToken = default)
+        {
+            return default(IAsyncEnumerable<TResponse>);
+        }
+
+        public IAsyncEnumerable<object?> CreateStream(object request, CancellationToken cancellationToken = default)
+        {
+            return default(IAsyncEnumerable<object?>);
+        }
+
+        public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task Publish(object notification, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<TResponse>(default(TResponse));
+        }
+
+        public Task<object> Send(object request, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(default(object));
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\Repositories\BuyerRepository.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.Repositories;
+
+public class BuyerRepository
+    : IBuyerRepository
+{
+    private readonly OrderingContext _context;
+    public IUnitOfWork UnitOfWork => _context;
+
+    public BuyerRepository(OrderingContext context)
+    {
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+    }
+
+    public Buyer Add(Buyer buyer)
+    {
+        if (buyer.IsTransient())
+        {
+            return _context.Buyers
+                .Add(buyer)
+                .Entity;
+        }
+
+        return buyer;
+    }
+
+    public Buyer Update(Buyer buyer)
+    {
+        return _context.Buyers
+                .Update(buyer)
+                .Entity;
+    }
+
+    public async Task<Buyer> FindAsync(string identity)
+    {
+        var buyer = await _context.Buyers
+            .Include(b => b.PaymentMethods)
+            .Where(b => b.IdentityGuid == identity)
+            .SingleOrDefaultAsync();
+
+        return buyer;
+    }
+
+    public async Task<Buyer> FindByIdAsync(string id)
+    {
+        var buyer = await _context.Buyers
+            .Include(b => b.PaymentMethods)
+            .Where(b => b.Id == int.Parse(id))
+            .SingleOrDefaultAsync();
+
+        return buyer;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.Infrastructure\Repositories\OrderRepository.cs
+namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.Repositories;
+
+public class OrderRepository
+    : IOrderRepository
+{
+    private readonly OrderingContext _context;
+
+    public IUnitOfWork UnitOfWork => _context;
+
+    public OrderRepository(OrderingContext context)
+    {
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+    }
+
+    public Order Add(Order order)
+    {
+        return _context.Orders.Add(order).Entity;
+
+    }
+
+    public async Task<Order> GetAsync(int orderId)
+    {
+        var order = await _context
+                            .Orders
+                            .Include(x => x.Address)
+                            .FirstOrDefaultAsync(o => o.Id == orderId);
+        if (order == null)
+        {
+            order = _context
+                        .Orders
+                        .Local
+                        .FirstOrDefault(o => o.Id == orderId);
+        }
+        if (order != null)
+        {
+            await _context.Entry(order)
+                .Collection(i => i.OrderItems).LoadAsync();
+            await _context.Entry(order)
+                .Reference(i => i.OrderStatus).LoadAsync();
+        }
+
+        return order;
+    }
+
+    public void Update(Order order)
+    {
+        _context.Entry(order).State = EntityState.Modified;
+    }
+}
+
+

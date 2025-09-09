@@ -10,9 +10,10 @@ public class DevspacesMessageHandler : DelegatingHandler
     {
         _httpContextAccessor = httpContextAccessor;
     }
-    // добавление заголовка 
+    // :: add header `azds-route-as`
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        DebugLogger.Logger.Log("add header `azds-route-as` to httpclient request");  
         var req = _httpContextAccessor.HttpContext.Request;
 
         if (req.Headers.ContainsKey(DevspacesHeaderName))

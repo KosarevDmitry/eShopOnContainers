@@ -80,8 +80,8 @@ public class BasketController : ControllerBase
     }
 
     // DELETE api/values/5
-    [HttpDelete("{id}")]
-    [ProducesResponseType(typeof(void), (int)HttpStatusCode.OK)]
+    [HttpDelete("{id}")]  
+    [ProducesResponseType(typeof(void), (int)HttpStatusCode.OK)] // если Task то void
     public async Task DeleteBasketByIdAsync(string id)
     {
         await _repository.DeleteBasketAsync(id);

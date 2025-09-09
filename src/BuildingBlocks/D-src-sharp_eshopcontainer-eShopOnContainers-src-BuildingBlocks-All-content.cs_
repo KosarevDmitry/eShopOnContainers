@@ -1,0 +1,1961 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 46
+bus.sln
+
+IEventBus.cs
+EventBus.csproj
+EventBusServiceBus.cs
+EventBusServiceBus.csproj
+
+DefaultRabbitMQPersistentConnection.cs
+IRabbitMQPersistentConnection.cs
+DefaultServiceBusPersisterConnection.cs
+IServiceBusPersisterConnection.cs
+
+IntegrationEventLogContext.cs
+
+WebHost.Customization.csproj
+
+IntegrationEventLogEntry.cs
+
+EventStateEnum.cs
+
+TestIntegrationEvent.cs
+IntegrationEvent.cs
+
+HttpClientBuilderDevspacesExtensions.cs
+ServiceCollectionDevspacesExtensions.cs
+GenericTypeExtensions.cs
+WebHostExtensions.cs
+
+IntegrationEventLogEF.csproj
+
+DevspacesMessageHandler.cs
+TestIntegrationEventHandler.cs
+TestIntegrationOtherEventHandler.cs
+IDynamicIntegrationEventHandler.cs
+IIntegrationEventHandler.cs
+
+SubscriptionInfo.cs
+
+IEventBusSubscriptionsManager.cs
+InMemoryEventBusSubscriptionsManager.cs
+
+EventBusRabbitMQ.cs
+EventBusRabbitMQ.csproj
+
+readme.md
+
+IIntegrationEventLogService.cs
+IntegrationEventLogService.cs
+
+bus.sln.DotSettings.user
+testtt.sln.DotSettings.user
+
+Devspaces.Support.csproj
+
+GenericTypeExtensionsTest.cs
+
+EventBus.Tests.csproj
+InMemory_SubscriptionManager_Tests.cs
+Tests.cs
+
+ResilientTransaction.cs
+
+GlobalUsings.cs
+GlobalUsings.cs
+GlobalUsings.cs
+GlobalUsings.cs
+GlobalUsings.cs
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\bus.sln
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBus", "EventBus\EventBus.csproj", "{A16BF0C1-6B91-46D3-9FA4-6987CF48208A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBus.Tests", "EventBus.Tests\EventBus.Tests.csproj", "{54857B31-44D7-4E8D-A012-6FF20D12A55D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBusServiceBus", "EventBusServiceBus\EventBusServiceBus.csproj", "{71EF6CD5-A1BF-4D8B-9381-78620E1BE6F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationEventLogEF", "IntegrationEventLogEF\IntegrationEventLogEF.csproj", "{62C9D71F-2AC6-4249-8FB4-AA0CBFA275C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBusRabbitMQ", "EventBusRabbitMQ\EventBusRabbitMQ.csproj", "{7D8E1225-DA78-4B8E-A917-636DACB47D7C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A16BF0C1-6B91-46D3-9FA4-6987CF48208A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A16BF0C1-6B91-46D3-9FA4-6987CF48208A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A16BF0C1-6B91-46D3-9FA4-6987CF48208A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A16BF0C1-6B91-46D3-9FA4-6987CF48208A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54857B31-44D7-4E8D-A012-6FF20D12A55D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54857B31-44D7-4E8D-A012-6FF20D12A55D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54857B31-44D7-4E8D-A012-6FF20D12A55D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54857B31-44D7-4E8D-A012-6FF20D12A55D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71EF6CD5-A1BF-4D8B-9381-78620E1BE6F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71EF6CD5-A1BF-4D8B-9381-78620E1BE6F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71EF6CD5-A1BF-4D8B-9381-78620E1BE6F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71EF6CD5-A1BF-4D8B-9381-78620E1BE6F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62C9D71F-2AC6-4249-8FB4-AA0CBFA275C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62C9D71F-2AC6-4249-8FB4-AA0CBFA275C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62C9D71F-2AC6-4249-8FB4-AA0CBFA275C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62C9D71F-2AC6-4249-8FB4-AA0CBFA275C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D8E1225-DA78-4B8E-A917-636DACB47D7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D8E1225-DA78-4B8E-A917-636DACB47D7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D8E1225-DA78-4B8E-A917-636DACB47D7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D8E1225-DA78-4B8E-A917-636DACB47D7C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Abstractions\IEventBus.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+
+public interface IEventBus
+{
+    void Publish(IntegrationEvent @event);
+
+    void Subscribe<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>;
+
+    void SubscribeDynamic<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler;
+
+    void UnsubscribeDynamic<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler;
+
+    void Unsubscribe<T, TH>()
+        where TH : IIntegrationEventHandler<T>
+        where T : IntegrationEvent;
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\EventBus.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>Microsoft.eShopOnContainers.BuildingBlocks.EventBus</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>    
+  </ItemGroup>
+
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus\EventBusServiceBus.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus;
+
+public class EventBusServiceBus : IEventBus, IAsyncDisposable
+{
+    private readonly IServiceBusPersisterConnection _serviceBusPersisterConnection;
+    private readonly ILogger<EventBusServiceBus> _logger;
+    private readonly IEventBusSubscriptionsManager _subsManager;
+    private readonly ILifetimeScope _autofac;
+    private readonly string _topicName = "eshop_event_bus";
+    private readonly string _subscriptionName;
+    private readonly ServiceBusSender _sender;
+    private readonly ServiceBusProcessor _processor;
+    private readonly string AUTOFAC_SCOPE_NAME = "eshop_event_bus";
+    private const string INTEGRATION_EVENT_SUFFIX = "IntegrationEvent";
+
+    public EventBusServiceBus(IServiceBusPersisterConnection serviceBusPersisterConnection,
+        ILogger<EventBusServiceBus> logger, IEventBusSubscriptionsManager subsManager, ILifetimeScope autofac, string subscriptionClientName)
+    {
+        _serviceBusPersisterConnection = serviceBusPersisterConnection;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _subsManager = subsManager ?? new InMemoryEventBusSubscriptionsManager();
+        _autofac = autofac;
+        _subscriptionName = subscriptionClientName;
+        _sender = _serviceBusPersisterConnection.TopicClient.CreateSender(_topicName);
+        ServiceBusProcessorOptions options = new ServiceBusProcessorOptions { MaxConcurrentCalls = 10, AutoCompleteMessages = false };
+        _processor = _serviceBusPersisterConnection.TopicClient.CreateProcessor(_topicName, _subscriptionName, options);
+
+        RemoveDefaultRule();
+        RegisterSubscriptionClientMessageHandlerAsync().GetAwaiter().GetResult();
+    }
+
+    public void Publish(IntegrationEvent @event)
+    {
+        var eventName = @event.GetType().Name.Replace(INTEGRATION_EVENT_SUFFIX, "");
+        var jsonMessage = JsonSerializer.Serialize(@event, @event.GetType());
+        var body = Encoding.UTF8.GetBytes(jsonMessage);
+
+        var message = new ServiceBusMessage
+        {
+            MessageId = Guid.NewGuid().ToString(),
+            Body = new BinaryData(body),
+            Subject = eventName,
+        };
+
+        _sender.SendMessageAsync(message)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    public void SubscribeDynamic<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler
+    {
+        _logger.LogInformation("Subscribing to dynamic event {EventName} with {EventHandler}", eventName, typeof(TH).Name);
+
+        _subsManager.AddDynamicSubscription<TH>(eventName);
+    }
+
+    public void Subscribe<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>
+    {
+        var eventName = typeof(T).Name.Replace(INTEGRATION_EVENT_SUFFIX, "");
+
+        var containsKey = _subsManager.HasSubscriptionsForEvent<T>();
+        if (!containsKey)
+        {
+            try
+            {
+                _serviceBusPersisterConnection.AdministrationClient.CreateRuleAsync(_topicName, _subscriptionName, new CreateRuleOptions
+                {
+                    Filter = new CorrelationRuleFilter() { Subject = eventName },
+                    Name = eventName
+                }).GetAwaiter().GetResult();
+            }
+            catch (ServiceBusException)
+            {
+                _logger.LogWarning("The messaging entity {eventName} already exists.", eventName);
+            }
+        }
+
+        _logger.LogInformation("Subscribing to event {EventName} with {EventHandler}", eventName, typeof(TH).Name);
+
+        _subsManager.AddSubscription<T, TH>();
+    }
+
+    public void Unsubscribe<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>
+    {
+        var eventName = typeof(T).Name.Replace(INTEGRATION_EVENT_SUFFIX, "");
+
+        try
+        {
+            _serviceBusPersisterConnection
+                .AdministrationClient
+                .DeleteRuleAsync(_topicName, _subscriptionName, eventName)
+                .GetAwaiter()
+                .GetResult();
+        }
+        catch (ServiceBusException ex) when (ex.Reason == ServiceBusFailureReason.MessagingEntityNotFound)
+        {
+            _logger.LogWarning("The messaging entity {eventName} Could not be found.", eventName);
+        }
+
+        _logger.LogInformation("Unsubscribing from event {EventName}", eventName);
+
+        _subsManager.RemoveSubscription<T, TH>();
+    }
+
+    public void UnsubscribeDynamic<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler
+    {
+        _logger.LogInformation("Unsubscribing from dynamic event {EventName}", eventName);
+
+        _subsManager.RemoveDynamicSubscription<TH>(eventName);
+    }
+
+    private async Task RegisterSubscriptionClientMessageHandlerAsync()
+    {
+        _processor.ProcessMessageAsync +=
+            async (args) =>
+            {
+                var eventName = $"{args.Message.Subject}{INTEGRATION_EVENT_SUFFIX}";
+                string messageData = args.Message.Body.ToString();
+
+                // Complete the message so that it is not received again.
+                if (await ProcessEvent(eventName, messageData))
+                {
+                    await args.CompleteMessageAsync(args.Message);
+                }
+            };
+
+        _processor.ProcessErrorAsync += ErrorHandler;
+        await _processor.StartProcessingAsync();
+    }
+
+    private Task ErrorHandler(ProcessErrorEventArgs args)
+    {
+        var ex = args.Exception;
+        var context = args.ErrorSource;
+
+        _logger.LogError(ex, "ERROR handling message: {ExceptionMessage} - Context: {@ExceptionContext}", ex.Message, context);
+
+        return Task.CompletedTask;
+    }
+
+    private async Task<bool> ProcessEvent(string eventName, string message)
+    {
+        var processed = false;
+        if (_subsManager.HasSubscriptionsForEvent(eventName))
+        {
+            var scope = _autofac.BeginLifetimeScope(AUTOFAC_SCOPE_NAME);
+            var subscriptions = _subsManager.GetHandlersForEvent(eventName);
+            foreach (var subscription in subscriptions)
+            {
+                if (subscription.IsDynamic)
+                {
+                    if (scope.ResolveOptional(subscription.HandlerType) is not IDynamicIntegrationEventHandler handler) continue;
+
+                    using dynamic eventData = JsonDocument.Parse(message);
+                    await handler.Handle(eventData);
+                }
+                else
+                {
+                    var handler = scope.ResolveOptional(subscription.HandlerType);
+                    if (handler == null) continue;
+                    var eventType = _subsManager.GetEventTypeByName(eventName);
+                    var integrationEvent = JsonSerializer.Deserialize(message, eventType);
+                    var concreteType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
+                    await (Task)concreteType.GetMethod("Handle").Invoke(handler, new[] { integrationEvent });
+                }
+            }
+        }
+        processed = true;
+        return processed;
+    }
+
+    private void RemoveDefaultRule()
+    {
+        try
+        {
+            _serviceBusPersisterConnection
+                .AdministrationClient
+                .DeleteRuleAsync(_topicName, _subscriptionName, RuleProperties.DefaultRuleName)
+                .GetAwaiter()
+                .GetResult();
+        }
+        catch (ServiceBusException ex) when (ex.Reason == ServiceBusFailureReason.MessagingEntityNotFound)
+        {
+            _logger.LogWarning("The messaging entity {DefaultRuleName} Could not be found.", RuleProperties.DefaultRuleName);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _subsManager.Clear();
+        await _processor.CloseAsync();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus\EventBusServiceBus.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="6.5.0" />
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.11.1" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EventBus\EventBus.csproj" />
+  </ItemGroup>
+
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusRabbitMQ\DefaultRabbitMQPersistentConnection.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBusRabbitMQ;
+
+public class DefaultRabbitMQPersistentConnection
+    : IRabbitMQPersistentConnection
+{
+    private readonly IConnectionFactory _connectionFactory;
+    private readonly ILogger<DefaultRabbitMQPersistentConnection> _logger;
+    private readonly int _retryCount;
+    private IConnection _connection;
+    public bool Disposed;
+
+    readonly object _syncRoot = new();
+
+    public DefaultRabbitMQPersistentConnection(IConnectionFactory connectionFactory, ILogger<DefaultRabbitMQPersistentConnection> logger, int retryCount = 5)
+    {
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _retryCount = retryCount;
+    }
+
+    public bool IsConnected => _connection is { IsOpen: true } && !Disposed;
+
+    public IModel CreateModel()
+    {
+        if (!IsConnected)
+        {
+            throw new InvalidOperationException("No RabbitMQ connections are available to perform this action");
+        }
+
+        return _connection.CreateModel();
+    }
+
+    public void Dispose()
+    {
+        if (Disposed) return;
+
+        Disposed = true;
+
+        try
+        {
+            _connection.ConnectionShutdown -= OnConnectionShutdown;
+            _connection.CallbackException -= OnCallbackException;
+            _connection.ConnectionBlocked -= OnConnectionBlocked;
+            _connection.Dispose();
+        }
+        catch (IOException ex)
+        {
+            _logger.LogCritical(ex.ToString());
+        }
+    }
+
+    public bool TryConnect()
+    {
+        _logger.LogInformation("RabbitMQ Client is trying to connect");
+
+        lock (_syncRoot)
+        {
+            var policy = RetryPolicy.Handle<SocketException>()
+                .Or<BrokerUnreachableException>()
+                .WaitAndRetry(_retryCount, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
+                {
+                    _logger.LogWarning(ex, "RabbitMQ Client could not connect after {TimeOut}s ({ExceptionMessage})", $"{time.TotalSeconds:n1}", ex.Message);
+                }
+            );
+
+            policy.Execute(() =>
+            {
+                _connection = _connectionFactory
+                        .CreateConnection();
+            });
+
+            if (IsConnected)
+            {
+                _connection.ConnectionShutdown += OnConnectionShutdown;
+                _connection.CallbackException += OnCallbackException;
+                _connection.ConnectionBlocked += OnConnectionBlocked;
+
+                _logger.LogInformation("RabbitMQ Client acquired a persistent connection to '{HostName}' and is subscribed to failure events", _connection.Endpoint.HostName);
+
+                return true;
+            }
+            else
+            {
+                _logger.LogCritical("FATAL ERROR: RabbitMQ connections could not be created and opened");
+
+                return false;
+            }
+        }
+    }
+
+    private void OnConnectionBlocked(object sender, ConnectionBlockedEventArgs e)
+    {
+        if (Disposed) return;
+
+        _logger.LogWarning("A RabbitMQ connection is shutdown. Trying to re-connect...");
+
+        TryConnect();
+    }
+
+    void OnCallbackException(object sender, CallbackExceptionEventArgs e)
+    {
+        if (Disposed) return;
+
+        _logger.LogWarning("A RabbitMQ connection throw exception. Trying to re-connect...");
+
+        TryConnect();
+    }
+
+    void OnConnectionShutdown(object sender, ShutdownEventArgs reason)
+    {
+        if (Disposed) return;
+
+        _logger.LogWarning("A RabbitMQ connection is on shutdown. Trying to re-connect...");
+
+        TryConnect();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusRabbitMQ\IRabbitMQPersistentConnection.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBusRabbitMQ;
+
+public interface IRabbitMQPersistentConnection
+    : IDisposable
+{
+    bool IsConnected { get; }
+
+    bool TryConnect();
+
+    IModel CreateModel();
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus\DefaultServiceBusPersisterConnection.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus;
+
+public class DefaultServiceBusPersisterConnection : IServiceBusPersisterConnection
+{
+    private readonly string _serviceBusConnectionString;
+    private ServiceBusClient _topicClient;
+    private ServiceBusAdministrationClient _subscriptionClient;
+
+    bool _disposed;
+
+    public DefaultServiceBusPersisterConnection(string serviceBusConnectionString)
+    {
+        _serviceBusConnectionString = serviceBusConnectionString;
+        _subscriptionClient = new ServiceBusAdministrationClient(_serviceBusConnectionString);
+        _topicClient = new ServiceBusClient(_serviceBusConnectionString);
+    }
+
+    public ServiceBusClient TopicClient
+    {
+        get
+        {
+            if (_topicClient.IsClosed)
+            {
+                _topicClient = new ServiceBusClient(_serviceBusConnectionString);
+            }
+            return _topicClient;
+        }
+    }
+
+    public ServiceBusAdministrationClient AdministrationClient => 
+        _subscriptionClient;
+
+    public ServiceBusClient CreateModel()
+    {
+        if (_topicClient.IsClosed)
+        {
+            _topicClient = new ServiceBusClient(_serviceBusConnectionString);
+        }
+
+        return _topicClient;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed) return;
+
+        _disposed = true;
+        await _topicClient.DisposeAsync();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus\IServiceBusPersisterConnection.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus;
+
+public interface IServiceBusPersisterConnection : IAsyncDisposable
+{
+    ServiceBusClient TopicClient { get; }
+    ServiceBusAdministrationClient AdministrationClient { get; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\IntegrationEventLogContext.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF;
+
+public class IntegrationEventLogContext : DbContext
+{
+    public IntegrationEventLogContext(DbContextOptions<IntegrationEventLogContext> options) : base(options)
+    {
+    }
+
+    public DbSet<IntegrationEventLogEntry> IntegrationEventLogs { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        builder.Entity<IntegrationEventLogEntry>(ConfigureIntegrationEventLogEntry);
+    }
+
+    void ConfigureIntegrationEventLogEntry(EntityTypeBuilder<IntegrationEventLogEntry> builder)
+    {
+        builder.ToTable("IntegrationEventLog");
+
+        builder.HasKey(e => e.EventId);
+
+        builder.Property(e => e.EventId)
+            .IsRequired();
+
+        builder.Property(e => e.Content)
+            .IsRequired();
+
+        builder.Property(e => e.CreationTime)
+            .IsRequired();
+
+        builder.Property(e => e.State)
+            .IsRequired();
+
+        builder.Property(e => e.TimesSent)
+            .IsRequired();
+
+        builder.Property(e => e.EventTypeName)
+            .IsRequired();
+
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\WebHostCustomization\WebHost.Customization\WebHost.Customization.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <GenerateErrorForMissingTargetingPacks>false</GenerateErrorForMissingTargetingPacks>
+  </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.0" />
+    <PackageReference Include="Microsoft.NETCore.Platforms" Version="7.0.0" />
+    <PackageReference Include="Polly" Version="7.2.3" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
+  </ItemGroup>
+
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\IntegrationEventLogEntry.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF;
+
+public class IntegrationEventLogEntry
+{
+    private IntegrationEventLogEntry() { }
+    public IntegrationEventLogEntry(IntegrationEvent @event, Guid transactionId)
+    {
+        EventId = @event.Id;
+        CreationTime = @event.CreationDate;
+        EventTypeName = @event.GetType().FullName;                     
+        Content = JsonSerializer.Serialize(@event, @event.GetType(), new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        State = EventStateEnum.NotPublished;
+        TimesSent = 0;
+        TransactionId = transactionId.ToString();
+    }
+    public Guid EventId { get; private set; }
+    public string EventTypeName { get; private set; }
+    [NotMapped]
+    public string EventTypeShortName => EventTypeName.Split('.')?.Last();
+    [NotMapped]
+    public IntegrationEvent IntegrationEvent { get; private set; }
+    public EventStateEnum State { get; set; }
+    public int TimesSent { get; set; }
+    public DateTime CreationTime { get; private set; }
+    public string Content { get; private set; }
+    public string TransactionId { get; private set; }
+
+    public IntegrationEventLogEntry DeserializeJsonContent(Type type)
+    {            
+        IntegrationEvent = JsonSerializer.Deserialize(Content, type, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) as IntegrationEvent;
+        return this;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\EventStateEnum.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF;
+
+public enum EventStateEnum
+{
+    NotPublished = 0,
+    InProgress = 1,
+    Published = 2,
+    PublishedFailed = 3
+}
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus.Tests\TestIntegrationEvent.cs
+using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace EventBus.Tests
+{
+    public record TestIntegrationEvent : IntegrationEvent
+    {
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Events\IntegrationEvent.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
+
+public record IntegrationEvent
+{        
+    public IntegrationEvent()
+    {
+        Id = Guid.NewGuid();
+        CreationDate = DateTime.UtcNow;
+    }
+
+    [JsonConstructor] // нужно посмотреть что какие аттрибуты еще есть
+    public IntegrationEvent(Guid id, DateTime createDate)
+    {
+        Id = id;
+        CreationDate = createDate;
+    }
+
+    [JsonInclude]
+    public Guid Id { get; private init; }
+
+    [JsonInclude]
+    public DateTime CreationDate { get; private init; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\HttpClientBuilderDevspacesExtensions.cs
+namespace Devspaces.Support;
+
+public static class HttpClientBuilderDevspacesExtensions
+{
+    public static IHttpClientBuilder AddDevspacesSupport(this IHttpClientBuilder builder)
+    {
+        builder.AddHttpMessageHandler<DevspacesMessageHandler>();
+        return builder;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\ServiceCollectionDevspacesExtensions.cs
+namespace Devspaces.Support;
+
+public static class ServiceCollectionDevspacesExtensions
+{
+    public static IServiceCollection AddDevspaces(this IServiceCollection services)
+    {
+        services.AddTransient<DevspacesMessageHandler>();
+        return services;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Extensions\GenericTypeExtensions.cs
+using System.Diagnostics;
+
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Extensions;
+public static class GenericTypeExtensions
+{
+    public static string GetGenericTypeName(this Type type)
+    {
+        string typeName;
+
+        if (type.IsGenericType)
+        {
+           var genericTypes = string.Join(",", type.GetGenericArguments().Select(t => t.Name).ToArray());
+            typeName = $"{type.Name.Remove(type.Name.IndexOf('`'))}<{genericTypes}>";
+        }
+        else
+        {
+            typeName = type.Name;
+        }
+
+        return typeName;
+    }
+
+    public static string GetGenericTypeName(this object @object)
+    {
+        return @object.GetType().GetGenericTypeName();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\WebHostCustomization\WebHost.Customization\WebHostExtensions.cs
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Polly;
+using System;
+using System.Data.SqlClient;
+
+namespace Microsoft.AspNetCore.Hosting
+{
+    public static class IWebHostExtensions
+    {
+        public static bool IsInKubernetes(this IWebHost webHost)
+        {
+            var cfg = webHost.Services.GetService<IConfiguration>();
+            var orchestratorType = cfg.GetValue<string>("OrchestratorType");
+            return orchestratorType?.ToUpper() == "K8S";
+        }
+
+        public static IWebHost MigrateDbContext<TContext>(this IWebHost webHost, Action<TContext, IServiceProvider> seeder) where TContext : DbContext
+        {
+            var underK8s = webHost.IsInKubernetes();
+
+            using var scope = webHost.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var logger = services.GetRequiredService<ILogger<TContext>>();
+            var context = services.GetService<TContext>();
+
+            try
+            {
+                logger.LogInformation("Migrating database associated with context {DbContextName}", typeof(TContext).Name);
+
+                if (underK8s)
+                {
+                    InvokeSeeder(seeder, context, services);
+                }
+                else
+                {
+                    var retries = 10;
+                    var retry = Policy.Handle<SqlException>()
+                        .WaitAndRetry(
+                            retryCount: retries,
+                            sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                            onRetry: (exception, timeSpan, retry, ctx) =>
+                            {
+                                logger.LogWarning(exception, "[{prefix}] Exception {ExceptionType} with message {Message} detected on attempt {retry} of {retries}", nameof(TContext), exception.GetType().Name, exception.Message, retry, retries);
+                            });
+
+                    //if the sql server container is not created on run docker compose this
+                    //migration can't fail for network related exception. The retry options for DbContext only 
+                    //apply to transient exceptions
+                    // Note that this is NOT applied when running some orchestrators (let the orchestrator to recreate the failing service)
+                    retry.Execute(() => InvokeSeeder(seeder, context, services));
+                }
+
+                logger.LogInformation("Migrated database associated with context {DbContextName}", typeof(TContext).Name);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while migrating the database used on context {DbContextName}", typeof(TContext).Name);
+                if (underK8s)
+                {
+                    throw;          // Rethrow under k8s because we rely on k8s to re-run the pod
+                }
+            }
+
+            return webHost;
+        }
+
+        private static void InvokeSeeder<TContext>(Action<TContext, IServiceProvider> seeder, TContext context, IServiceProvider services)
+            where TContext : DbContext
+        {
+            context.Database.Migrate();
+            seeder(context, services);
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\IntegrationEventLogEF.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.0" />    
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EventBus\EventBus.csproj" />
+  </ItemGroup>
+
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\DevspacesMessageHandler.cs
+namespace Devspaces.Support;
+public class DevspacesMessageHandler : DelegatingHandler
+{
+    private const string DevspacesHeaderName = "azds-route-as";
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    public DevspacesMessageHandler(IHttpContextAccessor httpContextAccessor)
+    {
+        _httpContextAccessor = httpContextAccessor;
+    }
+    // :: add header `azds-route-as`
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        DebugLogger.Logger.Log("add header `azds-route-as` to httpclient request");  
+        var req = _httpContextAccessor.HttpContext.Request;
+
+        if (req.Headers.ContainsKey(DevspacesHeaderName))
+        {
+            request.Headers.Add(DevspacesHeaderName, req.Headers[DevspacesHeaderName] as IEnumerable<string>);
+        }
+        return base.SendAsync(request, cancellationToken);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus.Tests\TestIntegrationEventHandler.cs
+using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace EventBus.Tests
+{
+    public class TestIntegrationEventHandler : IIntegrationEventHandler<TestIntegrationEvent>
+    {
+        public bool Handled { get; private set; }
+
+        public TestIntegrationEventHandler()
+        {
+            Handled = false;
+        }
+
+        public async Task Handle(TestIntegrationEvent @event)
+        {
+            Handled = true;
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus.Tests\TestIntegrationOtherEventHandler.cs
+using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace EventBus.Tests
+{
+    public class TestIntegrationOtherEventHandler : IIntegrationEventHandler<TestIntegrationEvent>
+    {
+        public bool Handled { get; private set; }
+
+        public TestIntegrationOtherEventHandler()
+        {
+            Handled = false;
+        }
+
+        public async Task Handle(TestIntegrationEvent @event)
+        {
+            Handled = true;
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Abstractions\IDynamicIntegrationEventHandler.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+
+public interface IDynamicIntegrationEventHandler
+{
+    Task Handle(dynamic eventData);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Abstractions\IIntegrationEventHandler.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+// in  должен быть инициализирован и не должен меняться в теле функции
+public interface IIntegrationEventHandler<in TIntegrationEvent> : IIntegrationEventHandler
+    where TIntegrationEvent : IntegrationEvent
+{
+    Task Handle(TIntegrationEvent @event);
+}
+
+public interface IIntegrationEventHandler
+{
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\SubscriptionInfo.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
+
+public partial class InMemoryEventBusSubscriptionsManager : IEventBusSubscriptionsManager
+{
+    public class SubscriptionInfo
+    {
+        public bool IsDynamic { get; }
+        public Type HandlerType { get; }
+
+        private SubscriptionInfo(bool isDynamic, Type handlerType)
+        {
+            IsDynamic = isDynamic;
+            HandlerType = handlerType;
+        }
+
+        public static SubscriptionInfo Dynamic(Type handlerType) =>
+            new SubscriptionInfo(true, handlerType);
+
+        public static SubscriptionInfo Typed(Type handlerType) =>
+            new SubscriptionInfo(false, handlerType);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\IEventBusSubscriptionsManager.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
+
+public interface IEventBusSubscriptionsManager
+{
+    bool IsEmpty { get; }
+    event EventHandler<string> OnEventRemoved;
+    void AddDynamicSubscription<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler;
+
+    void AddSubscription<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>;
+
+    void RemoveSubscription<T, TH>()
+            where TH : IIntegrationEventHandler<T>
+            where T : IntegrationEvent;
+    void RemoveDynamicSubscription<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler;
+
+    bool HasSubscriptionsForEvent<T>() where T : IntegrationEvent;
+    bool HasSubscriptionsForEvent(string eventName);
+    Type GetEventTypeByName(string eventName);
+    void Clear();
+    IEnumerable<SubscriptionInfo> GetHandlersForEvent<T>() where T : IntegrationEvent;
+    IEnumerable<SubscriptionInfo> GetHandlersForEvent(string eventName);
+    string GetEventKey<T>();
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\InMemoryEventBusSubscriptionsManager.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
+
+public partial class InMemoryEventBusSubscriptionsManager : IEventBusSubscriptionsManager
+{
+
+    private readonly Dictionary<string, List<SubscriptionInfo>> _handlers;
+    private readonly List<Type> _eventTypes; // из string type не сделаешь,
+                                             // поэтому приходится поддерживать список типов тоже
+
+    public event EventHandler<string> OnEventRemoved; // когда в списке ни одного SubscriptionInfo ни остается,
+                                                      // вызывается этот делегат
+
+    public InMemoryEventBusSubscriptionsManager()
+    {
+        _handlers = new Dictionary<string, List<SubscriptionInfo>>();
+        _eventTypes = new List<Type>();
+    }
+
+    public bool IsEmpty => _handlers is { Count: 0 };
+    public void Clear() => _handlers.Clear();
+
+    public void AddDynamicSubscription<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler
+    {
+        DoAddSubscription(typeof(TH), eventName, isDynamic: true);
+    }
+
+    public void AddSubscription<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>
+    {
+        var eventName = GetEventKey<T>();
+
+        DoAddSubscription(typeof(TH), eventName, isDynamic: false);
+
+        if (!_eventTypes.Contains(typeof(T)))
+        {
+            _eventTypes.Add(typeof(T));
+        }
+    }
+
+    private void DoAddSubscription(Type handlerType, string eventName, bool isDynamic)
+    {
+        if (!HasSubscriptionsForEvent(eventName))
+        {
+            _handlers.Add(eventName, new List<SubscriptionInfo>());
+        }
+
+        if (_handlers[eventName].Any(s => s.HandlerType == handlerType))
+        {
+            throw new ArgumentException(
+                $"Handler Type {handlerType.Name} already registered for '{eventName}'", nameof(handlerType));
+        }
+
+        if (isDynamic)
+        {
+            _handlers[eventName].Add(SubscriptionInfo.Dynamic(handlerType));
+        }
+        else
+        {
+            _handlers[eventName].Add(SubscriptionInfo.Typed(handlerType));
+        }
+    }
+
+
+    public void RemoveDynamicSubscription<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler
+    {
+        var handlerToRemove = FindDynamicSubscriptionToRemove<TH>(eventName);
+        DoRemoveHandler(eventName, handlerToRemove);
+    }
+
+
+    public void RemoveSubscription<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>
+    {
+        var eventName       = GetEventKey<T>();
+        var handlerToRemove = FindSubscriptionToRemove<T, TH>();
+        DoRemoveHandler(eventName, handlerToRemove);
+    }
+
+
+    private void DoRemoveHandler(string eventName, SubscriptionInfo subsToRemove)
+    {
+        if (subsToRemove != null)
+        {
+            _handlers[eventName].Remove(subsToRemove);
+            if (!_handlers[eventName].Any())
+            {
+                _handlers.Remove(eventName);
+                var eventType = _eventTypes.SingleOrDefault(e => e.Name == eventName);
+                if (eventType != null)
+                {
+                    _eventTypes.Remove(eventType);
+                }
+                RaiseOnEventRemoved(eventName);
+            }
+
+        }
+    }
+
+    public IEnumerable<SubscriptionInfo> GetHandlersForEvent<T>() where T : IntegrationEvent
+    {
+        var key = GetEventKey<T>();
+        return GetHandlersForEvent(key);
+    }
+    public IEnumerable<SubscriptionInfo> GetHandlersForEvent(string eventName) => _handlers[eventName];
+
+    private void RaiseOnEventRemoved(string eventName)
+    {
+        var handler = OnEventRemoved;
+        handler?.Invoke(this, eventName);
+    }
+
+
+    private SubscriptionInfo FindDynamicSubscriptionToRemove<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler
+    {
+        return DoFindSubscriptionToRemove(eventName, typeof(TH));
+    }
+
+
+    private SubscriptionInfo FindSubscriptionToRemove<T, TH>()
+            where T : IntegrationEvent
+            where TH : IIntegrationEventHandler<T>
+    {
+        var eventName = GetEventKey<T>();
+        return DoFindSubscriptionToRemove(eventName, typeof(TH));
+    }
+
+    private SubscriptionInfo DoFindSubscriptionToRemove(string eventName, Type handlerType)
+    {
+        if (!HasSubscriptionsForEvent(eventName))
+        {
+            return null;
+        }
+
+        return _handlers[eventName].SingleOrDefault(s => s.HandlerType == handlerType);
+
+    }
+
+    public bool HasSubscriptionsForEvent<T>() where T : IntegrationEvent
+    {
+        var key = GetEventKey<T>();
+        return HasSubscriptionsForEvent(key);
+    }
+    public bool HasSubscriptionsForEvent(string eventName) => _handlers.ContainsKey(eventName);
+
+    public Type GetEventTypeByName(string eventName) => _eventTypes.SingleOrDefault(t => t.Name == eventName);
+
+    public string GetEventKey<T>()
+    {
+        return typeof(T).Name;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusRabbitMQ\EventBusRabbitMQ.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBusRabbitMQ;
+
+public class EventBusRabbitMQ : IEventBus, IDisposable
+{
+    const string BROKER_NAME = "eshop_event_bus";
+    const string AUTOFAC_SCOPE_NAME = "eshop_event_bus";
+
+    private readonly IRabbitMQPersistentConnection _persistentConnection;
+    private readonly ILogger<EventBusRabbitMQ> _logger;
+    private readonly IEventBusSubscriptionsManager _subsManager;
+    private readonly ILifetimeScope _autofac;
+    private readonly int _retryCount;
+
+    private IModel _consumerChannel;
+    private string _queueName;
+
+    public EventBusRabbitMQ(IRabbitMQPersistentConnection persistentConnection, ILogger<EventBusRabbitMQ> logger,
+        ILifetimeScope autofac, IEventBusSubscriptionsManager subsManager, string queueName = null, int retryCount = 5)
+    {
+        _persistentConnection = persistentConnection ?? throw new ArgumentNullException(nameof(persistentConnection));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _subsManager = subsManager ?? new InMemoryEventBusSubscriptionsManager();
+        _queueName = queueName;
+        _consumerChannel = CreateConsumerChannel();
+        _autofac = autofac;
+        _retryCount = retryCount;
+        _subsManager.OnEventRemoved += SubsManager_OnEventRemoved;
+    }
+
+    private void SubsManager_OnEventRemoved(object sender, string eventName)
+    {
+        if (!_persistentConnection.IsConnected)
+        {
+            _persistentConnection.TryConnect();
+        }
+
+        using var channel = _persistentConnection.CreateModel();
+        channel.QueueUnbind(queue: _queueName,
+            exchange: BROKER_NAME,
+            routingKey: eventName);
+
+        if (_subsManager.IsEmpty)
+        {
+            _queueName = string.Empty;
+            _consumerChannel.Close();
+        }
+    }
+
+    public void Publish(IntegrationEvent @event)
+    {
+        if (!_persistentConnection.IsConnected)
+        {
+            _persistentConnection.TryConnect();
+        }
+
+        var policy = RetryPolicy.Handle<BrokerUnreachableException>()
+            .Or<SocketException>()
+            .WaitAndRetry(_retryCount, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
+            {
+                _logger.LogWarning(ex, "Could not publish event: {EventId} after {Timeout}s ({ExceptionMessage})", @event.Id, $"{time.TotalSeconds:n1}", ex.Message);
+            });
+
+        var eventName = @event.GetType().Name;
+
+        _logger.LogTrace("Creating RabbitMQ channel to publish event: {EventId} ({EventName})", @event.Id, eventName);
+
+        using var channel = _persistentConnection.CreateModel();
+        _logger.LogTrace("Declaring RabbitMQ exchange to publish event: {EventId}", @event.Id);
+
+        channel.ExchangeDeclare(exchange: BROKER_NAME, type: "direct");
+
+        var body = JsonSerializer.SerializeToUtf8Bytes(@event, @event.GetType(), new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+
+        policy.Execute(() =>
+        {
+            var properties = channel.CreateBasicProperties();
+            properties.DeliveryMode = 2; // persistent
+
+                _logger.LogTrace("Publishing event to RabbitMQ: {EventId}", @event.Id);
+
+            channel.BasicPublish(
+                exchange: BROKER_NAME,
+                routingKey: eventName,
+                mandatory: true,
+                basicProperties: properties,
+                body: body);
+        });
+    }
+
+    public void SubscribeDynamic<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler
+    {
+        _logger.LogInformation("Subscribing to dynamic event {EventName} with {EventHandler}", eventName, typeof(TH).GetGenericTypeName());
+
+        DoInternalSubscription(eventName);
+        _subsManager.AddDynamicSubscription<TH>(eventName);
+        StartBasicConsume();
+    }
+
+    public void Subscribe<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>
+    {
+        var eventName = _subsManager.GetEventKey<T>();
+        DoInternalSubscription(eventName);
+
+        _logger.LogInformation("Subscribing to event {EventName} with {EventHandler}", eventName, typeof(TH).GetGenericTypeName());
+
+        _subsManager.AddSubscription<T, TH>();
+        StartBasicConsume();
+    }
+
+    private void DoInternalSubscription(string eventName)
+    {
+        var containsKey = _subsManager.HasSubscriptionsForEvent(eventName);
+        if (!containsKey)
+        {
+            if (!_persistentConnection.IsConnected)
+            {
+                _persistentConnection.TryConnect();
+            }
+ 
+            _consumerChannel.QueueBind(queue: _queueName,
+                                exchange: BROKER_NAME,
+                                routingKey: eventName);
+        }
+    }
+
+    public void Unsubscribe<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>
+    {
+        var eventName = _subsManager.GetEventKey<T>();
+
+        _logger.LogInformation("Unsubscribing from event {EventName}", eventName);
+
+        _subsManager.RemoveSubscription<T, TH>();
+    }
+
+    public void UnsubscribeDynamic<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler
+    {
+        _subsManager.RemoveDynamicSubscription<TH>(eventName);
+    }
+
+    public void Dispose()
+    {
+        if (_consumerChannel != null)
+        {
+            _consumerChannel.Dispose();
+        }
+
+        _subsManager.Clear();
+    }
+
+    private void StartBasicConsume()
+    {
+        _logger.LogTrace("Starting RabbitMQ basic consume");
+
+        if (_consumerChannel != null)
+        {
+            var consumer = new AsyncEventingBasicConsumer(_consumerChannel);
+
+            consumer.Received += Consumer_Received;
+
+            _consumerChannel.BasicConsume(
+                queue: _queueName,
+                autoAck: false,
+                consumer: consumer);
+        }
+        else
+        {
+            _logger.LogError("StartBasicConsume can't call on _consumerChannel == null");
+        }
+    }
+
+    private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
+    {
+        var eventName = eventArgs.RoutingKey;
+        var message = Encoding.UTF8.GetString(eventArgs.Body.Span);
+
+        try
+        {
+            if (message.ToLowerInvariant().Contains("throw-fake-exception"))
+            {
+                throw new InvalidOperationException($"Fake exception requested: \"{message}\"");
+            }
+
+            await ProcessEvent(eventName, message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "----- ERROR Processing message \"{Message}\"", message);
+        }
+
+        // Even on exception we take the message off the queue.
+        // in a REAL WORLD app this should be handled with a Dead Letter Exchange (DLX). 
+        // For more information see: https://www.rabbitmq.com/dlx.html
+        _consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
+    }
+
+    private IModel CreateConsumerChannel()
+    {
+        if (!_persistentConnection.IsConnected)
+        {
+            _persistentConnection.TryConnect();
+        }
+
+        _logger.LogTrace("Creating RabbitMQ consumer channel");
+
+        var channel = _persistentConnection.CreateModel();
+
+        channel.ExchangeDeclare(exchange: BROKER_NAME,
+                                type: "direct");
+
+        channel.QueueDeclare(queue: _queueName,
+                                durable: true,
+                                exclusive: false,
+                                autoDelete: false,
+                                arguments: null);
+
+        channel.CallbackException += (sender, ea) =>
+        {
+            _logger.LogWarning(ea.Exception, "Recreating RabbitMQ consumer channel");
+
+            _consumerChannel.Dispose();
+            _consumerChannel = CreateConsumerChannel();
+            StartBasicConsume();
+        };
+
+        return channel;
+    }
+
+    private async Task ProcessEvent(string eventName, string message)
+    {
+        _logger.LogTrace("Processing RabbitMQ event: {EventName}", eventName);
+
+        if (_subsManager.HasSubscriptionsForEvent(eventName))
+        {
+            await using var scope = _autofac.BeginLifetimeScope(AUTOFAC_SCOPE_NAME);
+            var subscriptions = _subsManager.GetHandlersForEvent(eventName);
+            foreach (var subscription in subscriptions)
+            {
+                if (subscription.IsDynamic)
+                {
+                    if (scope.ResolveOptional(subscription.HandlerType) is not IDynamicIntegrationEventHandler handler) continue;
+                    using dynamic eventData = JsonDocument.Parse(message);
+                    await Task.Yield();
+                    await handler.Handle(eventData);
+                }
+                else
+                {
+                    var handler = scope.ResolveOptional(subscription.HandlerType);
+                    if (handler == null) continue;
+                    var eventType = _subsManager.GetEventTypeByName(eventName);
+                    var integrationEvent = JsonSerializer.Deserialize(message, eventType, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var concreteType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
+
+                    await Task.Yield();
+                    await (Task)concreteType.GetMethod("Handle").Invoke(handler, new object[] { integrationEvent });
+                }
+            }
+        }
+        else
+        {
+            _logger.LogWarning("No subscription for RabbitMQ event: {EventName}", eventName);
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusRabbitMQ\EventBusRabbitMQ.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>Microsoft.eShopOnContainers.BuildingBlocks.EventBusRabbitMQ</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="6.5.0" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />    
+    <PackageReference Include="Polly" Version="7.2.3" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EventBus\EventBus.csproj" />
+  </ItemGroup>
+
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\readme.md
+Хороший пример с точки зрения устройства сервисов
+каждый класс должен быть добавлен  в коллекцию сервисов
+это естественный способ его создания
+потом передавай куда уже требуется
+`services.AddTransient<DevspacesMessageHandler>();`
+
+`builder.AddHttpMessageHandler<DevspacesMessageHandler>();`
+
+проект демонстрирует как добавить
+подключить обработчик сообщения DelegatingHandler
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\Services\IIntegrationEventLogService.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF.Services;
+
+public interface IIntegrationEventLogService
+{
+    Task<IEnumerable<IntegrationEventLogEntry>> RetrieveEventLogsPendingToPublishAsync(Guid transactionId);
+    Task SaveEventAsync(IntegrationEvent @event, IDbContextTransaction transaction);
+    Task MarkEventAsPublishedAsync(Guid eventId);
+    Task MarkEventAsInProgressAsync(Guid eventId);
+    Task MarkEventAsFailedAsync(Guid eventId);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\Services\IntegrationEventLogService.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF.Services;
+
+public class IntegrationEventLogService : IIntegrationEventLogService, IDisposable
+{
+    private readonly IntegrationEventLogContext _integrationEventLogContext;
+    private readonly DbConnection _dbConnection;
+    private readonly List<Type> _eventTypes;
+    private volatile bool _disposedValue;
+
+    public IntegrationEventLogService(DbConnection dbConnection)
+    {
+        _dbConnection = dbConnection ?? throw new ArgumentNullException(nameof(dbConnection));
+        _integrationEventLogContext = new IntegrationEventLogContext(
+            new DbContextOptionsBuilder<IntegrationEventLogContext>()
+                .UseSqlServer(_dbConnection)
+                .Options);
+
+        _eventTypes = Assembly.Load(Assembly.GetEntryAssembly().FullName)
+            .GetTypes()
+            .Where(t => t.Name.EndsWith(nameof(IntegrationEvent)))
+            .ToList();
+    }
+
+    public async Task<IEnumerable<IntegrationEventLogEntry>> RetrieveEventLogsPendingToPublishAsync(Guid transactionId)
+    {
+        var tid = transactionId.ToString();
+
+        var result = await _integrationEventLogContext.IntegrationEventLogs
+            .Where(e => e.TransactionId == tid && e.State == EventStateEnum.NotPublished).ToListAsync();
+
+        if (result.Any())
+        {
+            return result.OrderBy(o => o.CreationTime)
+                .Select(e => e.DeserializeJsonContent(_eventTypes.Find(t => t.Name == e.EventTypeShortName)));
+        }
+
+        return new List<IntegrationEventLogEntry>();
+    }
+
+    public Task SaveEventAsync(IntegrationEvent @event, IDbContextTransaction transaction)
+    {
+        if (transaction == null) throw new ArgumentNullException(nameof(transaction));
+
+        var eventLogEntry = new IntegrationEventLogEntry(@event, transaction.TransactionId);
+
+        _integrationEventLogContext.Database.UseTransaction(transaction.GetDbTransaction());
+        _integrationEventLogContext.IntegrationEventLogs.Add(eventLogEntry);
+
+        return _integrationEventLogContext.SaveChangesAsync();
+    }
+
+    public Task MarkEventAsPublishedAsync(Guid eventId)
+    {
+        return UpdateEventStatus(eventId, EventStateEnum.Published);
+    }
+
+    public Task MarkEventAsInProgressAsync(Guid eventId)
+    {
+        return UpdateEventStatus(eventId, EventStateEnum.InProgress);
+    }
+
+    public Task MarkEventAsFailedAsync(Guid eventId)
+    {
+        return UpdateEventStatus(eventId, EventStateEnum.PublishedFailed);
+    }
+
+    private Task UpdateEventStatus(Guid eventId, EventStateEnum status)
+    {
+        var eventLogEntry = _integrationEventLogContext.IntegrationEventLogs.Single(ie => ie.EventId == eventId);
+        eventLogEntry.State = status;
+
+        if (status == EventStateEnum.InProgress)
+            eventLogEntry.TimesSent++;
+
+        _integrationEventLogContext.IntegrationEventLogs.Update(eventLogEntry);
+
+        return _integrationEventLogContext.SaveChangesAsync();
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                _integrationEventLogContext?.Dispose();
+            }
+
+
+            _disposedValue = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\bus.sln.DotSettings.user
+<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AILogger_00601_002Ecs_002Fl_003AC_0021_003FUsers_003FUser_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003Fbac9dcefa261431895e1e275aa1f3054f690_003Fe4_003Fdb51daec_003FILogger_00601_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AServiceBusClient_002Ecs_002Fl_003AC_0021_003FUsers_003FUser_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FSourcesCache_003Fdfe661bb5d9531ff3aa1d2939ad7b6f16cd99076fc8399de6b730dd2aa6_003FServiceBusClient_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/Environment/Hierarchy/Build/BuildTool/CustomBuildToolPath/@EntryValue">C:\Program Files\dotnet\sdk\7.0.306\MSBuild.dll</s:String>
+	<s:String x:Key="/Default/Environment/Hierarchy/Build/BuildTool/DotNetCliExePath/@EntryValue">C:\Program Files\dotnet\dotnet.exe</s:String>
+	<s:Int64 x:Key="/Default/Environment/Hierarchy/Build/BuildTool/MsbuildVersion/@EntryValue">4294967294</s:Int64>
+	<s:Boolean x:Key="/Default/Environment/Hierarchy/Build/BuildTool/RecentBuildToolPaths/=C_003A_005CProgram_0020Files_005Cdotnet_005Csdk_005C7_002E0_002E306_005CMSBuild_002Edll/@EntryIndexedValue">True</s:Boolean>
+	<s:String x:Key="/Default/Environment/UnitTesting/CreateUnitTestDialog/TestProjectMapping/=A16BF0C1_002D6B91_002D46D3_002D9FA4_002D6987CF48208A/@EntryIndexedValue">54857B31-44D7-4E8D-A012-6FF20D12A55D</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/CreateUnitTestDialog/TestTemplateMapping/=xUnit/@EntryIndexedValue">33ff99d8-b1ad-4ed5-a4fd-376b97c2c841</s:String>
+	<s:Boolean x:Key="/Default/Environment/UnitTesting/CreateUnitTestDialog/ShowAdvancedOptions/@EntryValue">True</s:Boolean>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1ae3c4b0_002D01bb_002D4eef_002D989b_002D08cea1254d54/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetGenericTypeNameTest" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::54857B31-44D7-4E8D-A012-6FF20D12A55D::net7.0::EventBus.Tests.Extensions.GenericTypeExtensionsTest.GetGenericTypeNameTest&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=3a41804f_002Daf2d_002D4c9a_002D9417_002D85869bb3d085/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GenericTypeExtensionsTest #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::54857B31-44D7-4E8D-A012-6FF20D12A55D::net7.0::EventBus.Tests.Extensions.GenericTypeExtensionsTest&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=714c59d7_002Dc588_002D414a_002D93e2_002Dddeb708dbb6f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GenericTypeExtensionsTest" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::54857B31-44D7-4E8D-A012-6FF20D12A55D::net7.0::EventBus.Tests.Extensions.GenericTypeExtensionsTest&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e7aa001c_002D59fe_002D4d07_002D8cb5_002Db03a1d31040d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GetGenericTypeNameTest #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::54857B31-44D7-4E8D-A012-6FF20D12A55D::net7.0::EventBus.Tests.Extensions.GenericTypeExtensionsTest.GetGenericTypeNameTest&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::4EBE86C5-231B-46F8-AFCA-F5A5FFBEB66F::net7.0::KosarevBusTest.GenericTypeExtensionsTest.GetGenericTypeNameTest&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Monitoring/StartMode/@EntryValue">Disabled</s:String></wpf:ResourceDictionary>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\testtt.sln.DotSettings.user
+<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=68dd4b5e_002D95e0_002D44b9_002D90c9_002D73c010237398/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GetGenericTypeNameTest" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::D7D921B9-2977-4755-961B-1EBC15B6F656::net7.0::KosarevBusTest.GenericTypeExtensionsTest.GetGenericTypeNameTest&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\Devspaces.Support.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\DebugLogger\src\DebugLogger.csproj" />
+  </ItemGroup>
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus.Tests\Extensions\GenericTypeExtensionsTest.cs
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices.JavaScript;
+using System.Text;
+using System.Threading.Tasks;
+using JetBrains.Annotations;
+using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Extensions;
+using Xunit;
+
+namespace EventBus.Tests.Extensions;
+
+//[TestSubject(typeof(GenericTypeExtensions))]
+public class GenericTypeExtensionsTest
+{
+    [Fact]
+    public void GetGenericTypeNameTest()
+    {
+        var genericTester = new GenericTester<int, double, StringBuilder>();
+       var name          = genericTester.GetGenericTypeName();
+        Assert.Equal("GenericTester<Int32,Double,StringBuilder>",name); // без пробелов между аргументами, названия типов иные
+    }
+}
+
+public class GenericTester<T1, T2, T3> where T1 : struct
+                                        where T2 : struct
+                                        where T3 : new()
+{
+//    public T3 METHOD(T1 a, T2 b)
+//    {
+//        return new T3();
+//    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus.Tests\EventBus.Tests.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>    
+    <TargetFramework>net7.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0-preview-20221003-04" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="xunit" Version="2.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EventBusRabbitMQ\EventBusRabbitMQ.csproj" />
+    <ProjectReference Include="..\EventBusServiceBus\EventBusServiceBus.csproj" />
+    <ProjectReference Include="..\EventBus\EventBus.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+  </ItemGroup>
+
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus.Tests\InMemory_SubscriptionManager_Tests.cs
+using Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
+using System;
+using System.Linq;
+using Xunit;
+
+namespace EventBus.Tests
+{
+    public class InMemory_SubscriptionManager_Tests
+    {
+        [Fact]
+        public void After_Creation_Should_Be_Empty()
+        {
+            var manager = new InMemoryEventBusSubscriptionsManager();
+            Assert.True(manager.IsEmpty);
+        }
+
+        [Fact]
+        public void After_One_Event_Subscription_Should_Contain_The_Event()
+        {
+            var manager = new InMemoryEventBusSubscriptionsManager();
+            manager.AddSubscription<TestIntegrationEvent,TestIntegrationEventHandler>();
+            Assert.True(manager.HasSubscriptionsForEvent<TestIntegrationEvent>());
+        }
+
+        [Fact]
+        public void After_All_Subscriptions_Are_Deleted_Event_Should_No_Longer_Exists()
+        {
+            var manager = new InMemoryEventBusSubscriptionsManager();
+            manager.AddSubscription<TestIntegrationEvent, TestIntegrationEventHandler>();
+            manager.RemoveSubscription<TestIntegrationEvent, TestIntegrationEventHandler>();
+            Assert.False(manager.HasSubscriptionsForEvent<TestIntegrationEvent>());
+        }
+
+        [Fact]
+        public void Deleting_Last_Subscription_Should_Raise_On_Deleted_Event()
+        {
+            bool raised = false;
+            var manager = new InMemoryEventBusSubscriptionsManager();
+            manager.OnEventRemoved += (o, e) => raised = true;
+            manager.AddSubscription<TestIntegrationEvent, TestIntegrationEventHandler>();
+            manager.RemoveSubscription<TestIntegrationEvent, TestIntegrationEventHandler>();
+            Assert.True(raised);
+        }
+
+        [Fact]
+        public void Get_Handlers_For_Event_Should_Return_All_Handlers()
+        {
+            var manager = new InMemoryEventBusSubscriptionsManager();
+            manager.AddSubscription<TestIntegrationEvent, TestIntegrationEventHandler>();
+            manager.AddSubscription<TestIntegrationEvent, TestIntegrationOtherEventHandler>();
+            var handlers = manager.GetHandlersForEvent<TestIntegrationEvent>();
+            Assert.Equal(2, handlers.Count());
+        }
+
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus.Tests\Tests.cs
+using Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus;
+using Xunit;
+
+namespace EventBus.Tests;
+
+public class Tests
+{
+    [Fact]
+    public void Test1()
+    {
+        string conn="conn";
+        DefaultServiceBusPersisterConnection p = new(conn);
+        
+    }
+    
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\Utilities\ResilientTransaction.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF.Utilities;
+
+public class ResilientTransaction
+{
+    private readonly DbContext _context;
+    private ResilientTransaction(DbContext context) =>
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+
+    public static ResilientTransaction New(DbContext context) => new(context);
+
+    public async Task ExecuteAsync(Func<Task> action)
+    {
+        //Use of an EF Core resiliency strategy when using multiple DbContexts within an explicit BeginTransaction():
+        //See: https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
+        var strategy = _context.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            await action();
+            await transaction.CommitAsync();
+        });
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\GlobalUsings.cs
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.Extensions.DependencyInjection;
+global using System.Collections.Generic;
+global using System.Net.Http;
+global using System.Threading.Tasks;
+global using System.Threading;
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\GlobalUsings.cs
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
+global using static Microsoft.eShopOnContainers.BuildingBlocks.EventBus.InMemoryEventBusSubscriptionsManager;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Text.Json.Serialization;
+global using System.Threading.Tasks;
+global using System;
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusRabbitMQ\GlobalUsings.cs
+global using Microsoft.Extensions.Logging;
+global using Polly;
+global using Polly.Retry;
+global using RabbitMQ.Client;
+global using RabbitMQ.Client.Events;
+global using RabbitMQ.Client.Exceptions;
+global using System;
+global using System.IO;
+global using System.Net.Sockets;
+global using Autofac;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Extensions;
+global using System.Text;
+global using System.Threading.Tasks;
+global using System.Text.Json;
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus\GlobalUsings.cs
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
+global using static Microsoft.eShopOnContainers.BuildingBlocks.EventBus.InMemoryEventBusSubscriptionsManager;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Text.Json.Serialization;
+global using System.Threading.Tasks;
+global using System;
+global using Autofac;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
+global using Microsoft.Extensions.Logging;
+global using System.Text;
+global using System.Text.Json;
+global using Azure.Messaging.ServiceBus;
+global using Azure.Messaging.ServiceBus.Administration;
+global using System;
+
+
+
+
+
+
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\GlobalUsings.cs
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.Metadata.Builders;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
+global using System;
+global using System.Text.Json;
+global using System.ComponentModel.DataAnnotations.Schema;
+global using System.Linq;
+global using System.Threading.Tasks;
+global using Microsoft.EntityFrameworkCore.Storage;
+global using System.Collections.Generic;
+global using System.Data.Common;
+global using System.Reflection;
+
+

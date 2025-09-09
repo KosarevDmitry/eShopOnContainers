@@ -49,6 +49,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\BuildingBlocks\Devspaces.Support\Devspaces.Support.csproj" />
+    <ProjectReference Include="..\..\DebugLogger\src\DebugLogger.csproj" />
   </ItemGroup>
 
 </Project>

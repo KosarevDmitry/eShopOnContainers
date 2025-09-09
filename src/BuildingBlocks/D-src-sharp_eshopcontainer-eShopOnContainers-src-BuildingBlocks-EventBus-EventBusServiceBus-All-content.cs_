@@ -1,0 +1,337 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 5
+EventBusServiceBus.cs
+
+EventBusServiceBus.csproj
+
+DefaultServiceBusPersisterConnection.cs
+IServiceBusPersisterConnection.cs
+
+GlobalUsings.cs
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus\DefaultServiceBusPersisterConnection.cs
+
+/*
+ probably  developer may use  Azure class ServiceBusClient  or  RabbitMQ 
+here there i code for ServiceBusClient.
+RabbitMQ in  \EventBus\EventBusRabbitMQ project 
+*/
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus;
+
+public class DefaultServiceBusPersisterConnection : IServiceBusPersisterConnection
+{
+    private readonly string _serviceBusConnectionString;
+    private ServiceBusClient _topicClient;
+    private ServiceBusAdministrationClient _subscriptionClient;
+
+    bool _disposed;
+
+    public DefaultServiceBusPersisterConnection(string serviceBusConnectionString)
+    {
+        _serviceBusConnectionString = serviceBusConnectionString;
+        _subscriptionClient = new ServiceBusAdministrationClient(_serviceBusConnectionString);
+        _topicClient = new ServiceBusClient(_serviceBusConnectionString);
+    }
+
+    public ServiceBusClient TopicClient
+    {
+        get
+        {
+            if (_topicClient.IsClosed)
+            {
+                _topicClient = new ServiceBusClient(_serviceBusConnectionString);
+            }
+            return _topicClient;
+        }
+    }
+
+    public ServiceBusAdministrationClient AdministrationClient => 
+        _subscriptionClient;
+
+    public ServiceBusClient CreateModel()
+    {
+        if (_topicClient.IsClosed)
+        {
+            _topicClient = new ServiceBusClient(_serviceBusConnectionString);
+        }
+
+        return _topicClient;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed) return;
+
+        _disposed = true;
+        await _topicClient.DisposeAsync();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus\EventBusServiceBus.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus;
+
+public class EventBusServiceBus : IEventBus, IAsyncDisposable
+{
+    private readonly IServiceBusPersisterConnection _serviceBusPersisterConnection;
+    private readonly ILogger<EventBusServiceBus> _logger;
+    private readonly IEventBusSubscriptionsManager _subsManager;
+    private readonly ILifetimeScope _autofac;
+    private readonly string _topicName = "eshop_event_bus";
+    private readonly string _subscriptionName;
+    private readonly ServiceBusSender _sender;
+    private readonly ServiceBusProcessor _processor;
+    private readonly string AUTOFAC_SCOPE_NAME = "eshop_event_bus";
+    private const string INTEGRATION_EVENT_SUFFIX = "IntegrationEvent";
+// :: TopicClient is  resolved by AzureBusClient
+    public EventBusServiceBus(IServiceBusPersisterConnection serviceBusPersisterConnection,
+        ILogger<EventBusServiceBus> logger, IEventBusSubscriptionsManager subsManager, ILifetimeScope autofac, string subscriptionClientName)
+    {
+        _serviceBusPersisterConnection = serviceBusPersisterConnection;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _subsManager = subsManager ?? new InMemoryEventBusSubscriptionsManager();
+        _autofac = autofac;
+        _subscriptionName = subscriptionClientName;
+        _sender = _serviceBusPersisterConnection.TopicClient.CreateSender(_topicName);
+        ServiceBusProcessorOptions options = new ServiceBusProcessorOptions { MaxConcurrentCalls = 10, AutoCompleteMessages = false };
+        _processor = _serviceBusPersisterConnection.TopicClient.CreateProcessor(_topicName, _subscriptionName, options);
+
+        RemoveDefaultRule();
+        RegisterSubscriptionClientMessageHandlerAsync().GetAwaiter().GetResult();
+    }
+
+    public void Publish(IntegrationEvent @event)
+    {
+        var eventName = @event.GetType().Name.Replace(INTEGRATION_EVENT_SUFFIX, "");
+        var jsonMessage = JsonSerializer.Serialize(@event, @event.GetType());
+        var body = Encoding.UTF8.GetBytes(jsonMessage);
+
+        var message = new ServiceBusMessage
+        {
+            MessageId = Guid.NewGuid().ToString(),
+            Body = new BinaryData(body),
+            Subject = eventName,
+        };
+
+        _sender.SendMessageAsync(message)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    public void SubscribeDynamic<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler
+    {
+        _logger.LogInformation("Subscribing to dynamic event {EventName} with {EventHandler}", eventName, typeof(TH).Name);
+
+        _subsManager.AddDynamicSubscription<TH>(eventName);
+    }
+
+    public void Subscribe<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>
+    {
+        var eventName = typeof(T).Name.Replace(INTEGRATION_EVENT_SUFFIX, "");
+
+        var containsKey = _subsManager.HasSubscriptionsForEvent<T>();
+        if (!containsKey)
+        {
+            try
+            {
+                _serviceBusPersisterConnection.AdministrationClient.CreateRuleAsync(_topicName, _subscriptionName, new CreateRuleOptions
+                {
+                    Filter = new CorrelationRuleFilter() { Subject = eventName },
+                    Name = eventName
+                }).GetAwaiter().GetResult();
+            }
+            catch (ServiceBusException)
+            {
+                _logger.LogWarning("The messaging entity {eventName} already exists.", eventName);
+            }
+        }
+
+        _logger.LogInformation("Subscribing to event {EventName} with {EventHandler}", eventName, typeof(TH).Name);
+
+        _subsManager.AddSubscription<T, TH>();
+    }
+
+    public void Unsubscribe<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>
+    {
+        var eventName = typeof(T).Name.Replace(INTEGRATION_EVENT_SUFFIX, "");
+
+        try
+        {
+            _serviceBusPersisterConnection
+                .AdministrationClient
+                .DeleteRuleAsync(_topicName, _subscriptionName, eventName)
+                .GetAwaiter()
+                .GetResult();
+        }
+        catch (ServiceBusException ex) when (ex.Reason == ServiceBusFailureReason.MessagingEntityNotFound)
+        {
+            _logger.LogWarning("The messaging entity {eventName} Could not be found.", eventName);
+        }
+
+        _logger.LogInformation("Unsubscribing from event {EventName}", eventName);
+
+        _subsManager.RemoveSubscription<T, TH>();
+    }
+
+    public void UnsubscribeDynamic<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler
+    {
+        _logger.LogInformation("Unsubscribing from dynamic event {EventName}", eventName);
+
+        _subsManager.RemoveDynamicSubscription<TH>(eventName);
+    }
+
+    private async Task RegisterSubscriptionClientMessageHandlerAsync()
+    {
+        _processor.ProcessMessageAsync +=
+            async (args) =>
+            {
+                var eventName = $"{args.Message.Subject}{INTEGRATION_EVENT_SUFFIX}";
+                string messageData = args.Message.Body.ToString();
+
+                // Complete the message so that it is not received again.
+                if (await ProcessEvent(eventName, messageData))
+                {
+                    await args.CompleteMessageAsync(args.Message);
+                }
+            };
+
+        _processor.ProcessErrorAsync += ErrorHandler;
+        await _processor.StartProcessingAsync();
+    }
+
+    private Task ErrorHandler(ProcessErrorEventArgs args)
+    {
+        var ex = args.Exception;
+        var context = args.ErrorSource;
+
+        _logger.LogError(ex, "ERROR handling message: {ExceptionMessage} - Context: {@ExceptionContext}", ex.Message, context);
+
+        return Task.CompletedTask;
+    }
+
+    private async Task<bool> ProcessEvent(string eventName, string message)
+    {
+        var processed = false;
+        if (_subsManager.HasSubscriptionsForEvent(eventName))
+        {
+            var scope = _autofac.BeginLifetimeScope(AUTOFAC_SCOPE_NAME);
+            var subscriptions = _subsManager.GetHandlersForEvent(eventName);
+            foreach (var subscription in subscriptions)
+            {
+                if (subscription.IsDynamic)
+                {
+                    if (scope.ResolveOptional(subscription.HandlerType) is not IDynamicIntegrationEventHandler handler) continue;
+
+                    using dynamic eventData = JsonDocument.Parse(message);
+                    await handler.Handle(eventData);
+                }
+                else
+                {
+                    var handler = scope.ResolveOptional(subscription.HandlerType);
+                    if (handler == null) continue;
+                    var eventType = _subsManager.GetEventTypeByName(eventName);
+                    var integrationEvent = JsonSerializer.Deserialize(message, eventType);
+                    var concreteType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
+                    await (Task)concreteType.GetMethod("Handle").Invoke(handler, new[] { integrationEvent });
+                }
+            }
+        }
+        processed = true;
+        return processed;
+    }
+
+    private void RemoveDefaultRule()
+    {
+        try
+        {
+            _serviceBusPersisterConnection
+                .AdministrationClient
+                .DeleteRuleAsync(_topicName, _subscriptionName, RuleProperties.DefaultRuleName)
+                .GetAwaiter()
+                .GetResult();
+        }
+        catch (ServiceBusException ex) when (ex.Reason == ServiceBusFailureReason.MessagingEntityNotFound)
+        {
+            _logger.LogWarning("The messaging entity {DefaultRuleName} Could not be found.", RuleProperties.DefaultRuleName);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _subsManager.Clear();
+        await _processor.CloseAsync();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus\EventBusServiceBus.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="6.5.0" />
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.11.1" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EventBus\EventBus.csproj" />
+  </ItemGroup>
+
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus\GlobalUsings.cs
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
+global using static Microsoft.eShopOnContainers.BuildingBlocks.EventBus.InMemoryEventBusSubscriptionsManager;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Text.Json.Serialization;
+global using System.Threading.Tasks;
+global using System;
+global using Autofac;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
+global using Microsoft.Extensions.Logging;
+global using System.Text;
+global using System.Text.Json;
+global using Azure.Messaging.ServiceBus;
+global using Azure.Messaging.ServiceBus.Administration;
+global using System;
+
+
+
+
+
+
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBusServiceBus\IServiceBusPersisterConnection.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus;
+
+public interface IServiceBusPersisterConnection : IAsyncDisposable
+{
+    ServiceBusClient TopicClient { get; }
+    ServiceBusAdministrationClient AdministrationClient { get; }
+}
+
+

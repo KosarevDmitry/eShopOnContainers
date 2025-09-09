@@ -79,7 +79,7 @@ public class Startup
 
 static class ServiceCollectionExtensions
 {
-
+// что делает 
     public static IServiceCollection AddAppInsight(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddApplicationInsightsTelemetry(configuration);
@@ -90,10 +90,11 @@ static class ServiceCollectionExtensions
 
     public static IServiceCollection AddHealthChecks(this IServiceCollection services, IConfiguration configuration)
     {
+        // :: need to add Identity HealthChecks url 
         services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy())
             .AddUrlGroup(new Uri(configuration["IdentityUrlHC"]), name: "identityapi-check", tags: new string[] { "identityapi" });
-
+        
         return services;
     }
 
@@ -101,16 +102,18 @@ static class ServiceCollectionExtensions
     {
         services.AddOptions();
         services.Configure<AppSettings>(configuration);
+        DebugLogger.Logger.Log("add DI for DistributedSessionStore and DataProtection");
         services.AddSession();
+        DebugLogger.Logger.Log("add DI for MemoryDistributedCache");
         services.AddDistributedMemoryCache();
 
-        if (configuration.GetValue<string>("IsClusterEnv") == bool.TrueString)
-        {
+        if (configuration.GetValue<string>("IsClusterEnv") == bool.TrueString) // is false
+        {   DebugLogger.Logger.Question("create Redis list `DataProtection-Keys`, it needs add DPConnectionString to config");
             services.AddDataProtection(opts =>
             {
-                opts.ApplicationDiscriminator = "eshop.webmvc";
-            })
-            .PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(configuration["DPConnectionString"]), "DataProtection-Keys");
+                opts.ApplicationDiscriminator = "eshop.webmvc"; // симметричное шифрование
+            })  
+            .PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(configuration["DPConnectionString"]), "DataProtection-Keys"); 
         }
 
         return services;
@@ -120,12 +123,12 @@ static class ServiceCollectionExtensions
     public static IServiceCollection AddHttpClientServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
+        DebugLogger.Logger.Log("Add httpclients for various services");
         //register delegating handlers
         services.AddTransient<HttpClientAuthorizationDelegatingHandler>();
         services.AddTransient<HttpClientRequestIdDelegatingHandler>();
 
-        //set 5 min as the lifetime for each HttpMessageHandler int the pool
+        //set 5 min as the lifetime for each HttpMessageHandler in the pool
         services.AddHttpClient("extendedhandlerlifetime").SetHandlerLifetime(TimeSpan.FromMinutes(5)).AddDevspacesSupport();
 
         //add http client services
@@ -142,7 +145,7 @@ static class ServiceCollectionExtensions
                 .AddHttpMessageHandler<HttpClientRequestIdDelegatingHandler>()
                 .AddDevspacesSupport();
 
-
+        // :: data received from IdentityServer
         //add custom application services
         services.AddTransient<IIdentityParser<ApplicationUser>, IdentityParser>();
 
@@ -152,8 +155,10 @@ static class ServiceCollectionExtensions
 
     public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
+        DebugLogger.Logger.Log("IdentityUrl and CallBackUrl get from appsettings.json directly");
         var identityUrl = configuration.GetValue<string>("IdentityUrl");
-        var callBackUrl = configuration.GetValue<string>("CallBackUrl");
+        DebugLogger.Logger.Log("CallBackUrl get from appsettings.json directly, CallBackUrl is `IIS Express` url");
+        var callBackUrl = configuration.GetValue<string>("CallBackUrl"); 
         var sessionCookieLifetime = configuration.GetValue("SessionCookieLifetimeMinutes", 60);
 
         // Add Authentication services          
@@ -165,7 +170,8 @@ static class ServiceCollectionExtensions
         })
         .AddCookie(setup => setup.ExpireTimeSpan = TimeSpan.FromMinutes(sessionCookieLifetime))
         .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
-        {
+        { 
+            // :: data send to IdentityServer
             options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             options.Authority = identityUrl.ToString();
             options.SignedOutRedirectUri = callBackUrl.ToString();

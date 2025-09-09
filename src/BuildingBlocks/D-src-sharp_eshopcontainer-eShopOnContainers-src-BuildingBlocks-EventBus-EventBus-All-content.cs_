@@ -1,0 +1,385 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 10
+IEventBus.cs
+
+EventBus.csproj
+
+IntegrationEvent.cs
+
+GenericTypeExtensions.cs
+
+IDynamicIntegrationEventHandler.cs
+IIntegrationEventHandler.cs
+
+SubscriptionInfo.cs
+
+IEventBusSubscriptionsManager.cs
+InMemoryEventBusSubscriptionsManager.cs
+
+GlobalUsings.cs
+---
+
+summary
+/*
+classes support binding between  a IntegrationEvent type  and several handler types 
+handler type have single method  `Task Handle(dynamic eventData);`
+*/
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Abstractions\IDynamicIntegrationEventHandler.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+
+public interface IDynamicIntegrationEventHandler
+{
+    Task Handle(dynamic eventData);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Abstractions\IEventBus.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+
+public interface IEventBus
+{
+    void Publish(IntegrationEvent @event);
+
+    void Subscribe<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>;
+
+    void SubscribeDynamic<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler;
+
+    void UnsubscribeDynamic<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler;
+
+    void Unsubscribe<T, TH>()
+        where TH : IIntegrationEventHandler<T>
+        where T : IntegrationEvent;
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Abstractions\IIntegrationEventHandler.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+// :: `in` must be initialised and can not to update in fuction body
+public interface IIntegrationEventHandler<in TIntegrationEvent> : IIntegrationEventHandler
+    where TIntegrationEvent : IntegrationEvent
+{
+    Task Handle(TIntegrationEvent @event);
+}
+
+public interface IIntegrationEventHandler
+{
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\EventBus.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>Microsoft.eShopOnContainers.BuildingBlocks.EventBus</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>    
+  </ItemGroup>
+
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Events\IntegrationEvent.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
+
+public record IntegrationEvent
+{        
+    public IntegrationEvent()
+    {
+        Id = Guid.NewGuid();
+        CreationDate = DateTime.UtcNow;
+    }
+
+    [JsonConstructor] // :: нужно посмотреть что какие аттрибуты еще есть
+    public IntegrationEvent(Guid id, DateTime createDate)
+    {
+        Id = id;
+        CreationDate = createDate;
+    }
+
+    [JsonInclude]
+    public Guid Id { get; private init; }
+
+    [JsonInclude]
+    public DateTime CreationDate { get; private init; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\Extensions\GenericTypeExtensions.cs
+using System.Diagnostics;
+// :: fine way to get readable standart generic name, probably fo logging
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Extensions;
+public static class GenericTypeExtensions
+{
+    public static string GetGenericTypeName(this Type type)
+    {
+        string typeName;
+
+        if (type.IsGenericType)
+        {
+           var genericTypes = string.Join(",", type.GetGenericArguments().Select(t => t.Name).ToArray());
+            typeName = $"{type.Name.Remove(type.Name.IndexOf('`'))}<{genericTypes}>";
+        }
+        else
+        {
+            typeName = type.Name;
+        }
+
+        return typeName;
+    }
+
+    public static string GetGenericTypeName(this object @object)
+    {
+        return @object.GetType().GetGenericTypeName();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\GlobalUsings.cs
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
+global using static Microsoft.eShopOnContainers.BuildingBlocks.EventBus.InMemoryEventBusSubscriptionsManager;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Text.Json.Serialization;
+global using System.Threading.Tasks;
+global using System;
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\IEventBusSubscriptionsManager.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
+// TH means type handler
+public interface IEventBusSubscriptionsManager
+{
+    bool IsEmpty { get; }
+    event EventHandler<string> OnEventRemoved;
+	
+    void AddDynamicSubscription<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler;
+
+    void AddSubscription<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>;
+
+    void RemoveSubscription<T, TH>()
+            where TH : IIntegrationEventHandler<T>
+            where T : IntegrationEvent;
+    void RemoveDynamicSubscription<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler;
+
+    bool HasSubscriptionsForEvent<T>() where T : IntegrationEvent;
+    bool HasSubscriptionsForEvent(string eventName);
+    Type GetEventTypeByName(string eventName);
+    void Clear();
+    IEnumerable<SubscriptionInfo> GetHandlersForEvent<T>() where T : IntegrationEvent;
+    IEnumerable<SubscriptionInfo> GetHandlersForEvent(string eventName);
+    string GetEventKey<T>();
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\InMemoryEventBusSubscriptionsManager.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
+
+// class support binding between  a IntegrationEvent type  as dictionary key and several handler types 
+public partial class InMemoryEventBusSubscriptionsManager : IEventBusSubscriptionsManager
+{
+// a dictionary key is name of type that store in _eventTypes
+    private readonly Dictionary<string, List<SubscriptionInfo>> _handlers;
+	
+	// :: to generate type giving only string name is difficult task, so  it is easier to keep  also a type list
+    private readonly List<Type> _eventTypes; 
+	
+	// :: when there is no any  SubscriptionInfo left, this delegate is called
+    public event EventHandler<string> OnEventRemoved; 
+
+    public InMemoryEventBusSubscriptionsManager()
+    {
+        _handlers = new Dictionary<string, List<SubscriptionInfo>>();
+        _eventTypes = new List<Type>();
+    }
+
+    public bool IsEmpty => _handlers is { Count: 0 };
+    public void Clear() => _handlers.Clear();
+
+    public void AddDynamicSubscription<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler
+    {
+        DoAddSubscription(typeof(TH), eventName, isDynamic: true);
+    }
+
+    public void AddSubscription<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>
+    {
+		/* eventName serves as routingKey of rabbitMQ
+		 good idea becouse it make key unique in  the assembly
+		 */
+        var eventName = GetEventKey<T>();
+
+        DoAddSubscription(typeof(TH), eventName, isDynamic: false);
+
+        if (!_eventTypes.Contains(typeof(T)))
+        {
+            _eventTypes.Add(typeof(T));
+        }
+    }
+
+    private void DoAddSubscription(Type handlerType, string eventName, bool isDynamic)
+    {
+        if (!HasSubscriptionsForEvent(eventName))
+        {
+            _handlers.Add(eventName, new List<SubscriptionInfo>());
+        }
+
+        if (_handlers[eventName].Any(s => s.HandlerType == handlerType))
+        {
+            throw new ArgumentException(
+                $"Handler Type {handlerType.Name} already registered for '{eventName}'", nameof(handlerType));
+        }
+
+        if (isDynamic)
+        {
+            _handlers[eventName].Add(SubscriptionInfo.Dynamic(handlerType));
+        }
+        else
+        {
+            _handlers[eventName].Add(SubscriptionInfo.Typed(handlerType));
+        }
+    }
+
+
+    public void RemoveDynamicSubscription<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler
+    {
+        var handlerToRemove = FindDynamicSubscriptionToRemove<TH>(eventName);
+        DoRemoveHandler(eventName, handlerToRemove);
+    }
+
+
+    public void RemoveSubscription<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>
+    {
+        var eventName       = GetEventKey<T>();
+        var handlerToRemove = FindSubscriptionToRemove<T, TH>();
+        DoRemoveHandler(eventName, handlerToRemove);
+    }
+
+
+    private void DoRemoveHandler(string eventName, SubscriptionInfo subsToRemove)
+    {
+        if (subsToRemove != null)
+        {
+            _handlers[eventName].Remove(subsToRemove);
+            if (!_handlers[eventName].Any())
+            {
+				// :: remove keypair at all
+                _handlers.Remove(eventName);
+				// :: remove type from type list also
+                var eventType = _eventTypes.SingleOrDefault(e => e.Name == eventName);
+                if (eventType != null)
+                {
+                    _eventTypes.Remove(eventType);
+                }
+				
+                RaiseOnEventRemoved(eventName);
+            }
+
+        }
+    }
+
+    public IEnumerable<SubscriptionInfo> GetHandlersForEvent<T>() where T : IntegrationEvent
+    {
+        var key = GetEventKey<T>();
+        return GetHandlersForEvent(key);
+    }
+    public IEnumerable<SubscriptionInfo> GetHandlersForEvent(string eventName) => _handlers[eventName];
+
+
+    private void RaiseOnEventRemoved(string eventName)
+    {
+        var handler = OnEventRemoved;
+        handler?.Invoke(this, eventName);
+    }
+
+
+    private SubscriptionInfo FindDynamicSubscriptionToRemove<TH>(string eventName)
+        where TH : IDynamicIntegrationEventHandler
+    {
+        return DoFindSubscriptionToRemove(eventName, typeof(TH));
+    }
+
+
+    private SubscriptionInfo FindSubscriptionToRemove<T, TH>()
+            where T : IntegrationEvent
+            where TH : IIntegrationEventHandler<T>
+    {
+        var eventName = GetEventKey<T>();
+        return DoFindSubscriptionToRemove(eventName, typeof(TH));
+    }
+
+    private SubscriptionInfo DoFindSubscriptionToRemove(string eventName, Type handlerType)
+    {
+        if (!HasSubscriptionsForEvent(eventName))
+        {
+            return null;
+        }
+
+        return _handlers[eventName].SingleOrDefault(s => s.HandlerType == handlerType);
+
+    }
+
+    public bool HasSubscriptionsForEvent<T>() where T : IntegrationEvent
+    {
+        var key = GetEventKey<T>();
+        return HasSubscriptionsForEvent(key);
+    }
+    public bool HasSubscriptionsForEvent(string eventName) => _handlers.ContainsKey(eventName);
+
+    public Type GetEventTypeByName(string eventName) => _eventTypes.SingleOrDefault(t => t.Name == eventName);
+
+    public string GetEventKey<T>()
+    {
+        return typeof(T).Name;
+    }
+}
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\EventBus\SubscriptionInfo.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
+
+public partial class InMemoryEventBusSubscriptionsManager : IEventBusSubscriptionsManager
+{
+    public class SubscriptionInfo
+    {
+        public bool IsDynamic { get; }
+        public Type HandlerType { get; }
+
+        private SubscriptionInfo(bool isDynamic, Type handlerType)
+        {
+            IsDynamic = isDynamic;
+            HandlerType = handlerType;
+        }
+
+        public static SubscriptionInfo Dynamic(Type handlerType) =>
+            new SubscriptionInfo(true, handlerType);
+
+        public static SubscriptionInfo Typed(Type handlerType) =>
+            new SubscriptionInfo(false, handlerType);
+    }
+}
+
+

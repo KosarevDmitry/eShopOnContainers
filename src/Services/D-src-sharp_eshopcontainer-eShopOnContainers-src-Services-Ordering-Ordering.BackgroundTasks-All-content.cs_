@@ -1,0 +1,545 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.BackgroundTasks
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 11
+appsettings.json
+
+appsettings.Development.json
+
+Dockerfile
+
+GracePeriodConfirmedIntegrationEvent.cs
+
+CustomExtensionMethods.cs
+
+Program.cs
+
+GracePeriodManagerService.cs
+
+BackgroundTaskSettings.cs
+
+launchSettings.json
+
+Startup.cs
+
+Ordering.BackgroundTasks.csproj
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.BackgroundTasks\appsettings.Development.json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "System": "Information",
+      "Microsoft": "Information"
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.BackgroundTasks\appsettings.json
+{
+  "ConnectionString": "Server=tcp:127.0.0.1,5433;Database=Microsoft.eShopOnContainers.Services.OrderingDb;User Id=sa;Password=Pass@word;",
+  "Serilog": {
+    "SeqServerUrl": null,
+    "LogstashgUrl": null,
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "Microsoft.eShopOnContainers": "Information",
+        "System": "Warning"
+      }
+    }
+  },
+  "SubscriptionClientName": "BackgroundTasks",
+  "GracePeriodTime": "1",
+  "CheckUpdateTime": "1000",
+  "ApplicationInsights": {
+    "InstrumentationKey": ""
+  },
+  "AzureServiceBusEnabled": false,
+  "EventBusRetryCount": 5,
+  "EventBusConnection": "",
+  "EventBusUserName": "",
+  "EventBusPassword": ""
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.BackgroundTasks\BackgroundTaskSettings.cs
+namespace Ordering.BackgroundTasks
+{
+    public class BackgroundTaskSettings
+    {
+        public string ConnectionString { get; set; }
+
+        public string EventBusConnection { get; set; }
+
+        public int GracePeriodTime { get; set; }
+
+        public int CheckUpdateTime { get; set; }
+
+        public string SubscriptionClientName { get; set; }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.BackgroundTasks\Dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+WORKDIR /app
+EXPOSE 80
+
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+WORKDIR /src
+
+# It's important to keep lines from here down to "COPY . ." identical in all Dockerfiles
+# to take advantage of Docker's build cache, to speed up local container builds
+COPY "eShopOnContainers-ServicesAndWebApps.sln" "eShopOnContainers-ServicesAndWebApps.sln"
+
+COPY "ApiGateways/Mobile.Bff.Shopping/aggregator/Mobile.Shopping.HttpAggregator.csproj" "ApiGateways/Mobile.Bff.Shopping/aggregator/Mobile.Shopping.HttpAggregator.csproj"
+COPY "ApiGateways/Web.Bff.Shopping/aggregator/Web.Shopping.HttpAggregator.csproj" "ApiGateways/Web.Bff.Shopping/aggregator/Web.Shopping.HttpAggregator.csproj"
+COPY "BuildingBlocks/Devspaces.Support/Devspaces.Support.csproj" "BuildingBlocks/Devspaces.Support/Devspaces.Support.csproj"
+COPY "BuildingBlocks/EventBus/EventBus/EventBus.csproj" "BuildingBlocks/EventBus/EventBus/EventBus.csproj"
+COPY "BuildingBlocks/EventBus/EventBus.Tests/EventBus.Tests.csproj" "BuildingBlocks/EventBus/EventBus.Tests/EventBus.Tests.csproj"
+COPY "BuildingBlocks/EventBus/EventBusRabbitMQ/EventBusRabbitMQ.csproj" "BuildingBlocks/EventBus/EventBusRabbitMQ/EventBusRabbitMQ.csproj"
+COPY "BuildingBlocks/EventBus/EventBusServiceBus/EventBusServiceBus.csproj" "BuildingBlocks/EventBus/EventBusServiceBus/EventBusServiceBus.csproj"
+COPY "BuildingBlocks/EventBus/IntegrationEventLogEF/IntegrationEventLogEF.csproj" "BuildingBlocks/EventBus/IntegrationEventLogEF/IntegrationEventLogEF.csproj"
+COPY "BuildingBlocks/WebHostCustomization/WebHost.Customization/WebHost.Customization.csproj" "BuildingBlocks/WebHostCustomization/WebHost.Customization/WebHost.Customization.csproj"
+COPY "Services/Basket/Basket.API/Basket.API.csproj" "Services/Basket/Basket.API/Basket.API.csproj"
+COPY "Services/Basket/Basket.FunctionalTests/Basket.FunctionalTests.csproj" "Services/Basket/Basket.FunctionalTests/Basket.FunctionalTests.csproj"
+COPY "Services/Basket/Basket.UnitTests/Basket.UnitTests.csproj" "Services/Basket/Basket.UnitTests/Basket.UnitTests.csproj"
+COPY "Services/Catalog/Catalog.API/Catalog.API.csproj" "Services/Catalog/Catalog.API/Catalog.API.csproj"
+COPY "Services/Catalog/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj" "Services/Catalog/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj"
+COPY "Services/Catalog/Catalog.UnitTests/Catalog.UnitTests.csproj" "Services/Catalog/Catalog.UnitTests/Catalog.UnitTests.csproj"
+COPY "Services/Identity/Identity.API/Identity.API.csproj" "Services/Identity/Identity.API/Identity.API.csproj"
+COPY "Services/Ordering/Ordering.API/Ordering.API.csproj" "Services/Ordering/Ordering.API/Ordering.API.csproj"
+COPY "Services/Ordering/Ordering.BackgroundTasks/Ordering.BackgroundTasks.csproj" "Services/Ordering/Ordering.BackgroundTasks/Ordering.BackgroundTasks.csproj"
+COPY "Services/Ordering/Ordering.Domain/Ordering.Domain.csproj" "Services/Ordering/Ordering.Domain/Ordering.Domain.csproj"
+COPY "Services/Ordering/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj" "Services/Ordering/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj"
+COPY "Services/Ordering/Ordering.Infrastructure/Ordering.Infrastructure.csproj" "Services/Ordering/Ordering.Infrastructure/Ordering.Infrastructure.csproj"
+COPY "Services/Ordering/Ordering.SignalrHub/Ordering.SignalrHub.csproj" "Services/Ordering/Ordering.SignalrHub/Ordering.SignalrHub.csproj"
+COPY "Services/Ordering/Ordering.UnitTests/Ordering.UnitTests.csproj" "Services/Ordering/Ordering.UnitTests/Ordering.UnitTests.csproj"
+COPY "Services/Payment/Payment.API/Payment.API.csproj" "Services/Payment/Payment.API/Payment.API.csproj"
+COPY "Services/Webhooks/Webhooks.API/Webhooks.API.csproj" "Services/Webhooks/Webhooks.API/Webhooks.API.csproj"
+COPY "Tests/Services/Application.FunctionalTests/Application.FunctionalTests.csproj" "Tests/Services/Application.FunctionalTests/Application.FunctionalTests.csproj"
+COPY "Web/WebhookClient/WebhookClient.csproj" "Web/WebhookClient/WebhookClient.csproj"
+COPY "Web/WebMVC/WebMVC.csproj" "Web/WebMVC/WebMVC.csproj"
+COPY "Web/WebSPA/WebSPA.csproj" "Web/WebSPA/WebSPA.csproj"
+COPY "Web/WebStatus/WebStatus.csproj" "Web/WebStatus/WebStatus.csproj"
+
+COPY "docker-compose.dcproj" "docker-compose.dcproj"
+
+COPY "NuGet.config" "NuGet.config"
+
+RUN dotnet restore "eShopOnContainers-ServicesAndWebApps.sln"
+
+COPY . .
+WORKDIR /src/Services/Ordering/Ordering.BackgroundTasks
+RUN dotnet publish --no-restore -c Release -o /app
+
+FROM build AS publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app .
+ENTRYPOINT ["dotnet", "Ordering.BackgroundTasks.dll"]
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.BackgroundTasks\Events\GracePeriodConfirmedIntegrationEvent.cs
+namespace Ordering.BackgroundTasks.Events
+{
+    using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
+
+    public record GracePeriodConfirmedIntegrationEvent : IntegrationEvent
+    {
+        public int OrderId { get; }
+
+        public GracePeriodConfirmedIntegrationEvent(int orderId) =>
+            OrderId = orderId;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.BackgroundTasks\Extensions\CustomExtensionMethods.cs
+using Autofac;
+using Azure.Messaging.ServiceBus;
+using Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
+using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+using Microsoft.eShopOnContainers.BuildingBlocks.EventBusRabbitMQ;
+using Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
+using RabbitMQ.Client;
+using Serilog;
+
+namespace Ordering.BackgroundTasks.Extensions
+{
+    public static class CustomExtensionMethods
+    {
+        public static IServiceCollection AddCustomHealthCheck(this IServiceCollection services, IConfiguration configuration)
+        {
+            var hcBuilder = services.AddHealthChecks();
+
+            hcBuilder.AddCheck("self", () => HealthCheckResult.Healthy());
+
+            hcBuilder.AddSqlServer(
+                    configuration["ConnectionString"],
+                    name: "OrderingTaskDB-check",
+                    tags: new string[] { "orderingtaskdb" });
+
+            if (configuration.GetValue<bool>("AzureServiceBusEnabled"))
+            {
+                hcBuilder.AddAzureServiceBusTopic(
+                        configuration["EventBusConnection"],
+                        topicName: "eshop_event_bus",
+                        name: "orderingtask-servicebus-check",
+                        tags: new string[] { "servicebus" });
+            }
+            else
+            {
+                hcBuilder.AddRabbitMQ(
+                        $"amqp://{configuration["EventBusConnection"]}",
+                        name: "orderingtask-rabbitmqbus-check",
+                        tags: new string[] { "rabbitmqbus" });
+            }
+
+            return services;
+        }
+
+        public static IServiceCollection AddEventBus(this IServiceCollection services, IConfiguration configuration)
+        {
+            var subscriptionClientName = configuration["SubscriptionClientName"];
+
+            if (configuration.GetValue<bool>("AzureServiceBusEnabled"))
+            {
+                services.AddSingleton<IServiceBusPersisterConnection>(sp =>
+                {
+                    var serviceBusConnectionString = configuration["EventBusConnection"];
+
+                    return new DefaultServiceBusPersisterConnection(serviceBusConnectionString);
+                });
+
+                services.AddSingleton<IEventBus, EventBusServiceBus>(sp =>
+                {
+                    var serviceBusPersisterConnection = sp.GetRequiredService<IServiceBusPersisterConnection>();
+                    var iLifetimeScope = sp.GetRequiredService<ILifetimeScope>();
+                    var logger = sp.GetRequiredService<ILogger<EventBusServiceBus>>();
+                    var eventBusSubcriptionsManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
+                    string subscriptionName = configuration["SubscriptionClientName"];
+
+                    return new EventBusServiceBus(serviceBusPersisterConnection, logger, eventBusSubcriptionsManager, iLifetimeScope, subscriptionName);
+                });
+            }
+            else
+            {
+                services.AddSingleton<IRabbitMQPersistentConnection>(sp =>
+                {
+                    var logger = sp.GetRequiredService<ILogger<DefaultRabbitMQPersistentConnection>>();
+
+                    var factory = new ConnectionFactory()
+                    {
+                        HostName = configuration["EventBusConnection"],
+                        DispatchConsumersAsync = true
+                    };
+
+                    if (!string.IsNullOrEmpty(configuration["EventBusUserName"]))
+                    {
+                        factory.UserName = configuration["EventBusUserName"];
+                    }
+
+                    if (!string.IsNullOrEmpty(configuration["EventBusPassword"]))
+                    {
+                        factory.Password = configuration["EventBusPassword"];
+                    }
+
+                    var retryCount = 5;
+
+                    if (!string.IsNullOrEmpty(configuration["EventBusRetryCount"]))
+                    {
+                        retryCount = int.Parse(configuration["EventBusRetryCount"]);
+                    }
+
+                    return new DefaultRabbitMQPersistentConnection(factory, logger, retryCount);
+                });
+
+                services.AddSingleton<IEventBus, EventBusRabbitMQ>(sp =>
+                {
+                    var rabbitMQPersistentConnection = sp.GetRequiredService<IRabbitMQPersistentConnection>();
+                    var iLifetimeScope = sp.GetRequiredService<ILifetimeScope>();
+                    var logger = sp.GetRequiredService<ILogger<EventBusRabbitMQ>>();
+                    var eventBusSubcriptionsManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
+
+                    var retryCount = 5;
+
+                    if (!string.IsNullOrEmpty(configuration["EventBusRetryCount"]))
+                    {
+                        retryCount = int.Parse(configuration["EventBusRetryCount"]);
+                    }
+
+                    return new EventBusRabbitMQ(rabbitMQPersistentConnection, logger, iLifetimeScope, eventBusSubcriptionsManager, subscriptionClientName, retryCount);
+                });
+            }
+
+            services.AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
+
+            return services;
+        }
+
+        public static ILoggingBuilder UseSerilog(this ILoggingBuilder builder, IConfiguration configuration)
+        {
+            var seqServerUrl = configuration["Serilog:SeqServerUrl"];
+            var logstashUrl = configuration["Serilog:LogstashgUrl"];
+
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .Enrich.WithProperty("ApplicationContext", Program.AppName)
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.Seq(string.IsNullOrWhiteSpace(seqServerUrl) ? "http://seq" : seqServerUrl)
+                .WriteTo.Http(string.IsNullOrWhiteSpace(logstashUrl) ? "http://logstash:8080" : logstashUrl,null)
+                .ReadFrom.Configuration(configuration)
+                .CreateLogger();
+
+            return builder;
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.BackgroundTasks\Ordering.BackgroundTasks.csproj
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <UserSecretsId>dotnet-Ordering.BackgroundTasks-9D3E1DD6-405B-447F-8AAB-1708B36D260E</UserSecretsId>
+    <GenerateErrorForMissingTargetingPacks>false</GenerateErrorForMissingTargetingPacks>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.AzureServiceBus" Version="6.0.4" />
+    <PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" Version="6.0.2" />
+    <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="6.0.2" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="6.0.5" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Autofac" Version="6.5.0" />
+    <PackageReference Include="Dapper" Version="2.0.123" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.HealthChecks" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="6.1.0-dev-00289" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.1-dev-00787" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.5.0-dev-00359" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.1-dev-00896" />
+    <PackageReference Include="Serilog.Sinks.Http" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.3-dev-00260" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\EventBus\EventBusRabbitMQ\EventBusRabbitMQ.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\EventBus\EventBusServiceBus\EventBusServiceBus.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\EventBus\EventBus\EventBus.csproj" />
+  </ItemGroup>
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.BackgroundTasks\Program.cs
+using Autofac.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Ordering.BackgroundTasks.Extensions;
+using Serilog;
+using System.IO;
+
+namespace Ordering.BackgroundTasks
+{
+    public class Program
+    {
+        public static readonly string AppName = typeof(Program).Assembly.GetName().Name;
+
+        public static void Main(string[] args)
+        {
+            CreateHostBuilder(args).Run();
+        }
+
+        public static IHost CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>())
+                .ConfigureAppConfiguration((host, builder) =>
+                {
+                    builder.SetBasePath(Directory.GetCurrentDirectory());
+                    builder.AddJsonFile("appsettings.json", optional: true);
+                    builder.AddJsonFile($"appsettings.{host.HostingEnvironment.EnvironmentName}.json", optional: true);
+                    builder.AddEnvironmentVariables();
+                    builder.AddCommandLine(args);
+                })
+                .ConfigureLogging((host, builder) => builder.UseSerilog(host.Configuration).AddSerilog())
+                .Build();
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.BackgroundTasks\Properties\launchSettings.json
+{
+  "profiles": {
+    "Ordering.BackgroundTasks": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.BackgroundTasks\Services\GracePeriodManagerService.cs
+using Dapper;
+using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Ordering.BackgroundTasks.Events;
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Ordering.BackgroundTasks.Services
+{
+    public class GracePeriodManagerService : BackgroundService
+    {
+        private readonly ILogger<GracePeriodManagerService> _logger;
+        private readonly BackgroundTaskSettings _settings;
+        private readonly IEventBus _eventBus;
+
+        public GracePeriodManagerService(IOptions<BackgroundTaskSettings> settings, IEventBus eventBus, ILogger<GracePeriodManagerService> logger)
+        {
+            _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
+            _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            _logger.LogDebug("GracePeriodManagerService is starting.");
+
+            stoppingToken.Register(() => _logger.LogDebug("#1 GracePeriodManagerService background task is stopping."));
+
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                _logger.LogDebug("GracePeriodManagerService background task is doing background work.");
+
+                CheckConfirmedGracePeriodOrders();
+
+                await Task.Delay(_settings.CheckUpdateTime, stoppingToken);
+            }
+
+            _logger.LogDebug("GracePeriodManagerService background task is stopping.");
+        }
+
+        private void CheckConfirmedGracePeriodOrders()
+        {
+            _logger.LogDebug("Checking confirmed grace period orders");
+
+            var orderIds = GetConfirmedGracePeriodOrders();
+
+            foreach (var orderId in orderIds)
+            {
+                var confirmGracePeriodEvent = new GracePeriodConfirmedIntegrationEvent(orderId);
+
+                _logger.LogInformation("----- Publishing integration event: {IntegrationEventId} from {AppName} - ({@IntegrationEvent})", confirmGracePeriodEvent.Id, Program.AppName, confirmGracePeriodEvent);
+
+                _eventBus.Publish(confirmGracePeriodEvent);
+            }
+        }
+
+        private IEnumerable<int> GetConfirmedGracePeriodOrders()
+        {
+            IEnumerable<int> orderIds = new List<int>();
+
+            using var conn = new SqlConnection(_settings.ConnectionString);
+            try
+            {
+                conn.Open();
+                orderIds = conn.Query<int>(
+                    @"SELECT Id FROM [ordering].[orders] 
+                        WHERE DATEDIFF(minute, [OrderDate], GETDATE()) >= @GracePeriodTime
+                        AND [OrderStatusId] = 1",
+                    new { _settings.GracePeriodTime });
+            }
+            catch (SqlException exception)
+            {
+                _logger.LogCritical(exception, "FATAL ERROR: Database connections could not be opened: {Message}", exception.Message);
+            }
+
+
+            return orderIds;
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Ordering\Ordering.BackgroundTasks\Startup.cs
+namespace Ordering.BackgroundTasks
+{
+    using HealthChecks.UI.Client;
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Ordering.BackgroundTasks.Extensions;
+    using Ordering.BackgroundTasks.Services;
+
+    public class Startup
+    {
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public IConfiguration Configuration { get; }
+
+        public virtual void ConfigureServices(IServiceCollection services)
+        {
+            services.AddCustomHealthCheck(this.Configuration)
+                .Configure<BackgroundTaskSettings>(this.Configuration)
+                .AddOptions()
+                .AddHostedService<GracePeriodManagerService>()
+                .AddEventBus(this.Configuration);
+        }
+
+
+        public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
+        {
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
+                {
+                    Predicate = _ => true,
+                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+                });
+                endpoints.MapHealthChecks("/liveness", new HealthCheckOptions
+                {
+                    Predicate = r => r.Name.Contains("self")
+                });
+            });
+        }
+    }
+}
+
+

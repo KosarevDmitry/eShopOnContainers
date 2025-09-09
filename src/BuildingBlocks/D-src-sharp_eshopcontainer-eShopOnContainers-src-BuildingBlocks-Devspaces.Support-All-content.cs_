@@ -1,0 +1,106 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 6
+HttpClientBuilderDevspacesExtensions.cs
+ServiceCollectionDevspacesExtensions.cs
+
+DevspacesMessageHandler.cs
+
+readme.md
+
+Devspaces.Support.csproj
+
+GlobalUsings.cs
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\Devspaces.Support.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+  </ItemGroup>
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\DevspacesMessageHandler.cs
+namespace Devspaces.Support;
+public class DevspacesMessageHandler : DelegatingHandler
+{
+    private const string DevspacesHeaderName = "azds-route-as";
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    public DevspacesMessageHandler(IHttpContextAccessor httpContextAccessor)
+    {
+        _httpContextAccessor = httpContextAccessor;
+    }
+    // добавление заголовка 
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var req = _httpContextAccessor.HttpContext.Request;
+
+        if (req.Headers.ContainsKey(DevspacesHeaderName))
+        {
+            request.Headers.Add(DevspacesHeaderName, req.Headers[DevspacesHeaderName] as IEnumerable<string>);
+        }
+        return base.SendAsync(request, cancellationToken);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\GlobalUsings.cs
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.Extensions.DependencyInjection;
+global using System.Collections.Generic;
+global using System.Net.Http;
+global using System.Threading.Tasks;
+global using System.Threading;
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\HttpClientBuilderDevspacesExtensions.cs
+namespace Devspaces.Support;
+
+public static class HttpClientBuilderDevspacesExtensions
+{
+    public static IHttpClientBuilder AddDevspacesSupport(this IHttpClientBuilder builder)
+    {
+        builder.AddHttpMessageHandler<DevspacesMessageHandler>();
+        return builder;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\readme.md
+Хороший пример с точки зрения устройства сервисов
+каждый класс должен быть добавлен  в коллекцию сервисов
+это естественный способ его создания
+потом передавай куда уже требуется
+`services.AddTransient<DevspacesMessageHandler>();`
+
+`builder.AddHttpMessageHandler<DevspacesMessageHandler>();`
+
+проект демонстрирует как добавить
+подключить обработчик сообщения DelegatingHandler
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\Devspaces.Support\ServiceCollectionDevspacesExtensions.cs
+namespace Devspaces.Support;
+
+public static class ServiceCollectionDevspacesExtensions
+{
+    public static IServiceCollection AddDevspaces(this IServiceCollection services)
+    {
+        services.AddTransient<DevspacesMessageHandler>();
+        return services;
+    }
+}
+
+

@@ -1,0 +1,305 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 8
+IntegrationEventLogContext.cs
+
+IntegrationEventLogEntry.cs
+
+EventStateEnum.cs
+
+IntegrationEventLogEF.csproj
+
+IIntegrationEventLogService.cs
+IntegrationEventLogService.cs
+
+ResilientTransaction.cs
+
+GlobalUsings.cs
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\EventStateEnum.cs
+
+/*
+event logger write to db using efcore 
+*/
+namespace Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF;
+
+public enum EventStateEnum
+{
+    NotPublished = 0,
+    InProgress = 1,
+    Published = 2,
+    PublishedFailed = 3
+}
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\GlobalUsings.cs
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.Metadata.Builders;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
+global using System;
+global using System.Text.Json;
+global using System.ComponentModel.DataAnnotations.Schema;
+global using System.Linq;
+global using System.Threading.Tasks;
+global using Microsoft.EntityFrameworkCore.Storage;
+global using System.Collections.Generic;
+global using System.Data.Common;
+global using System.Reflection;
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\IntegrationEventLogContext.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF;
+
+public class IntegrationEventLogContext : DbContext
+{
+    public IntegrationEventLogContext(DbContextOptions<IntegrationEventLogContext> options) : base(options)
+    {
+    }
+
+    public DbSet<IntegrationEventLogEntry> IntegrationEventLogs { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        builder.Entity<IntegrationEventLogEntry>(ConfigureIntegrationEventLogEntry);
+    }
+
+    void ConfigureIntegrationEventLogEntry(EntityTypeBuilder<IntegrationEventLogEntry> builder)
+    {
+        builder.ToTable("IntegrationEventLog");
+
+        builder.HasKey(e => e.EventId);
+
+        builder.Property(e => e.EventId)
+            .IsRequired();
+
+        builder.Property(e => e.Content)
+            .IsRequired();
+
+        builder.Property(e => e.CreationTime)
+            .IsRequired();
+
+        builder.Property(e => e.State)
+            .IsRequired();
+
+        builder.Property(e => e.TimesSent)
+            .IsRequired();
+
+        builder.Property(e => e.EventTypeName)
+            .IsRequired();
+
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\IntegrationEventLogEF.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.0" />    
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EventBus\EventBus.csproj" />
+  </ItemGroup>
+
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\IntegrationEventLogEntry.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF;
+
+public class IntegrationEventLogEntry
+{
+    private IntegrationEventLogEntry() { }
+    public IntegrationEventLogEntry(IntegrationEvent @event, Guid transactionId)
+    {
+        EventId = @event.Id;
+        CreationTime = @event.CreationDate;
+        EventTypeName = @event.GetType().FullName;                     
+        Content = JsonSerializer.Serialize(@event, @event.GetType(), new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        State = EventStateEnum.NotPublished;
+        TimesSent = 0;
+        TransactionId = transactionId.ToString();
+    }
+    public Guid EventId { get; private set; }
+    public string EventTypeName { get; private set; }
+    [NotMapped]
+    public string EventTypeShortName => EventTypeName.Split('.')?.Last();
+    [NotMapped]
+    public IntegrationEvent IntegrationEvent { get; private set; }
+    public EventStateEnum State { get; set; }
+    public int TimesSent { get; set; }
+    public DateTime CreationTime { get; private set; }
+    public string Content { get; private set; }
+    public string TransactionId { get; private set; }
+
+    public IntegrationEventLogEntry DeserializeJsonContent(Type type)
+    {            
+        IntegrationEvent = JsonSerializer.Deserialize(Content, type, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) as IntegrationEvent;
+        return this;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\Services\IIntegrationEventLogService.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF.Services;
+
+public interface IIntegrationEventLogService
+{
+    Task<IEnumerable<IntegrationEventLogEntry>> RetrieveEventLogsPendingToPublishAsync(Guid transactionId);
+    Task SaveEventAsync(IntegrationEvent @event, IDbContextTransaction transaction);
+    Task MarkEventAsPublishedAsync(Guid eventId);
+    Task MarkEventAsInProgressAsync(Guid eventId);
+    Task MarkEventAsFailedAsync(Guid eventId);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\Services\IntegrationEventLogService.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF.Services;
+
+public class IntegrationEventLogService : IIntegrationEventLogService, IDisposable
+{
+    private readonly IntegrationEventLogContext _integrationEventLogContext;
+    private readonly DbConnection _dbConnection;
+    private readonly List<Type> _eventTypes;
+    private volatile bool _disposedValue;
+
+    public IntegrationEventLogService(DbConnection dbConnection)
+    {
+        _dbConnection = dbConnection ?? throw new ArgumentNullException(nameof(dbConnection));
+        _integrationEventLogContext = new IntegrationEventLogContext(
+            new DbContextOptionsBuilder<IntegrationEventLogContext>()
+                .UseSqlServer(_dbConnection)
+                .Options);
+
+        _eventTypes = Assembly.Load(Assembly.GetEntryAssembly().FullName)
+            .GetTypes()
+            .Where(t => t.Name.EndsWith(nameof(IntegrationEvent)))
+            .ToList();
+    }
+
+    public async Task<IEnumerable<IntegrationEventLogEntry>> RetrieveEventLogsPendingToPublishAsync(Guid transactionId)
+    {
+        var tid = transactionId.ToString();
+
+        var result = await _integrationEventLogContext.IntegrationEventLogs
+            .Where(e => e.TransactionId == tid && e.State == EventStateEnum.NotPublished).ToListAsync();
+
+        if (result.Any())
+        {
+            return result.OrderBy(o => o.CreationTime)
+                .Select(e => e.DeserializeJsonContent(_eventTypes.Find(t => t.Name == e.EventTypeShortName)));
+        }
+
+        return new List<IntegrationEventLogEntry>();
+    }
+
+    public Task SaveEventAsync(IntegrationEvent @event, IDbContextTransaction transaction)
+    {
+        if (transaction == null) throw new ArgumentNullException(nameof(transaction));
+
+        var eventLogEntry = new IntegrationEventLogEntry(@event, transaction.TransactionId);
+
+        _integrationEventLogContext.Database.UseTransaction(transaction.GetDbTransaction());
+        _integrationEventLogContext.IntegrationEventLogs.Add(eventLogEntry);
+
+        return _integrationEventLogContext.SaveChangesAsync();
+    }
+
+    public Task MarkEventAsPublishedAsync(Guid eventId)
+    {
+        return UpdateEventStatus(eventId, EventStateEnum.Published);
+    }
+
+    public Task MarkEventAsInProgressAsync(Guid eventId)
+    {
+        return UpdateEventStatus(eventId, EventStateEnum.InProgress);
+    }
+
+    public Task MarkEventAsFailedAsync(Guid eventId)
+    {
+        return UpdateEventStatus(eventId, EventStateEnum.PublishedFailed);
+    }
+
+    private Task UpdateEventStatus(Guid eventId, EventStateEnum status)
+    {
+        var eventLogEntry = _integrationEventLogContext.IntegrationEventLogs.Single(ie => ie.EventId == eventId);
+        eventLogEntry.State = status;
+
+        if (status == EventStateEnum.InProgress)
+            eventLogEntry.TimesSent++;
+
+        _integrationEventLogContext.IntegrationEventLogs.Update(eventLogEntry);
+
+        return _integrationEventLogContext.SaveChangesAsync();
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                _integrationEventLogContext?.Dispose();
+            }
+
+
+            _disposedValue = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\BuildingBlocks\EventBus\IntegrationEventLogEF\Utilities\ResilientTransaction.cs
+namespace Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF.Utilities;
+
+public class ResilientTransaction
+{
+    private readonly DbContext _context;
+    private ResilientTransaction(DbContext context) =>
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+
+    public static ResilientTransaction New(DbContext context) => new(context);
+
+    public async Task ExecuteAsync(Func<Task> action)
+    {
+        //Use of an EF Core resiliency strategy when using multiple DbContexts within an explicit BeginTransaction():
+        //See: https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
+        var strategy = _context.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            await action();
+            await transaction.CommitAsync();
+        });
+    }
+}
+
+

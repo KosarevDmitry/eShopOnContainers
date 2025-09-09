@@ -1,0 +1,1017 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 19
+create-resources.cmd
+
+createresources.sh
+
+deploycosmos.json
+
+deploycosmos.parameters.json
+
+deploystorage.json
+
+deploystorage.parameters.json
+
+readme.md
+readme.md
+readme.md
+readme.md
+readme.md
+readme.md
+readme.md
+
+redisdeploy.json
+
+redisdeploy.parameters.json
+
+sbusdeploy.json
+
+sbusdeploy.parameters.json
+
+sqldeploy.json
+
+sqldeploy.parameters.json
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\cosmos\deploycosmos.json
+{
+    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "String"
+        }
+    },
+    "variables": {
+        "name": "[concat(parameters('name'), uniqueString(resourceGroup().id))]",
+        "location":"[resourceGroup().location]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.DocumentDb/databaseAccounts",
+            "kind": "MongoDB",
+            "name": "[variables('name')]",
+            "apiVersion": "2015-04-08",
+            "location": "[variables('location')]",
+            "properties": {
+                "databaseAccountOfferType": "Standard",
+                "locations": [
+                    {
+                        "id": "[concat(variables('name'), '-', variables('location'))]",
+                        "failoverPriority": 0,
+                        "locationName": "[variables('location')]"
+                    }
+                ]
+            }
+        }
+    ]
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\cosmos\deploycosmos.parameters.json
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "value": "eshop-nosql"
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\cosmos\readme.md
+# Deploying Azure Cosmosdb
+
+The ARM template `deploycosmos.json` and its parameter file (`deploycosmos.parameters.json`) are used to deploy following resources:
+
+1. One Cosmosdb database
+
+## Editing deploycosmos.parameters.json file
+
+You can edit the `deploycosmos.parameters.json` file to set your values, but is not needed. The only parameter that can
+be set is:
+
+1. `name` is a string that is used to create the database name. ARM script creates unique values by appending a unique string to this parameter value, so you can leave the default value.
+
+## Deploy the template
+
+Once parameter file is edited you can deploy it using [create-resources script](../readme.md).
+
+i. e. if you are in windows, to deploy a Cosmosdb database in a new resourcegroup located in westus, go to `deploy\az` folder and type:
+
+```
+create-resources.cmd cosmos\deploycosmos newResourceGroup -c westus
+```
+
+
+
+
+
+
+
+
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\create-resources.cmd
+@echo off
+if %1.==. GOTO error
+if %2.==. GOTO error
+if NOT %3.==-c. GOTO deployresources
+if %4.==. GOTO error
+echo Creating resource group %2 in '%4'
+call az group create --name %2 --location %4
+:deployresources
+echo Deploying ARM template '%1.json' in resource group %2
+call az group deployment create --resource-group %2 --parameters @%1.parameters.json --template-file %1.json
+GOTO end
+:error
+echo.
+echo Usage: 
+echo create-resources arm-file resource-group-name [-c location]
+echo arm-file: Path to ARM template WITHOUT .json extension. An parameter file with same name plus '.parameters' MUST exist in same folde
+echo resource-grop-name: Name of the resource group to use or create
+echo -c: If appears means that resource group must be created. If -c is specified, must use enter location
+echo.
+echo Examples:
+echo create-resources path_and_filename testgroup (Deploys path_and_filename.json with parameters specified in path_and_filename.parameters.json file).
+echo create-resources path_and_filename newgroup -c westus (Deploys path_and_filename.json (with parameters specified in path_and_filename.parameters.json file) in a NEW resource group named newgroup in the westus location)
+:end
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\createresources.sh
+#!/bin/bash
+
+CreateGroup()
+{
+	echo Creating resource group $resource_group in '$location'
+	az group create --name $resource_group --location $location
+}   # end of CreateGroup()
+
+
+
+deployresources()
+{
+	echo Deploying ARM template '$path_and_filename.json' in resource group $resource_group
+	az group deployment create --resource-group $resource_group --parameters @$path_and_filename.parameters.json --template-file $path_and_filename.json
+}   # end of deployresources
+
+Error_Usage()
+{
+	echo ""
+	echo Usage: 
+	echo create-resources arm-file resource-group-name [-c location]
+	echo arm-file: Path to ARM template WITHOUT .json extension. An parameter file with same name plus '.parameters' MUST exist in same folder
+	echo resource-grop-name: Name of the resource group to use or create
+	echo -c: If appears means that resource group must be created. If -c is specified, must use enter location
+	echo ""
+	echo Examples:
+	echo "1 create-resources path_and_filename testgroup (Deploys path_and_filename.json with parameters specified in path_and_filename.parameters.json file)."
+	echo "2 create-resources path_and_filename newgroup -c westus (Deploys path_and_filename.json (with parameters specified in path_and_filename.parameters.json file) in a NEW resource group named newgroup in the westus location)"
+}
+
+
+
+if [ $# -le 1 ]; then
+	Error_Usage
+	exit 1
+fi
+if [ "$1" == "" ]; then
+    echo "path_and_filename is empty"
+	Error_Usage
+	exit 1
+fi
+
+if [ "$2" == "" ]; then
+    echo "Resource Group is empty"
+	Error_Usage
+	exit 1
+fi
+
+if [ ! -f "$1.json" ]; then
+	echo "$1.json doesn't exist"
+	exit 1
+fi
+
+if [ ! -f "$1.parameters.json" ]; then
+	echo "$1.parameters.json doesn't exist"
+	exit 1
+fi
+
+
+path_and_filename=$1
+resource_group=$2
+
+
+if [ "$3" == "-c" ]; then
+    echo "Resource Group needs to be created"
+	if [ "$4" == "" ]; then
+		echo "but Resource Group name is missing"
+		Error_Usage
+		exit 1
+	else
+		location=$4
+		CreateGroup
+	fi
+	
+fi
+deployresources
+
+echo "all resources finished successfully"
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\readme.md
+
+# Deploying resources using create-resources script
+
+The `create-resources.cmd ` script is a basic script to allow easy deployment of one ARM template in one resource group. You can deploy to an existing resource group or to create one.
+
+**NOTE**: Alternatively, you can also use the `createresources.sh` bash script which can be used as a second option, convenient if you are using the Azure Cloud Bash Shell, a Mac or Linux machine, or simply, bash on Windows, instead of CMD/CommandPrompt in a local Windows
+
+## Deploying to a existing resource group - Windows CMD
+
+Just type `create-resources [pathfile-to-arm-template] resourcegroup` from command-prompt. Called this way the script will:
+
+1. Search for `path-to-arm-template.json` and `path-to-arm-template.parameters.json` files
+2. If they exist, will deploy them in the `resourcegroup` specified (that resource group in Azure has to exist).
+
+## Deploying to a new resource group - Windows CMD
+
+Just type `create-resources [pathfile-to-arm-template] resourcegroup -c location`. Called this way the script will:
+
+1. Search for `path-to-arm-template.json` and `path-to-arm-template.parameters.json` files
+2. If they exist, will create the `resourcegroup` specified in the `location` specified.
+3. Finally will deploy `path-to-arm-template.json` and `path-to-arm-template.parameters.json` files in the `resourcegroup`
+
+
+
+## Deploying to a existing resource group - Bash shell
+
+Just type `createresources.sh [pathfile-to-arm-template] resourcegroup` from command-prompt. Called this way the script will:
+
+1. Search for `path-to-arm-template.json` and `path-to-arm-template.parameters.json` files
+2. If they exist, will deploy them in the `resourcegroup` specified (that resource group in Azure has to exist).
+
+## Deploying to a new resource group - Bash shell
+
+Just type `createresources.sh [pathfile-to-arm-template] resourcegroup -c location`. Called this way the script will:
+
+1. Search for `path-to-arm-template.json` and `path-to-arm-template.parameters.json` files
+2. If they exist, will create the `resourcegroup` specified in the `location` specified.
+3. Finally will deploy `path-to-arm-template.json` and `path-to-arm-template.parameters.json` files in the `resourcegroup`
+
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\redis\readme.md
+# Deploying Redis Cache
+
+The ARM template `redisdeploy.json` and its parameter file (`redisdeploy.parameters.json`) are used to deploy following resources:
+
+1. One Redis Cache
+
+## Editing sbusdeploy.parameters.json file
+
+You can edit the `redisdeploy.parameters.parameters.json` file to set your values, but is not needed. The only parameter than can
+be set is:
+
+1. `namespaceprefix` is a string that is used to create the Redis namespace. ARM script creates unique values by appending a unique string to this parameter value, so you can leave the default value.
+
+## Deploy the template
+
+Once parameter file is edited you can deploy it using [create-resources script](../readme.md).
+
+i. e. if you are in windows, to deploy a Redis cache in a new Azure Resource Group located in westus, go to `deploy\az` folder and type:
+
+```
+create-resources.cmd redis\redisdeploy newResourceGroup -c westus
+```
+
+
+
+
+
+
+
+
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\redis\redisdeploy.json
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "namespaceprefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Redis namespace"
+            }
+        }
+    },
+    "variables": {
+        "location": "[resourceGroup().location]",
+        "namespaceprefix": "[concat(parameters('namespaceprefix'), uniqueString(resourceGroup().id))]",
+        "sbVersion": "2016-04-01"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Cache/Redis",
+            "name": "[variables('namespaceprefix')]",
+            "apiVersion": "[variables('sbVersion')]",
+            "location": "[variables('location')]",
+            "scale": null,
+            "properties": {
+                "redisVersion": "3.2.7",
+                "sku": {
+                    "name": "Standard",
+                    "family": "C",
+                    "capacity": 1
+                },
+                "enableNonSslPort": true,
+                "redisConfiguration": {
+                    "maxclients": "1000",
+                    "maxmemory-reserved": "50",
+                    "maxfragmentationmemory-reserved": "50",
+                    "maxmemory-policy": "volatile-lru",
+                    "maxmemory-delta": "50"
+                }
+            }
+        }
+    ]
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\redis\redisdeploy.parameters.json
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "namespaceprefix": {
+			"value": "eshopredis"
+		}
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\servicebus\readme.md
+# Deploying Azure Service Bus
+
+The ARM template `sbusdeploy.json` and its parameter file (`sbusdeploy.parameters.json`) are used to deploy following resources:
+
+1. One Service Bus namespace
+2. One Service Bus topic
+3. Subscriptions used by application
+
+## Editing sbusdeploy.parameters.json file
+
+You can edit the `sbusdeploy.parameters.json` file to set your values, but is not needed. The only parameter than can
+be set is:
+
+1. `namespaceprefix` is a string that is used to create the namespace. ARM script creates unique values by appending a unique string to this parameter value, so you can leave the default value.
+
+## Deploy the template
+
+Once parameter file is edited you can deploy it using [create-resources script](../readme.md).
+
+i. e. if you are in windows, to deploy servicebus in a new resourcegroup located in westus, go to `deploy\az` folder and type:
+
+```
+create-resources.cmd servicebus\sbusdeploy newResourceGroup -c westus
+```
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\servicebus\sbusdeploy.json
+{
+    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "namespaceprefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Service Bus namespace"
+            }
+        }
+    },
+    "variables": {
+		"serviceBusTopicName": "eshop_event_bus",
+		"BasketSubscriptionName": "Basket",
+		"CatalogSubscriptionName": "Catalog",
+		"OrderingSubscriptionName": "Ordering",
+		"GracePeriodSubscriptionName": "GracePeriod",
+		"PaymentSubscriptionName": "Payment",
+		"BackgroundTaskSubscriptionName": "backgroundtasks",
+		"OrderingSignalrHubSubscriptionName": "Ordering.signalrhub",
+		"WebhooksSubscriptionName": "Webhooks",
+        "location": "[resourceGroup().location]",
+        "sbVersion": "2015-08-01",
+        "defaultSASKeyName": "Root",
+        "namespace":"[concat(parameters('namespaceprefix'), uniqueString(resourceGroup().id))]",
+        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/topics/authorizationRules', variables('namespace'), variables('serviceBusTopicName'), variables('defaultSASKeyName'))]"        
+    },
+    "resources": [
+        {
+            "apiVersion": "[variables('sbVersion')]",
+            "name": "[variables('namespace')]",
+            "type": "Microsoft.ServiceBus/Namespaces",
+            "location": "[variables('location')]",
+            "sku": {
+                "name": "Standard",
+                "tier": "Standard"
+            },
+            "resources": [
+                {
+                    "apiVersion": "[variables('sbVersion')]",
+                    "name": "[variables('serviceBusTopicName')]",
+                    "type": "Topics",
+                    "dependsOn": [
+                        "[concat('Microsoft.ServiceBus/namespaces/', variables('namespace'))]"
+                    ],
+                    "properties": {
+                        "path": "[variables('serviceBusTopicName')]",
+						"defaultMessageTimeToLive": "14.00:00:00",
+						"maxSizeInMegabytes": 1024,
+						"requiresDuplicateDetection": false,
+						"enableBatchedOperations": true,
+						"sizeInBytes": 0,
+						"filteringMessagesBeforePublishing": false,
+						"isAnonymousAccessible": false,
+						"status": "Active",
+						"supportOrdering": false,
+						"autoDeleteOnIdle": "10675199.02:48:05.4775807",
+						"enablePartitioning": true,
+						"isExpress": false,
+						"enableSubscriptionPartitioning": false,
+						"enableExpress": false
+                    },
+                    "resources": [
+						{
+							"type": "AuthorizationRules",
+							"name": "[variables('defaultSASKeyName')]",
+							"apiVersion": "[variables('sbVersion')]",
+							"properties": {
+								"rights": [
+									"Manage",
+									"Send",
+									"Listen"
+								]
+							},
+							"dependsOn": [
+								"[variables('serviceBusTopicName')]"
+							]
+						},
+                        {
+                            "apiVersion": "[variables('sbVersion')]",
+                            "name": "[variables('BasketSubscriptionName')]",
+                            "type": "Subscriptions",
+                            "dependsOn": [
+                                "[variables('serviceBusTopicName')]"
+                            ],
+                            "properties": {
+								"lockDuration": "00:00:30",
+								"requiresSession": false,
+								"defaultMessageTimeToLive": "14.00:00:00",
+								"deadLetteringOnMessageExpiration": true,
+								"deadLetteringOnFilterEvaluationExceptions": true,
+								"maxDeliveryCount": 10,
+								"enableBatchedOperations": false,
+								"status": "Active",
+								"autoDeleteOnIdle": "10675199.02:48:05.4775807",
+								"entityAvailabilityStatus": "Available"
+							}
+                        },
+						{
+                            "apiVersion": "[variables('sbVersion')]",
+                            "name": "[variables('OrderingSubscriptionName')]",
+                            "type": "Subscriptions",
+                            "dependsOn": [
+                                "[variables('serviceBusTopicName')]"
+                            ],
+                            "properties": {
+								"lockDuration": "00:00:30",
+								"requiresSession": false,
+								"defaultMessageTimeToLive": "14.00:00:00",
+								"deadLetteringOnMessageExpiration": true,
+								"deadLetteringOnFilterEvaluationExceptions": true,
+								"maxDeliveryCount": 10,
+								"enableBatchedOperations": false,
+								"status": "Active",
+								"autoDeleteOnIdle": "10675199.02:48:05.4775807",
+								"entityAvailabilityStatus": "Available"
+							}
+                        },
+						{
+                            "apiVersion": "[variables('sbVersion')]",
+                            "name": "[variables('CatalogSubscriptionName')]",
+                            "type": "Subscriptions",
+                            "dependsOn": [
+                                "[variables('serviceBusTopicName')]"
+                            ],
+                            "properties": {
+								"lockDuration": "00:00:30",
+								"requiresSession": false,
+								"defaultMessageTimeToLive": "14.00:00:00",
+								"deadLetteringOnMessageExpiration": true,
+								"deadLetteringOnFilterEvaluationExceptions": true,
+								"maxDeliveryCount": 10,
+								"enableBatchedOperations": false,
+								"status": "Active",
+								"autoDeleteOnIdle": "10675199.02:48:05.4775807",
+								"entityAvailabilityStatus": "Available"
+							}
+                        },
+                        {
+                            "apiVersion": "[variables('sbVersion')]",
+                            "name": "[variables('GracePeriodSubscriptionName')]",
+                            "type": "Subscriptions",
+                            "dependsOn": [
+                                "[variables('serviceBusTopicName')]"
+                            ],
+                            "properties": {
+								"lockDuration": "00:00:30",
+								"requiresSession": false,
+								"defaultMessageTimeToLive": "14.00:00:00",
+								"deadLetteringOnMessageExpiration": true,
+								"deadLetteringOnFilterEvaluationExceptions": true,
+								"maxDeliveryCount": 10,
+								"enableBatchedOperations": false,
+								"status": "Active",
+								"autoDeleteOnIdle": "10675199.02:48:05.4775807",
+								"entityAvailabilityStatus": "Available"
+							}
+                        },
+                        {
+                            "apiVersion": "[variables('sbVersion')]",
+                            "name": "[variables('PaymentSubscriptionName')]",
+                            "type": "Subscriptions",
+                            "dependsOn": [
+                                "[variables('serviceBusTopicName')]"
+                            ],
+                            "properties": {
+								"lockDuration": "00:00:30",
+								"requiresSession": false,
+								"defaultMessageTimeToLive": "14.00:00:00",
+								"deadLetteringOnMessageExpiration": true,
+								"deadLetteringOnFilterEvaluationExceptions": true,
+								"maxDeliveryCount": 10,
+								"enableBatchedOperations": false,
+								"status": "Active",
+								"autoDeleteOnIdle": "10675199.02:48:05.4775807",
+								"entityAvailabilityStatus": "Available"
+							}
+                        },
+						{
+                            "apiVersion": "[variables('sbVersion')]",
+                            "name": "[variables('BackgroundTaskSubscriptionName')]",
+                            "type": "Subscriptions",
+                            "dependsOn": [
+                                "[variables('serviceBusTopicName')]"
+                            ],
+                            "properties": {
+								"lockDuration": "00:00:30",
+								"requiresSession": false,
+								"defaultMessageTimeToLive": "14.00:00:00",
+								"deadLetteringOnMessageExpiration": true,
+								"deadLetteringOnFilterEvaluationExceptions": true,
+								"maxDeliveryCount": 10,
+								"enableBatchedOperations": false,
+								"status": "Active",
+								"autoDeleteOnIdle": "10675199.02:48:05.4775807",
+								"entityAvailabilityStatus": "Available"
+							}
+                        },
+						{
+                            "apiVersion": "[variables('sbVersion')]",
+                            "name": "[variables('OrderingSignalrHubSubscriptionName')]",
+                            "type": "Subscriptions",
+                            "dependsOn": [
+                                "[variables('serviceBusTopicName')]"
+                            ],
+                            "properties": {
+								"lockDuration": "00:00:30",
+								"requiresSession": false,
+								"defaultMessageTimeToLive": "14.00:00:00",
+								"deadLetteringOnMessageExpiration": true,
+								"deadLetteringOnFilterEvaluationExceptions": true,
+								"maxDeliveryCount": 10,
+								"enableBatchedOperations": false,
+								"status": "Active",
+								"autoDeleteOnIdle": "10675199.02:48:05.4775807",
+								"entityAvailabilityStatus": "Available"
+							}
+                        },
+						{
+                            "apiVersion": "[variables('sbVersion')]",
+                            "name": "[variables('WebhooksSubscriptionName')]",
+                            "type": "Subscriptions",
+                            "dependsOn": [
+                                "[variables('serviceBusTopicName')]"
+                            ],
+                            "properties": {
+								"lockDuration": "00:00:30",
+								"requiresSession": false,
+								"defaultMessageTimeToLive": "14.00:00:00",
+								"deadLetteringOnMessageExpiration": true,
+								"deadLetteringOnFilterEvaluationExceptions": true,
+								"maxDeliveryCount": 10,
+								"enableBatchedOperations": false,
+								"status": "Active",
+								"autoDeleteOnIdle": "10675199.02:48:05.4775807",
+								"entityAvailabilityStatus": "Available"
+							}
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "outputs": {
+        "NamespaceConnectionString": {
+            "type": "string",
+            "value": "[listkeys(variables('authRuleResourceId'), variables('sbVersion')).primaryConnectionString]"
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\servicebus\sbusdeploy.parameters.json
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "namespaceprefix": {
+      "value": "eshopsb"
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\sql\readme.md
+# Deploying SQL Server & SQL Databases
+
+The ARM template `sqldeploy.json` and its parameter file (`sqldeploy.parameters.json`) are used to deploy following resources:
+
+1. One SQL Server
+2. Three SQL databases (for ordering, catalog and identity) services.
+3. Firewall rules to **allow access from any IP to SQL Server**. This allows easy management, but is not desired in production environments.
+
+## Editing sqldeploy.parameters.json file
+
+You **must** edit the `sqldeploy.parameters.json` file to set login and password of the admin user.
+
+1. `sql_server` is a object parameter that contains the sql server name and the database names. You can leave default values if you want.
+2. `admin` is a string with the admin logon. You MUST provide a valid value
+3. `adminpwd` is a string with the admin password. You MUST provide a valid value
+
+ARM script ensures uniqueness of the SQL server created by appending one unique string in its name (defined in the `sql_server.name` parameter).
+
+## Deploy the template
+
+Once parameter file is edited you can deploy it using [create-resources script](../readme.md).
+i. e. if you are in windows, to deploy sql databases in a new resourcegroup located in westus, go to `deploy\az` folder and type:
+
+```
+create-resources.cmd sql\sqldeploy newResourceGroup -c westus
+```
+
+
+
+
+
+
+
+
+
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\sql\sqldeploy.json
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "sql_server": {
+      "type": "object"
+    },
+    "admin": {
+      "type": "string"
+    },
+    "adminpwd":  {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "sql_server_name": "[concat(parameters('sql_server').name, '-', uniqueString(resourceGroup().id))]",
+    "admin": "[parameters('admin')]",
+    "adminpwd": "[parameters('adminpwd')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Sql/servers",
+      "name": "[variables('sql_server_name')]",
+      "apiVersion": "2014-04-01-preview",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "administratorLogin": "[variables('admin')]",
+        "administratorLoginPassword": "[variables('adminpwd')]",
+        "version": "12.0"
+      },
+      "resources": [
+        {
+          "type": "databases",
+          "name": "[parameters('sql_server').dbs.ordering]",
+          "apiVersion": "2014-04-01-preview",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "edition": "Standard",
+            "collation": "SQL_Latin1_General_CP1_CI_AS",
+            "maxSizeBytes": "1073741824",
+            "requestedServiceObjectiveName": "S1"
+          },
+          "dependsOn": [
+            "[concat('Microsoft.Sql/servers/', variables('sql_server_name'))]"
+          ]
+        },
+        {
+          "type": "databases",
+          "name": "[parameters('sql_server').dbs.identity]",
+          "apiVersion": "2014-04-01-preview",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "edition": "Standard",
+            "collation": "SQL_Latin1_General_CP1_CI_AS",
+            "maxSizeBytes": "1073741824",
+            "requestedServiceObjectiveName": "S1"
+          },
+          "dependsOn": [
+            "[concat('Microsoft.Sql/servers/', variables('sql_server_name'))]"
+          ]
+        },
+        {
+          "type": "databases",
+          "name": "[parameters('sql_server').dbs.catalog]",
+          "apiVersion": "2014-04-01-preview",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "edition": "Standard",
+            "collation": "SQL_Latin1_General_CP1_CI_AS",
+            "maxSizeBytes": "1073741824",
+            "requestedServiceObjectiveName": "S1"
+          },
+          "dependsOn": [
+            "[concat('Microsoft.Sql/servers/', variables('sql_server_name'))]"
+          ]
+        },      
+        {
+          "type": "firewallrules",
+          "name": "AllowAllWindowsAzureIps",
+          "apiVersion": "2014-04-01-preview",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
+          },
+          "dependsOn": [
+            "[concat('Microsoft.Sql/servers/', variables('sql_server_name'))]"
+          ]
+        },
+        {
+          "type": "firewallrules",
+          "name": "AllConnectionsAllowed",
+          "apiVersion": "2014-04-01-preview",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "255.255.255.255"
+          },
+          "dependsOn": [
+            "[concat('Microsoft.Sql/servers/', variables('sql_server_name'))]"
+          ]
+        }
+      ]
+    }
+  ],
+  "outputs": {
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\sql\sqldeploy.parameters.json
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "sql_server": {
+      "value": {
+        "name": "eshopsql",
+        "dbs": {
+          "ordering": "orderingdb",
+          "identity": "identitydb",
+          "catalog":  "catalogdb"
+        }
+      }
+    },
+    "admin": {
+      "value": null
+    },
+    "adminpwd": {
+      "value": null
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\storage\catalog\deploystorage.json
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "catalogstorage": {
+      "type": "string"
+    },
+    "profileName" : {
+      "type": "string"
+    },
+    "endpointName" : {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "catalogstorage": "[concat(parameters('catalogstorage'), uniqueString(resourceGroup().id))]",
+    "endpointName": "[concat(parameters('endpointName'), uniqueString(resourceGroup().id))]",
+    "profileName": "[parameters('profileName')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('catalogstorage')]",
+      "apiVersion": "2016-01-01",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "[variables('catalogstorage')]"
+      },
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "Storage"
+    },
+    {
+      "name": "[variables('profileName')]",
+      "type": "Microsoft.Cdn/profiles",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-04-02",
+      "tags": {
+        "displayName": "[variables('profileName')]"
+      },
+      "sku": {
+        "name": "Standard_Verizon"
+      },
+      "resources": [
+        {
+          "apiVersion": "2016-04-02",
+          "name": "[variables('endpointName')]",
+          "type": "endpoints",
+          "dependsOn": [
+            "[variables('profileName')]",
+            "[variables('catalogstorage')]"
+          ],
+          "location": "[resourceGroup().location]",
+          "tags": {
+            "displayName": "[variables('endpointName')]"
+          },
+          "properties": {
+            "originHostHeader": "[replace(replace(reference(resourceId('Microsoft.Storage/storageAccounts', variables('catalogstorage')),'2015-06-15' ).primaryEndpoints.blob,'https://',''),'/','')]",
+            "isHttpAllowed": true,
+            "isHttpsAllowed": true,
+            "queryStringCachingBehavior": "IgnoreQueryString",
+            "contentTypesToCompress": [
+              "text/plain",
+              "text/html",
+              "text/css",
+              "application/x-javascript",
+              "text/javascript"
+            ],
+            "isCompressionEnabled": "True",
+            "origins": [
+              {
+                "name": "origin1",
+                "properties": {
+                  "hostName": "[replace(replace(reference(resourceId('Microsoft.Storage/storageAccounts', variables('catalogstorage')),'2015-06-15' ).primaryEndpoints.blob,'https://',''),'/','')]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "hostName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.cdn/profiles/endpoints', variables('profileName'), variables('endpointName'))).hostName]"
+    },
+    "originHostHeader": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.cdn/profiles/endpoints', variables('profileName'), variables('endpointName'))).originHostHeader]"
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\storage\catalog\deploystorage.parameters.json
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "catalogstorage": {
+      "value": "catalog"
+    },
+    "profileName":{
+      "value": "eshopcatalog"
+    },
+   "endpointName":{
+      "value": "catalog-endpoint"
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\az\storage\catalog\readme.md
+# Deploying Catalog Storage 
+
+The ARM template `deploystorage.json` and its parameter file (`deploystorage.parameters.json`) are used to deploy following resources:
+
+1. One Storage Account
+2. One CDN profile
+3. One Endpoint
+
+## Editing deploystorage.parameters.json file
+
+You can edit the `deploystorage.parameters.json` file to set your values, but is not needed. The only parameters that can
+be set are:
+
+1. `catalogstorage` is a string that is used to create the storage account name. ARM script creates unique values by appending a unique string to this parameter value, so you can leave the default value.
+
+2. `profileName` is a string that is used to create the CDN profile name.
+
+3. `endpointName` is a string that is used to create the storage endpoint name. ARM script creates unique values by appending a unique string to this parameter value, so you can leave the default value.
+
+## Deploy the template
+
+Once parameter file is edited you can deploy it using [create-resources script](../../readme.md).
+
+i. e. if you are in windows, to deploy a Storage Account in a new resourcegroup located in westus, go to `deploy\az` folder and type:
+
+```
+create-resources.cmd storage\catalog\deploystorage newResourceGroup -c westus
+```
+
+
+
+
+
+
+
+
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\azure\readme.md
+# Deploying Resources On Azure
+
+## Pre-requisites
+1. [Azure CLI 2.0 Installed](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+2. Azure subscription created
+
+Login into your azure subscription by typing `az login` (note that you maybe need to use `az account set` to set the subscription to use). Refer to [this article](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli) for more details
+
+## Deploying using CLI
+
+## Deploying Virtual machines to host the services
+
+1. [Deploying a Linux VM to run single-server development environment using docker-machine (**Recommended for development environments**)](az/vms/docker-machine.md)
+2. [Deploying a Linux VM or Windows Server 2016 to run a single-server development environment using ARM template (**Recommended for creating testing environments**)](az/vms/plain-vm.md)
+
+Using `docker-machine` is the recommended way to create a VM with docker installed. But it is limited to Linux based VMs.
+
+## Deploying Azure resources used by the services
+
+1. [Deploying SQL Server and databases](az/sql/readme.md)
+2. [Deploying Azure Service Bus](az/servicebus/readme.md)
+3. [Deploying Redis Cache](az/redis/readme.md)
+4. [Deploying Cosmosdb](az/cosmos/readme.md)
+5. [Deploying Catalog Storage](az/storage/catalog/readme.md)
+
+
+
+
+
+
+

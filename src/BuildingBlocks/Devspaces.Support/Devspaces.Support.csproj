@@ -8,4 +8,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\DebugLogger\src\DebugLogger.csproj" />
+  </ItemGroup>
 </Project>

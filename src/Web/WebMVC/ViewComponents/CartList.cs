@@ -19,7 +19,7 @@ public class CartList : ViewComponent
             ViewBag.BasketInoperativeMsg = $"Basket Service is inoperative, please try later on. ({ex.GetType().Name} - {ex.Message}))";
         }
 
-        return View(vm);
+        return View(vm);  // :: from shared  /Components/CartList/Default
     }
 
     private Task<Basket> GetItemsAsync(ApplicationUser user) => _cartSvc.GetBasket(user);

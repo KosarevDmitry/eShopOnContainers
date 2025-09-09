@@ -24,6 +24,8 @@ inf:
       db: WebhooksDb        # Webhooks DB
   mongo:
     host: #my-nosql-data    # Uncomment to use specify custom mongo host. By default nosql-data is used
+  rabbitmq:
+    host: #rabbit           # Uncomment to use specify custom rabbitMq host. By default rabbitmq is used
   redis:                    # inf.redis defines the redis' connection strings
     basket:     
       svc: basket-data      # Name of k8s svc for basket redis     

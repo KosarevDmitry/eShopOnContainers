@@ -14,6 +14,7 @@ public class HttpClientRequestIdDelegatingHandler
         {
             if (!request.Headers.Contains("x-requestid"))
             {
+                DebugLogger.Logger.Log("Add x-requestid header for logging tracking purpose");
                 request.Headers.Add("x-requestid", Guid.NewGuid().ToString());
             }
         }

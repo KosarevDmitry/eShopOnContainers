@@ -1,0 +1,8 @@
+#nullable enable
+
+DebugLogger.Logger
+static DebugLogger.Logger.Flush() -> void
+static DebugLogger.Logger.Log(string! message, string! filepath = "", string! memberName = "", int sourceLineNumber = 0) -> void
+static DebugLogger.Logger.DefaultFolder.get -> string!
+static DebugLogger.Logger.IsDisable.get -> bool
+static DebugLogger.Logger.IsDisable.set -> void

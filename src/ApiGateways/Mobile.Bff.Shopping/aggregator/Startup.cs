@@ -38,7 +38,7 @@ public class Startup
         if (!string.IsNullOrEmpty(pathBase))
         {
             loggerFactory.CreateLogger<Startup>().LogDebug("Using PATH BASE '{pathBase}'", pathBase);
-            app.UsePathBase(pathBase);
+            app.UsePathBase(pathBase); // зачем
         }
 
         if (env.IsDevelopment())
@@ -50,7 +50,7 @@ public class Startup
         {
             c.SwaggerEndpoint($"{ (!string.IsNullOrEmpty(pathBase) ? pathBase : string.Empty) }/swagger/v1/swagger.json", "Purchase BFF V1");
 
-            c.OAuthClientId("mobileshoppingaggswaggerui");
+            c.OAuthClientId("mobileshoppingaggswaggerui"); //посмотреть
             c.OAuthClientSecret(string.Empty);
             c.OAuthRealm(string.Empty);
             c.OAuthAppName("Purchase BFF Swagger UI");
@@ -66,7 +66,7 @@ public class Startup
             endpoints.MapControllers();
             endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
             {
-                Predicate = _ => true,
+                Predicate = _ => true, // вернет true без теста на ошибку
                 ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
             });
             endpoints.MapHealthChecks("/liveness", new HealthCheckOptions
@@ -133,7 +133,7 @@ public static class ServiceCollectionExtensions
     {
         JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Remove("sub");
 
-        var identityUrl = configuration.GetValue<string>("urls:identity");
+        var identityUrl = configuration.GetValue<string>("urls:identity");// get from appsettings.localhost.json
 
         services.AddAuthentication(options =>
         {

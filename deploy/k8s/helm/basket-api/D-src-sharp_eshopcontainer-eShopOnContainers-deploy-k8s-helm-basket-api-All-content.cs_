@@ -1,0 +1,371 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\basket-api
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 9
+.helmignore
+
+_helpers.tpl
+
+_names.tpl
+
+Chart.yaml
+
+configmap.yaml
+
+deployment.yaml
+
+NOTES.txt
+
+service.yaml
+
+values.yaml
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\basket-api\.helmignore
+# Patterns to ignore when building packages.
+# This supports shell glob matching, relative path matching, and
+# negation (prefixed with !). Only one pattern per line.
+.DS_Store
+# Common VCS dirs
+.git/
+.gitignore
+.bzr/
+.bzrignore
+.hg/
+.hgignore
+.svn/
+# Common backup files
+*.swp
+*.bak
+*.tmp
+*~
+# Various IDEs
+.project
+.idea/
+*.tmproj
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\basket-api\Chart.yaml
+apiVersion: v1
+appVersion: "1.0"
+description: A Helm chart for Kubernetes
+name: basket-api
+version: 0.1.0
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\basket-api\templates\_helpers.tpl
+{{/* vim: set filetype=mustache: */}}
+{{/*
+Expand the name of the chart.
+*/}}
+{{- define "basket-api.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "basket-api.fullname" -}}
+{{- if .Values.fullnameOverride -}}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "basket-api.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\basket-api\templates\_names.tpl
+{{- define "suffix-name" -}}
+{{- if .Values.app.name -}}
+{{- .Values.app.name -}}
+{{- else -}}
+{{- .Release.Name -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "sql-name" -}}
+{{- if .Values.inf.sql.host -}}
+{{- .Values.inf.sql.host -}}
+{{- else -}}
+{{- printf "%s" "sql-data" -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "mongo-name" -}}
+{{- if .Values.inf.mongo.host -}}
+{{- .Values.inf.mongo.host -}}
+{{- else -}}
+{{- printf "%s" "nosql-data" -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "url-of" -}}
+{{- $name := first .}}
+{{- $ctx := last .}}
+{{- if eq $name "" -}}
+{{- $ctx.Values.inf.k8s.dns -}}
+{{- else -}}
+{{- printf "%s/%s" $ctx.Values.inf.k8s.dns $name -}}                {{/*Value is just <dns>/<name> */}}
+{{- end -}}
+{{- end -}}
+
+
+
+{{- define "pathBase" -}}
+{{- if .Values.inf.k8s.suffix -}}
+{{- $suffix := include "suffix-name" . -}}
+{{- printf "%s-%s"  .Values.pathBase $suffix -}}
+{{- else -}}
+{{- .Values.pathBase -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "fqdn-image" -}}
+{{- if .Values.inf.registry -}}
+{{- printf "%s/%s" .Values.inf.registry.server .Values.image.repository -}}
+{{- else -}}
+{{- .Values.image.repository -}}
+{{- end -}}
+{{- end -}}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\basket-api\templates\configmap.yaml
+{{- $name := include "basket-api.fullname" . -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "cfg-{{ $name }}"
+  labels:
+    app: {{ template "basket-api.name" . }}
+    chart: {{ template "basket-api.chart" .}}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data:
+  basket__ConnectionString: {{ .Values.inf.redis.basket.constr }}
+  urls__IdentityUrl: http://{{ .Values.app.svc.identity }}
+  all__EventBusConnection: {{ .Values.inf.eventbus.constr }}
+  all__InstrumentationKey: "{{ .Values.inf.appinsights.key }}"
+  all__UseAzureServiceBus: "{{ .Values.inf.eventbus.useAzure }}"
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\basket-api\templates\deployment.yaml
+{{- $name := include "basket-api.fullname" . -}}
+{{- $cfgname := printf "%s-%s" "cfg" $name -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "basket-api.fullname" . }}
+  labels:
+    ufo: {{ $cfgname}}
+    app: {{ template "basket-api.name" . }}
+    chart: {{ template "basket-api.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "basket-api.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "basket-api.name" . }}
+        release: {{ .Release.Name }}
+      {{ if .Values.inf.mesh.enabled -}}
+      annotations:
+        linkerd.io/inject: enabled
+      {{- end }}        
+    spec:
+      {{ if .Values.inf.registry -}}
+      imagePullSecrets:  // :: feature of kubernetes to store and get docker pass; explanation https://stackoverflow.com/questions/54354981/what-are-the-different-values-of-imagepullsecrets-and-what-does-regsecret-dowhy 
+      - name: {{ .Values.inf.registry.secretName }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          {{ if .Values.probes -}}
+          {{- if .Values.probes.liveness -}}
+          livenessProbe:
+            httpGet: 
+              port: {{ .Values.probes.liveness.port }}
+              path: {{ .Values.probes.liveness.path }}
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+          {{- end -}}
+          {{- end -}}
+          {{- if .Values.probes -}}
+          {{- if .Values.probes.readiness }}
+          readinessProbe:
+            httpGet:
+              port: {{ .Values.probes.readiness.port }}
+              path: {{ .Values.probes.readiness.path }}
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+          {{- end -}}
+          {{- end }}        
+          image: "{{ template "fqdn-image" . }}:{{ .Values.image.tag }}" // default eshop/basket.api:latest
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PATH_BASE
+              value: {{ include "pathBase" . }}
+            - name: k8sname
+              value: {{ .Values.clusterName }} // eshop-aks
+          {{- if .Values.env.values -}}
+          {{- range .Values.env.values }}  // range example
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+          {{- end -}}
+          {{- end -}}
+          {{- if .Values.env.configmap -}}   env  take var from -> configmap.yaml ->look on  values inf.yaml
+          {{- range .Values.env.configmap }}
+            - name: {{ .name }}
+              valueFrom:
+                configMapKeyRef:   // multi level
+                  name: {{ $cfgname }}
+                  key: {{ .key }}
+          {{- end -}}
+          {{- end }}
+          ports:
+            - name: http   
+              containerPort: 80  // default
+              protocol: TCP
+            - name: grpc
+              containerPort: 81
+              protocol: TCP                
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\basket-api\templates\NOTES.txt
+eShop Basket API installed.
+--------------------------
+
+This API is not directly exposed outside cluster. If need to access it use:
+
+export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app={{ template "basket-api.name" . }},release={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+echo "Visit http://127.0.0.1:8080 to use your application"
+kubectl port-forward $POD_NAME 8080:80
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\basket-api\templates\service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.app.svc.basket }}
+  labels:
+    app: {{ template "basket-api.name" . }}
+    chart: {{ template "basket-api.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}  // :: ClusterIP
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: {{ .Values.service.grpcPort }}
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+  selector:
+    app: {{ template "basket-api.name" . }}
+    release: {{ .Release.Name }}
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\deploy\k8s\helm\basket-api\values.yaml
+replicaCount: 1
+clusterName: eshop-aks
+pathBase: /basket-api   // :: ingress use to route app  https://andrewlock.net/understanding-pathbase-in-aspnetcore/ 
+// if  define pathBase in programm hey
+
+image:
+  repository: eshop/basket.api  //  before installation, It must have image 
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  grpcPort: 81  
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# env defines the environment variables that will be declared in the pod
+env:
+  urls:
+  # configmap declares variables which value is taken from the config map defined in template configmap.yaml (name is name of var and key the key in configmap).
+  configmap:
+    - name: ConnectionString
+      key: basket__ConnectionString
+    - name: EventBusConnection
+      key: all__EventBusConnection
+    - name: ApplicationInsights__InstrumentationKey
+      key: all__InstrumentationKey
+    - name: AzureServiceBusEnabled
+      key: all__UseAzureServiceBus
+    - name: IdentityUrl
+      key: urls__IdentityUrl
+  # values define environment variables with a fixed value (no configmap involved) (name is name of var, and value is its value)
+  values:
+    - name: OrchestratorType
+      value: 'K8S'
+    - name: PORT
+      value: "80"
+    - name: GRPC_PORT
+      value: "81"      
+probes:
+  liveness:
+    path: /liveness
+    initialDelaySeconds: 10
+    periodSeconds: 15
+    port: 80
+  readiness:
+    path: /hc
+    timeoutSeconds: 5
+    initialDelaySeconds: 90
+    periodSeconds: 60
+    port: 80
+
+ingress:
+  enabled: false
+
+

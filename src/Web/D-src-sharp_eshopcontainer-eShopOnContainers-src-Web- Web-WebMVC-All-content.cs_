@@ -1,0 +1,3274 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web
+
+Search patterns:
+Directory to include:all
+Only root dir: true
+
+Total files: 2
+D-src-sharp_eshopcontainer-eShopOnContainers-src-Web-WebMVC-.--.cs$-.--.csproj$-.--.json$-.--.config$-content.cs
+
+D-src-sharp_eshopcontainer-eShopOnContainers-src-Web-WebMVC-.--.cshtml$-content.cs
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\D-src-sharp_eshopcontainer-eShopOnContainers-src-Web-WebMVC-.--.cs$-.--.csproj$-.--.json$-.--.config$-content.cs
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC
+
+Search patterns:.*\.cs$, .*\.csproj$, .*\.json$, .*\.config$
+Directory to include:all
+Only root dir: false
+
+Total files: 56
+OrderProcessAction.cs
+
+appsettings.json
+
+Basket.cs
+
+bundleconfig.json
+
+WebMVC.csproj
+
+Campaign.cs
+
+Cart.cs
+
+Catalog.cs
+
+compilerconfig.json
+
+AccountController.cs
+CartController.cs
+CatalogController.cs
+ErrorController.cs
+OrderController.cs
+OrderManagementController.cs
+TestController.cs
+
+NumberToStringConverter.cs
+
+LatitudeCoordinate.cs
+LongitudeCoordinate.cs
+
+appsettings.Development.json
+
+CardExpiration.cs
+
+HttpClientExtensions.cs
+SessionExtensions.cs
+
+globalusings.cs
+
+HttpClientAuthorizationDelegatingHandler.cs
+HttpClientRequestIdDelegatingHandler.cs
+
+Header.cs
+
+API.cs
+
+PaginationInfo.cs
+
+BasketItem.cs
+CampaignItem.cs
+CatalogItem.cs
+OrderItem.cs
+
+libman.json   // :: use alternative for npm and yarn https://github.com/aspnet/LibraryManager
+
+CartList.cs
+
+IndexViewModel.cs
+IndexViewModel.cs
+
+BasketDTO.cs
+LocationDTO.cs
+OrderDTO.cs
+
+Order.cs
+
+IdentityParser.cs
+IIdentityParser.cs
+
+Program.cs
+
+WebContextSeed.cs
+
+BasketService.cs
+CatalogService.cs
+IBasketService.cs
+ICatalogService.cs
+IOrderingService.cs
+OrderingService.cs
+
+AppSettings.cs
+
+launchSettings.json
+
+Startup.cs
+
+ApplicationUser.cs
+
+web.config
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\AppSettings.cs
+namespace Microsoft.eShopOnContainers.WebMVC;
+
+public class AppSettings
+{
+    //public Connectionstrings ConnectionStrings { get; set; }
+    public string PurchaseUrl { get; set; }
+    public string SignalrHubUrl { get; set; }
+    public bool ActivateCampaignDetailFunction { get; set; }
+    public Logging Logging { get; set; }
+    public bool UseCustomizationData { get; set; }
+}
+
+public class Connectionstrings
+{
+    public string DefaultConnection { get; set; }
+}
+
+public class Logging
+{
+    public bool IncludeScopes { get; set; }
+    public Loglevel LogLevel { get; set; }
+}
+
+public class Loglevel
+{
+    public string Default { get; set; }
+    public string System { get; set; }
+    public string Microsoft { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\appsettings.Development.json
+{
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Debug"
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\appsettings.json
+{
+  "CatalogUrl": "http://localhost:5101",
+  "OrderingUrl": "http://localhost:5102",
+  "BasketUrl": "http://localhost:5103",
+  "IdentityUrl": "http://localhost:5105",
+  "CallBackUrl": "http://localhost:5100/",
+  "IsClusterEnv": "False",
+  "UseResilientHttp": "True",
+  "UseLoadTest": false,
+  "ActivateCampaignDetailFunction": "False",
+  "UseCustomizationData": false,
+  "Serilog": {
+    "SeqServerUrl": null,
+    "LogstashgUrl": null,
+    "MinimumLevel": {
+      "Default": "Information"
+    }
+  },
+  "ApplicationInsights": {
+    "InstrumentationKey": ""
+  },
+  "HttpClientRetryCount": 8,
+  "HttpClientExceptionsAllowedBeforeBreaking": 7,
+  "SessionCookieLifetimeMinutes": 60
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\bundleconfig.json
+// Configure bundling and minification for the project.
+// More info at https://go.microsoft.com/fwlink/?LinkId=808241
+[
+  {
+    "outputFileName": "wwwroot/css/site.min.css",
+    // An array of relative input file paths. Globbing patterns supported
+    "inputFiles": [
+      "wwwroot/css/**/*.css"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/site.js",
+    "inputFiles": [
+      "wwwroot/lib/@microsoft/signalr/dist/browser/signalr.js",
+      "wwwroot/lib/toastr/toastr.min.js"
+    ],
+    // Optionally specify minification options
+    "minify": {
+      "enabled": false,
+      "renameLocals": true
+    },
+    // Optinally generate .map file
+    "sourceMap": false
+  },
+  {
+    "outputFileName": "wwwroot/js/site.min.js",
+    "inputFiles": [
+      "wwwroot/js/site.js"
+    ],
+    // Optionally specify minification options
+    "minify": {
+      "enabled": false,
+      "renameLocals": true
+    },
+    // Optinally generate .map file
+    "sourceMap": false
+  }
+]
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\compilerconfig.json
+[
+  {
+    "outputFile": "wwwroot/css/orders/orders.component.css",
+    "inputFile": "wwwroot/css/orders/orders.component.scss"
+  },
+  {
+    "outputFile": "wwwroot/css/orders/orders-new/orders-new.component.css",
+    "inputFile": "wwwroot/css/orders/orders-new/orders-new.component.scss"
+  },
+  {
+    "outputFile": "wwwroot/css/orders/orders-detail/orders-detail.component.css",
+    "inputFile": "wwwroot/css/orders/orders-detail/orders-detail.component.scss"
+  },
+  {
+    "outputFile": "wwwroot/css/catalog/catalog.component.css",
+    "inputFile": "wwwroot/css/catalog/catalog.component.scss"
+  },
+  {
+    "outputFile": "wwwroot/css/basket/basket.component.css",
+    "inputFile": "wwwroot/css/basket/basket.component.scss"
+  },
+  {
+    "outputFile": "wwwroot/css/basket/basket-status/basket-status.component.css",
+    "inputFile": "wwwroot/css/basket/basket-status/basket-status.component.scss"
+  },
+  {
+    "outputFile": "wwwroot/css/shared/components/header/header.css",
+    "inputFile": "wwwroot/css/shared/components/header/header.scss"
+  },
+  {
+    "outputFile": "wwwroot/css/shared/components/identity/identity.css",
+    "inputFile": "wwwroot/css/shared/components/identity/identity.scss"
+  },
+  {
+    "outputFile": "wwwroot/css/shared/components/pager/pager.css",
+    "inputFile": "wwwroot/css/shared/components/pager/pager.scss"
+  },
+  {
+    "outputFile": "wwwroot/css/app.component.css",
+    "inputFile": "wwwroot/css/app.component.scss"
+  }
+]
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Controllers\AccountController.cs
+namespace Microsoft.eShopOnContainers.WebMVC.Controllers;
+
+[Authorize]
+public class AccountController : Controller
+{
+    private readonly ILogger<AccountController> _logger;
+
+    public AccountController(ILogger<AccountController> logger)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    [Authorize(AuthenticationSchemes = OpenIdConnectDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> SignIn(string returnUrl)
+    {
+        var user = User as ClaimsPrincipal;
+        var token = await HttpContext.GetTokenAsync("access_token");
+
+        _logger.LogInformation("----- User {@User} authenticated into {AppName}", user, Program.AppName);
+
+        if (token != null)
+        {
+            ViewData["access_token"] = token;
+        }
+
+        // "Catalog" because UrlHelper doesn't support nameof() for controllers
+        // https://github.com/aspnet/Mvc/issues/5853
+        return RedirectToAction(nameof(CatalogController.Index), "Catalog");
+    }
+
+    public async Task<IActionResult> Signout()
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
+
+        // "Catalog" because UrlHelper doesn't support nameof() for controllers
+        // https://github.com/aspnet/Mvc/issues/5853
+        var homeUrl = Url.Action(nameof(CatalogController.Index), "Catalog");
+        return new SignOutResult(OpenIdConnectDefaults.AuthenticationScheme,
+            new AspNetCore.Authentication.AuthenticationProperties { RedirectUri = homeUrl });
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Controllers\CartController.cs
+namespace Microsoft.eShopOnContainers.WebMVC.Controllers;
+
+[Authorize]
+public class CartController : Controller
+{
+    private readonly IBasketService _basketSvc;
+    private readonly ICatalogService _catalogSvc;
+    private readonly IIdentityParser<ApplicationUser> _appUserParser;
+
+    public CartController(IBasketService basketSvc, ICatalogService catalogSvc, IIdentityParser<ApplicationUser> appUserParser)
+    {
+        _basketSvc = basketSvc;
+        _catalogSvc = catalogSvc;
+        _appUserParser = appUserParser;
+    }
+
+    public async Task<IActionResult> Index()
+    {
+        try
+        {
+            var user = _appUserParser.Parse(HttpContext.User);
+            var vm = await _basketSvc.GetBasket(user);
+
+            return View(vm);
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
+
+        return View();
+    }
+
+
+    [HttpPost]
+    public async Task<IActionResult> Index(Dictionary<string, int> quantities, string action)
+    {
+        try
+        {
+            var user = _appUserParser.Parse(HttpContext.User);
+            var basket = await _basketSvc.SetQuantities(user, quantities);
+            if (action == "[ Checkout ]")
+            {
+                return RedirectToAction("Create", "Order");
+            }
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
+
+        return View();
+    }
+
+    public async Task<IActionResult> AddToCart(CatalogItem productDetails)
+    {
+        try
+        {
+            if (productDetails?.Id != null)
+            {
+                var user = _appUserParser.Parse(HttpContext.User);
+                await _basketSvc.AddItemToBasket(user, productDetails.Id);
+            }
+            return RedirectToAction("Index", "Catalog");
+        }
+        catch (Exception ex)
+        {
+            // Catch error when Basket.api is in circuit-opened mode                 
+            HandleException(ex);
+        }
+
+        return RedirectToAction("Index", "Catalog", new { errorMsg = ViewBag.BasketInoperativeMsg });
+    }
+
+    private void HandleException(Exception ex)
+    {
+        ViewBag.BasketInoperativeMsg = $"Basket Service is inoperative {ex.GetType().Name} - {ex.Message}";
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Controllers\CatalogController.cs
+namespace Microsoft.eShopOnContainers.WebMVC.Controllers;
+
+public class CatalogController : Controller
+{
+    private ICatalogService _catalogSvc;
+
+    public CatalogController(ICatalogService catalogSvc) =>
+        _catalogSvc = catalogSvc;
+
+    public async Task<IActionResult> Index(int? BrandFilterApplied, int? TypesFilterApplied, int? page, [FromQuery] string errorMsg)
+    {
+        var itemsPage = 9;
+        var catalog = await _catalogSvc.GetCatalogItems(page ?? 0, itemsPage, BrandFilterApplied, TypesFilterApplied);
+        var vm = new IndexViewModel()
+        {
+            CatalogItems = catalog.Data,
+            Brands = await _catalogSvc.GetBrands(),
+            Types = await _catalogSvc.GetTypes(),
+            BrandFilterApplied = BrandFilterApplied ?? 0,
+            TypesFilterApplied = TypesFilterApplied ?? 0,
+            PaginationInfo = new PaginationInfo()
+            {
+                ActualPage = page ?? 0,
+                ItemsPerPage = catalog.Data.Count,
+                TotalItems = catalog.Count,
+                TotalPages = (int)Math.Ceiling(((decimal)catalog.Count / itemsPage))
+            }
+        };
+// ::  disable button css if actual page is first or last one respectevely
+        vm.PaginationInfo.Next = (vm.PaginationInfo.ActualPage == vm.PaginationInfo.TotalPages - 1) ? "is-disabled" : "";
+        vm.PaginationInfo.Previous = (vm.PaginationInfo.ActualPage == 0) ? "is-disabled" : "";
+
+        ViewBag.BasketInoperativeMsg = errorMsg;
+
+        return View(vm);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Controllers\ErrorController.cs
+namespace WebMVC.Controllers;
+
+public class ErrorController : Controller
+{
+    public IActionResult Error() => View();
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Controllers\OrderController.cs
+namespace Microsoft.eShopOnContainers.WebMVC.Controllers;
+
+using Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+[Authorize]
+public class OrderController : Controller
+{
+    private IOrderingService _orderSvc;
+    private IBasketService _basketSvc;
+    private readonly IIdentityParser<ApplicationUser> _appUserParser;
+    public OrderController(IOrderingService orderSvc, IBasketService basketSvc, IIdentityParser<ApplicationUser> appUserParser)
+    {
+        _appUserParser = appUserParser;
+        _orderSvc = orderSvc;
+        _basketSvc = basketSvc;
+    }
+
+    public async Task<IActionResult> Create()
+    {
+
+        var user = _appUserParser.Parse(HttpContext.User);
+        var order = await _basketSvc.GetOrderDraft(user.Id);
+        var vm = _orderSvc.MapUserInfoIntoOrder(user, order);
+        vm.CardExpirationShortFormat();
+
+        return View(vm);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Checkout(Order model)
+    {
+        try
+        {
+            if (ModelState.IsValid)
+            {
+                var user = _appUserParser.Parse(HttpContext.User);
+                var basket = _orderSvc.MapOrderToBasket(model);
+
+                await _basketSvc.Checkout(basket);
+
+                //Redirect to historic list.
+                return RedirectToAction("Index");
+            }
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("Error", $"It was not possible to create a new order, please try later on ({ex.GetType().Name} - {ex.Message})");
+        }
+
+        return View("Create", model);
+    }
+
+    public async Task<IActionResult> Cancel(string orderId)
+    {
+        await _orderSvc.CancelOrder(orderId);
+
+        //Redirect to historic list.
+        return RedirectToAction("Index");
+    }
+
+    public async Task<IActionResult> Detail(string orderId)
+    {
+        var user = _appUserParser.Parse(HttpContext.User);
+
+        var order = await _orderSvc.GetOrder(user, orderId);
+        return View(order);
+    }
+
+    public async Task<IActionResult> Index(Order item)
+    {
+        var user = _appUserParser.Parse(HttpContext.User);
+        var vm = await _orderSvc.GetMyOrders(user);
+        return View(vm);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Controllers\OrderManagementController.cs
+namespace WebMVC.Controllers;
+
+[Authorize]
+public class OrderManagementController : Controller
+{
+    private IOrderingService _orderSvc;
+    private readonly IIdentityParser<ApplicationUser> _appUserParser;
+    public OrderManagementController(IOrderingService orderSvc, IIdentityParser<ApplicationUser> appUserParser)
+    {
+        _appUserParser = appUserParser;
+        _orderSvc = orderSvc;
+    }
+
+    public async Task<IActionResult> Index()
+    {
+        var user = _appUserParser.Parse(HttpContext.User);
+        var vm = await _orderSvc.GetMyOrders(user);
+
+        return View(vm);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> OrderProcess(string orderId, string actionCode)
+    {
+        if (OrderProcessAction.Ship.Code == actionCode)
+        {
+            await _orderSvc.ShipOrder(orderId);
+        }
+
+        return RedirectToAction("Index");
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Controllers\TestController.cs
+namespace WebMVC.Controllers;
+
+class TestPayload
+{
+    public int CatalogItemId { get; set; }
+
+    public string BasketId { get; set; }
+
+    public int Quantity { get; set; }
+}
+
+[Authorize]
+public class TestController : Controller
+{
+    private readonly IHttpClientFactory _client;
+    private readonly IIdentityParser<ApplicationUser> _appUserParser;
+
+    public TestController(IHttpClientFactory client, IIdentityParser<ApplicationUser> identityParser)
+    {
+        _client = client;
+        _appUserParser = identityParser;
+    }
+
+    public async Task<IActionResult> Ocelot()
+    {
+        var url = "http://apigw/shopping/api/v1/basket/items";
+
+        var payload = new TestPayload()
+        {
+            CatalogItemId = 1,
+            Quantity = 1,
+            BasketId = _appUserParser.Parse(User).Id
+        };
+
+        var content = new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json");
+
+
+        var response = await _client.CreateClient(nameof(IBasketService))
+            .PostAsync(url, content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var str = await response.Content.ReadAsStringAsync();
+
+            return Ok(str);
+        }
+        else
+        {
+            return Ok(new { response.StatusCode, response.ReasonPhrase });
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Extensions\HttpClientExtensions.cs
+namespace Microsoft.eShopOnContainers.WebMVC.Extensions;
+
+public static class HttpClientExtensions
+{
+    public static void SetBasicAuthentication(this HttpClient client, string userName, string password) =>
+        client.DefaultRequestHeaders.Authorization = new BasicAuthenticationHeaderValue(userName, password);
+
+    public static void SetToken(this HttpClient client, string scheme, string token) =>
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(scheme, token);
+
+    public static void SetBearerToken(this HttpClient client, string token) =>
+        client.SetToken(JwtConstants.TokenType, token);
+}
+
+public class BasicAuthenticationHeaderValue : AuthenticationHeaderValue
+{
+    public BasicAuthenticationHeaderValue(string userName, string password)
+        : base("Basic", EncodeCredential(userName, password))
+    { }
+
+    private static string EncodeCredential(string userName, string password)
+    {
+        Encoding encoding = Encoding.GetEncoding("iso-8859-1");
+        string credential = String.Format("{0}:{1}", userName, password);
+
+        return Convert.ToBase64String(encoding.GetBytes(credential));
+    }
+}
+
+// :: session helper
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Extensions\SessionExtensions.cs
+public static class SessionExtensions
+{
+    public static void SetObject(this ISession session, string key, object value) =>
+        session.SetString(key,JsonSerializer.Serialize(value));
+
+    public static T GetObject<T>(this ISession session, string key)
+    {
+        var value = session.GetString(key);
+
+        return value == null ? default(T) :JsonSerializer.Deserialize<T>(value, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+    }
+}
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\globalusings.cs
+global using Devspaces.Support;
+global using HealthChecks.UI.Client;
+global using Microsoft.AspNetCore.Authentication.Cookies;
+global using Microsoft.AspNetCore.Authentication.JwtBearer;
+global using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+global using Microsoft.AspNetCore.Authentication;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Builder;
+global using Microsoft.AspNetCore.DataProtection;
+global using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+global using Microsoft.AspNetCore.Hosting;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.AspNetCore.Mvc.Rendering;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.AspNetCore;
+global using Microsoft.eShopOnContainers.WebMVC.Services;
+global using Microsoft.eShopOnContainers.WebMVC.ViewModels.Annotations;
+global using Microsoft.eShopOnContainers.WebMVC.ViewModels.CartViewModels;
+global using Microsoft.eShopOnContainers.WebMVC.ViewModels.CatalogViewModels;
+global using Microsoft.eShopOnContainers.WebMVC.ViewModels.Pagination;
+global using Microsoft.eShopOnContainers.WebMVC.ViewModels;
+global using Microsoft.eShopOnContainers.WebMVC;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Diagnostics.HealthChecks;
+global using Microsoft.Extensions.Hosting;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;
+global using Microsoft.IdentityModel.Logging;
+global using Serilog;
+global using StackExchange.Redis;
+global using System.Collections.Generic;
+global using System.ComponentModel.DataAnnotations;
+global using System.ComponentModel;
+global using System.IdentityModel.Tokens.Jwt;
+global using System.IO.Compression;
+global using System.IO;
+global using System.Linq;
+global using System.Net.Http.Headers;
+global using System.Net.Http;
+global using System.Security.Claims;
+global using System.Security.Principal;
+global using System.Text.Json.Serialization;
+global using System.Text.Json;
+global using System.Text;
+global using System.Threading.Tasks;
+global using System.Threading;
+global using System;
+global using WebMVC.Infrastructure;
+global using WebMVC.Services.ModelDTOs;
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Infrastructure\API.cs
+namespace WebMVC.Infrastructure;
+// :: define urls for services
+public static class API
+{
+
+    public static class Purchase
+    {
+        public static string AddItemToBasket(string baseUri) => $"{baseUri}/basket/items";
+        public static string UpdateBasketItem(string baseUri) => $"{baseUri}/basket/items";
+
+        public static string GetOrderDraft(string baseUri, string basketId) => $"{baseUri}/order/draft/{basketId}";
+    }
+
+    public static class Basket
+    {
+        public static string GetBasket(string baseUri, string basketId) => $"{baseUri}/{basketId}";
+        public static string UpdateBasket(string baseUri) => baseUri;
+        public static string CheckoutBasket(string baseUri) => $"{baseUri}/checkout";
+        public static string CleanBasket(string baseUri, string basketId) => $"{baseUri}/{basketId}";
+    }
+
+    public static class Order
+    {
+        public static string GetOrder(string baseUri, string orderId)
+        {
+            return $"{baseUri}/{orderId}";
+        }
+
+        public static string GetAllMyOrders(string baseUri)
+        {
+            return baseUri;
+        }
+
+        public static string AddNewOrder(string baseUri)
+        {
+            return $"{baseUri}/new";
+        }
+
+        public static string CancelOrder(string baseUri)
+        {
+            return $"{baseUri}/cancel";
+        }
+
+        public static string ShipOrder(string baseUri)
+        {
+            return $"{baseUri}/ship";
+        }
+    }
+
+    public static class Catalog
+    {
+        public static string GetAllCatalogItems(string baseUri, int page, int take, int? brand, int? type)
+        {
+            var filterQs = "";
+
+            if (type.HasValue)
+            {
+                var brandQs = (brand.HasValue) ? brand.Value.ToString() : string.Empty;
+                filterQs = $"/type/{type.Value}/brand/{brandQs}";
+
+            }
+            else if (brand.HasValue)
+            {
+                var brandQs = (brand.HasValue) ? brand.Value.ToString() : string.Empty;
+                filterQs = $"/type/all/brand/{brandQs}";
+            }
+            else
+            {
+                filterQs = string.Empty;
+            }
+
+            return $"{baseUri}items{filterQs}?pageIndex={page}&pageSize={take}";
+        }
+
+        public static string GetAllBrands(string baseUri)
+        {
+            return $"{baseUri}catalogBrands";
+        }
+
+        public static string GetAllTypes(string baseUri)
+        {
+            return $"{baseUri}catalogTypes";
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Infrastructure\HttpClientAuthorizationDelegatingHandler.cs
+namespace WebMVC.Infrastructure;
+
+public class HttpClientAuthorizationDelegatingHandler
+    : DelegatingHandler
+{
+    private readonly IHttpContextAccessor _httpContextAccessor; // :: httpcontext instance of current tread
+
+    public HttpClientAuthorizationDelegatingHandler(IHttpContextAccessor httpContextAccessor)
+    {
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var authorizationHeader = _httpContextAccessor.HttpContext
+            .Request.Headers["Authorization"];
+
+        if (!string.IsNullOrEmpty(authorizationHeader))
+        {
+            request.Headers.Add("Authorization", new List<string>() { authorizationHeader });
+        }
+
+        var token = await GetToken();
+
+        if (token != null)
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        return await base.SendAsync(request, cancellationToken);
+    }
+
+    async Task<string> GetToken()
+    {
+        const string ACCESS_TOKEN = "access_token";
+
+        return await _httpContextAccessor.HttpContext
+            .GetTokenAsync(ACCESS_TOKEN);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Infrastructure\HttpClientRequestIdDelegatingHandler.cs
+namespace WebMVC.Infrastructure;
+
+public class HttpClientRequestIdDelegatingHandler
+    : DelegatingHandler
+{
+
+    public HttpClientRequestIdDelegatingHandler()
+    {
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        if (request.Method == HttpMethod.Post || request.Method == HttpMethod.Put)
+        {
+            if (!request.Headers.Contains("x-requestid"))
+            {
+                request.Headers.Add("x-requestid", Guid.NewGuid().ToString());
+            }
+        }
+
+        return await base.SendAsync(request, cancellationToken);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Infrastructure\WebContextSeed.cs
+namespace WebMVC.Infrastructure;
+using Serilog;
+
+public class WebContextSeed
+{
+    public static void Seed(IApplicationBuilder applicationBuilder, IWebHostEnvironment env)
+    {
+        var log = Serilog.Log.Logger;
+
+        var settings = (AppSettings)applicationBuilder
+            .ApplicationServices.GetRequiredService<IOptions<AppSettings>>().Value;
+
+        var useCustomizationData = settings.UseCustomizationData;
+        var contentRootPath = env.ContentRootPath;
+        var webroot = env.WebRootPath;
+
+        if (useCustomizationData)
+        {
+            GetPreconfiguredImages(contentRootPath, webroot, log);
+
+            GetPreconfiguredCSS(contentRootPath, webroot, log);
+        }
+    }
+
+    static void GetPreconfiguredCSS(string contentRootPath, string webroot, ILogger log)
+    {
+        try
+        {
+            string overrideCssFile = Path.Combine(contentRootPath, "Setup", "override.css");
+            if (!File.Exists(overrideCssFile))
+            {
+                log.Error("Override css file '{FileName}' does not exists.", overrideCssFile);
+                return;
+            }
+
+            string destinationFilename = Path.Combine(webroot, "css", "override.css");
+            File.Copy(overrideCssFile, destinationFilename, true);
+        }
+        catch (Exception ex)
+        {
+            log.Error(ex, "EXCEPTION ERROR: {Message}", ex.Message);
+        }
+    }
+
+    static void GetPreconfiguredImages(string contentRootPath, string webroot, ILogger log)
+    {
+        try
+        {
+            string imagesZipFile = Path.Combine(contentRootPath, "Setup", "images.zip");
+            if (!File.Exists(imagesZipFile))
+            {
+                log.Error("Zip file '{ZipFileName}' does not exists.", imagesZipFile);
+                return;
+            }
+
+            string imagePath = Path.Combine(webroot, "images");
+            string[] imageFiles = Directory.GetFiles(imagePath).Select(file => Path.GetFileName(file)).ToArray();
+
+            using ZipArchive zip = ZipFile.Open(imagesZipFile, ZipArchiveMode.Read);
+            foreach (ZipArchiveEntry entry in zip.Entries)
+            {
+                if (imageFiles.Contains(entry.Name))
+                {
+                    string destinationFilename = Path.Combine(imagePath, entry.Name);
+                    if (File.Exists(destinationFilename))
+                    {
+                        File.Delete(destinationFilename);
+                    }
+                    entry.ExtractToFile(destinationFilename);
+                }
+                else
+                {
+                    log.Warning("Skipped file '{FileName}' in zipfile '{ZipFileName}'", entry.Name, imagesZipFile);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            log.Error(ex, "EXCEPTION ERROR: {Message}", ex.Message);
+        }
+    }
+
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\libman.json
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "jquery@3.4.1",
+      "destination": "wwwroot/lib/jquery/"
+    },
+    {
+      "provider": "unpkg",
+      "library": "bootstrap@4.3.1",
+      "destination": "wwwroot/lib/bootstrap/",
+      "files": [
+        "dist/css/bootstrap.css",
+        "dist/css/bootstrap.css.map",
+        "dist/css/bootstrap.min.css",
+        "dist/css/bootstrap.min.css.map",
+        "dist/js/bootstrap.js",
+        "dist/js/bootstrap.min.js"
+      ]
+    },
+    {
+      "library": "jquery-validation-unobtrusive@3.2.11",
+      "destination": "wwwroot/lib/jquery-validation-unobtrusive/"
+    },
+    {
+      "library": "jquery-validate@1.19.0",
+      "destination": "wwwroot/lib/jquery-validate/",
+      "files": [
+        "jquery.validate.min.js",
+        "jquery.validate.js"
+      ]
+    },
+    {
+      "library": "toastr.js@2.1.4",
+      "destination": "wwwroot/lib/toastr/"
+    },
+    {
+      "provider": "unpkg",
+      "library": "@microsoft/signalr@latest",
+      "destination": "wwwroot/lib/@microsoft/signalr/",
+      "files": [
+        "dist/browser/signalr.js",
+        "dist/browser/signalr.min.js"
+      ]
+    }
+  ]
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Program.cs
+var configuration = GetConfiguration();
+
+Log.Logger = CreateSerilogLogger(configuration);
+
+try
+{
+    Log.Information("Configuring web host ({ApplicationContext})...", Program.AppName);
+    var host = BuildWebHost(configuration, args);
+
+    Log.Information("Starting web host ({ApplicationContext})...", Program.AppName);
+    host.Run();
+
+    return 0;
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Program terminated unexpectedly ({ApplicationContext})!", Program.AppName);
+    return 1;
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+// IWebHost like  distributedhost of aspire 
+IWebHost BuildWebHost(IConfiguration configuration, string[] args) =>
+    WebHost.CreateDefaultBuilder(args)
+        .CaptureStartupErrors(false)
+        .ConfigureAppConfiguration(x => x.AddConfiguration(configuration))
+        .UseStartup<Startup>()
+        .UseSerilog()
+        .Build();
+// :: logger
+Serilog.ILogger CreateSerilogLogger(IConfiguration configuration)
+{
+    var seqServerUrl = configuration["Serilog:SeqServerUrl"];
+    var logstashUrl = configuration["Serilog:LogstashgUrl"];
+    // writeTo указывает куда будет вестись запись
+    var cfg = new LoggerConfiguration()
+        .ReadFrom.Configuration(configuration)
+        .Enrich.WithProperty("ApplicationContext", Program.AppName)
+        .Enrich.FromLogContext()
+        .WriteTo.Console();
+    
+    if (!string.IsNullOrWhiteSpace(seqServerUrl))
+    {
+        cfg.WriteTo.Seq(seqServerUrl); // какой сервис seq
+    }
+    if (!string.IsNullOrWhiteSpace(logstashUrl))
+    {
+        cfg.WriteTo.Http(logstashUrl,null); 
+    }
+    return cfg.CreateLogger();
+}
+
+//конфигурация
+IConfiguration GetConfiguration()
+{
+    var builder = new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true) // обновлять при изменении
+        .AddEnvironmentVariables();
+
+    return builder.Build(); //получается что Build() возвращает IConfiguration
+}
+
+// интересно. все выше тоже partial program?
+
+public partial class Program
+{
+    private static readonly string _namespace = typeof(Startup).Namespace;
+    public static readonly string AppName = _namespace.Substring(_namespace.LastIndexOf('.', _namespace.LastIndexOf('.') - 1) + 1);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Properties\launchSettings.json
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:5100",
+      "sslPort": 0
+    }
+  },
+  "profiles": {
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "Microsoft.eShopOnContainers.WebMVC": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "http://localhost:5000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Services\BasketService.cs
+namespace Microsoft.eShopOnContainers.WebMVC.Services;
+
+using Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+public class BasketService : IBasketService
+{
+    private readonly IOptions<AppSettings> _settings;
+    private readonly HttpClient _apiClient;
+    private readonly ILogger<BasketService> _logger;
+    private readonly string _basketByPassUrl;
+    private readonly string _purchaseUrl;
+
+    public BasketService(HttpClient httpClient, IOptions<AppSettings> settings, ILogger<BasketService> logger)
+    {
+        _apiClient = httpClient;
+        _settings = settings;
+        _logger = logger;
+
+        _basketByPassUrl = $"{_settings.Value.PurchaseUrl}/b/api/v1/basket";
+        _purchaseUrl = $"{_settings.Value.PurchaseUrl}/api/v1";
+    }
+
+    public async Task<Basket> GetBasket(ApplicationUser user)
+    {
+        var uri = API.Basket.GetBasket(_basketByPassUrl, user.Id);
+        _logger.LogDebug("[GetBasket] -> Calling {Uri} to get the basket", uri);
+        var response = await _apiClient.GetAsync(uri);
+        _logger.LogDebug("[GetBasket] -> response code {StatusCode}", response.StatusCode);
+        var responseString = await response.Content.ReadAsStringAsync();
+        return string.IsNullOrEmpty(responseString) ?
+            new Basket() { BuyerId = user.Id } :
+            JsonSerializer.Deserialize<Basket>(responseString, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+    }
+
+    public async Task<Basket> UpdateBasket(Basket basket)
+    {
+        var uri = API.Basket.UpdateBasket(_basketByPassUrl);
+
+        var basketContent = new StringContent(JsonSerializer.Serialize(basket), System.Text.Encoding.UTF8, "application/json");
+
+        var response = await _apiClient.PostAsync(uri, basketContent);
+
+        response.EnsureSuccessStatusCode();
+
+        return basket;
+    }
+
+    public async Task Checkout(BasketDTO basket)
+    {
+        var uri = API.Basket.CheckoutBasket(_basketByPassUrl);
+        var basketContent = new StringContent(JsonSerializer.Serialize(basket), System.Text.Encoding.UTF8, "application/json");
+            
+        _logger.LogInformation("Uri chechout {uri}", uri);
+
+        var response = await _apiClient.PostAsync(uri, basketContent);
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<Basket> SetQuantities(ApplicationUser user, Dictionary<string, int> quantities)
+    {
+        var uri = API.Purchase.UpdateBasketItem(_purchaseUrl);
+
+        var basketUpdate = new
+        {
+            BasketId = user.Id,
+            Updates = quantities.Select(kvp => new
+            {
+                BasketItemId = kvp.Key,
+                NewQty = kvp.Value
+            }).ToArray()
+        };
+
+        var basketContent = new StringContent(JsonSerializer.Serialize(basketUpdate), System.Text.Encoding.UTF8, "application/json");
+
+        var response = await _apiClient.PutAsync(uri, basketContent);
+
+        response.EnsureSuccessStatusCode();
+
+        var jsonResponse = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<Basket>(jsonResponse, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+    }
+
+    public async Task<Order> GetOrderDraft(string basketId)
+    {
+        var uri = API.Purchase.GetOrderDraft(_purchaseUrl, basketId);
+
+        var responseString = await _apiClient.GetStringAsync(uri);
+
+        var response = JsonSerializer.Deserialize<Order>(responseString, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
+        return response;
+    }
+
+    public async Task AddItemToBasket(ApplicationUser user, int productId)
+    {
+        var uri = API.Purchase.AddItemToBasket(_purchaseUrl);
+
+        var newItem = new
+        {
+            CatalogItemId = productId,
+            BasketId = user.Id,
+            Quantity = 1
+        };
+
+        var basketContent = new StringContent(JsonSerializer.Serialize(newItem), System.Text.Encoding.UTF8, "application/json");
+
+        var response = await _apiClient.PostAsync(uri, basketContent);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Services\CatalogService.cs
+namespace Microsoft.eShopOnContainers.WebMVC.Services;
+
+public class CatalogService : ICatalogService
+{
+    private readonly IOptions<AppSettings> _settings;
+    private readonly HttpClient _httpClient;
+    private readonly ILogger<CatalogService> _logger;
+
+    private readonly string _remoteServiceBaseUrl;
+
+    public CatalogService(HttpClient httpClient, ILogger<CatalogService> logger, IOptions<AppSettings> settings)
+    {
+        _httpClient = httpClient;
+        _settings = settings;
+        _logger = logger;
+
+        _remoteServiceBaseUrl = $"{_settings.Value.PurchaseUrl}/c/api/v1/catalog/";
+    }
+
+    public async Task<Catalog> GetCatalogItems(int page, int take, int? brand, int? type)
+    {
+        var uri = API.Catalog.GetAllCatalogItems(_remoteServiceBaseUrl, page, take, brand, type);
+
+        var responseString = await _httpClient.GetStringAsync(uri);
+
+        var catalog = JsonSerializer.Deserialize<Catalog>(responseString, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
+        return catalog;
+    }
+
+    public async Task<IEnumerable<SelectListItem>> GetBrands()
+    {
+        var uri = API.Catalog.GetAllBrands(_remoteServiceBaseUrl);
+
+        var responseString = await _httpClient.GetStringAsync(uri);
+
+        var items = new List<SelectListItem>();
+
+        items.Add(new SelectListItem() { Value = null, Text = "All", Selected = true });
+            
+        using var brands = JsonDocument.Parse(responseString);
+
+        foreach (JsonElement brand  in brands.RootElement.EnumerateArray())
+        {
+            items.Add(new SelectListItem()
+            {
+                Value = brand.GetProperty("id").ToString(),
+                Text = brand.GetProperty("brand").ToString()
+            });
+        }
+
+        return items;
+    }
+
+    public async Task<IEnumerable<SelectListItem>> GetTypes()
+    {
+        var uri = API.Catalog.GetAllTypes(_remoteServiceBaseUrl);
+
+        var responseString = await _httpClient.GetStringAsync(uri);
+
+        var items = new List<SelectListItem>();
+        items.Add(new SelectListItem() { Value = null, Text = "All", Selected = true });
+            
+        using var catalogTypes = JsonDocument.Parse(responseString);
+
+        foreach (JsonElement catalogType in catalogTypes.RootElement.EnumerateArray())
+        {
+            items.Add(new SelectListItem()
+            {
+                Value = catalogType.GetProperty("id").ToString(),
+                Text = catalogType.GetProperty("type").ToString()
+            });
+        }
+
+        return items;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Services\IBasketService.cs
+namespace Microsoft.eShopOnContainers.WebMVC.Services;
+
+using Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+public interface IBasketService
+{
+    Task<Basket> GetBasket(ApplicationUser user);
+    Task AddItemToBasket(ApplicationUser user, int productId);
+    Task<Basket> UpdateBasket(Basket basket);
+    Task Checkout(BasketDTO basket);
+    Task<Basket> SetQuantities(ApplicationUser user, Dictionary<string, int> quantities);
+    Task<Order> GetOrderDraft(string basketId);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Services\ICatalogService.cs
+namespace Microsoft.eShopOnContainers.WebMVC.Services;
+
+public interface ICatalogService
+{
+    Task<Catalog> GetCatalogItems(int page, int take, int? brand, int? type);
+    Task<IEnumerable<SelectListItem>> GetBrands();
+    Task<IEnumerable<SelectListItem>> GetTypes();
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Services\IdentityParser.cs
+namespace Microsoft.eShopOnContainers.WebMVC.Services;
+// :: identity
+public class IdentityParser : IIdentityParser<ApplicationUser>
+{
+    public ApplicationUser Parse(IPrincipal principal)
+    {
+        // Pattern matching 'is' expression
+        // assigns "claims" if "principal" is a "ClaimsPrincipal"
+        if (principal is ClaimsPrincipal claims)
+        {
+            return new ApplicationUser
+            {
+
+                CardHolderName = claims.Claims.FirstOrDefault(x => x.Type == "card_holder")?.Value ?? "",
+                CardNumber = claims.Claims.FirstOrDefault(x => x.Type == "card_number")?.Value ?? "",
+                Expiration = claims.Claims.FirstOrDefault(x => x.Type == "card_expiration")?.Value ?? "",
+                CardType = int.Parse(claims.Claims.FirstOrDefault(x => x.Type == "missing")?.Value ?? "0"),
+                City = claims.Claims.FirstOrDefault(x => x.Type == "address_city")?.Value ?? "",
+                Country = claims.Claims.FirstOrDefault(x => x.Type == "address_country")?.Value ?? "",
+                Email = claims.Claims.FirstOrDefault(x => x.Type == "email")?.Value ?? "",
+                Id = claims.Claims.FirstOrDefault(x => x.Type == "sub")?.Value ?? "",
+                LastName = claims.Claims.FirstOrDefault(x => x.Type == "last_name")?.Value ?? "",
+                Name = claims.Claims.FirstOrDefault(x => x.Type == "name")?.Value ?? "",
+                PhoneNumber = claims.Claims.FirstOrDefault(x => x.Type == "phone_number")?.Value ?? "",
+                SecurityNumber = claims.Claims.FirstOrDefault(x => x.Type == "card_security_number")?.Value ?? "",
+                State = claims.Claims.FirstOrDefault(x => x.Type == "address_state")?.Value ?? "",
+                Street = claims.Claims.FirstOrDefault(x => x.Type == "address_street")?.Value ?? "",
+                ZipCode = claims.Claims.FirstOrDefault(x => x.Type == "address_zip_code")?.Value ?? ""
+            };
+        }
+        throw new ArgumentException(message: "The principal must be a ClaimsPrincipal", paramName: nameof(principal));
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Services\IIdentityParser.cs
+namespace Microsoft.eShopOnContainers.WebMVC.Services;
+
+public interface IIdentityParser<T>
+{
+    T Parse(IPrincipal principal);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Services\IOrderingService.cs
+namespace Microsoft.eShopOnContainers.WebMVC.Services;
+using Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+public interface IOrderingService
+{
+    Task<List<Order>> GetMyOrders(ApplicationUser user);
+    Task<Order> GetOrder(ApplicationUser user, string orderId);
+    Task CancelOrder(string orderId);
+    Task ShipOrder(string orderId);
+    Order MapUserInfoIntoOrder(ApplicationUser user, Order order);
+    BasketDTO MapOrderToBasket(Order order);
+    void OverrideUserInfoIntoOrder(Order original, Order destination);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Services\ModelDTOs\BasketDTO.cs
+namespace WebMVC.Services.ModelDTOs;
+
+public record BasketDTO
+{
+    [Required]
+    public string City { get; init; }
+    [Required]
+    public string Street { get; init; }
+    [Required]
+    public string State { get; init; }
+    [Required]
+    public string Country { get; init; }
+
+    public string ZipCode { get; init; }
+    [Required]
+    public string CardNumber { get; init; }
+    [Required]
+    public string CardHolderName { get; init; }
+
+    [Required]
+    public DateTime CardExpiration { get; init; }
+
+    [Required]
+    public string CardSecurityNumber { get; init; }
+
+    public int CardTypeId { get; init; }
+
+    public string Buyer { get; init; }
+
+    [Required]
+    public Guid RequestId { get; init; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Services\ModelDTOs\LocationDTO.cs
+namespace WebMVC.Services.ModelDTOs;
+
+public record LocationDTO
+{
+    public double Longitude { get; init; }
+    public double Latitude { get; init; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Services\ModelDTOs\OrderDTO.cs
+namespace WebMVC.Services.ModelDTOs;
+
+public record OrderDTO
+{
+    [Required]
+    public string OrderNumber { get; init; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Services\ModelDTOs\OrderProcessAction.cs
+namespace WebMVC.Services.ModelDTOs;
+
+public record OrderProcessAction
+{
+    public string Code { get; }
+    public string Name { get; }
+
+    public static OrderProcessAction Ship = new OrderProcessAction(nameof(Ship).ToLowerInvariant(), "Ship");
+
+    protected OrderProcessAction()
+    {
+    }
+
+    public OrderProcessAction(string code, string name)
+    {
+        Code = code;
+        Name = name;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Services\OrderingService.cs
+namespace Microsoft.eShopOnContainers.WebMVC.Services;
+
+using Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+public class OrderingService : IOrderingService
+{
+    private HttpClient _httpClient;
+    private readonly string _remoteServiceBaseUrl;
+    private readonly IOptions<AppSettings> _settings;
+
+
+    public OrderingService(HttpClient httpClient, IOptions<AppSettings> settings)
+    {
+        _httpClient = httpClient;
+        _settings = settings;
+
+        _remoteServiceBaseUrl = $"{settings.Value.PurchaseUrl}/o/api/v1/orders";
+    }
+
+    async public Task<Order> GetOrder(ApplicationUser user, string id)
+    {
+        var uri = API.Order.GetOrder(_remoteServiceBaseUrl, id);
+
+        var responseString = await _httpClient.GetStringAsync(uri);
+
+        var response = JsonSerializer.Deserialize<Order>(responseString, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
+        return response;
+    }
+
+    async public Task<List<Order>> GetMyOrders(ApplicationUser user)
+    {
+        var uri = API.Order.GetAllMyOrders(_remoteServiceBaseUrl);
+
+        var responseString = await _httpClient.GetStringAsync(uri);
+
+        var response = JsonSerializer.Deserialize<List<Order>>(responseString, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
+        return response;
+    }
+
+
+
+    async public Task CancelOrder(string orderId)
+    {
+        var order = new OrderDTO()
+        {
+            OrderNumber = orderId
+        };
+
+        var uri = API.Order.CancelOrder(_remoteServiceBaseUrl);
+        var orderContent = new StringContent(JsonSerializer.Serialize(order), System.Text.Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PutAsync(uri, orderContent);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+        {
+            throw new Exception("Error cancelling order, try later.");
+        }
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    async public Task ShipOrder(string orderId)
+    {
+        var order = new OrderDTO()
+        {
+            OrderNumber = orderId
+        };
+
+        var uri = API.Order.ShipOrder(_remoteServiceBaseUrl);
+        var orderContent = new StringContent(JsonSerializer.Serialize(order), System.Text.Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PutAsync(uri, orderContent);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+        {
+            throw new Exception("Error in ship order process, try later.");
+        }
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    public void OverrideUserInfoIntoOrder(Order original, Order destination)
+    {
+        destination.City = original.City;
+        destination.Street = original.Street;
+        destination.State = original.State;
+        destination.Country = original.Country;
+        destination.ZipCode = original.ZipCode;
+
+        destination.CardNumber = original.CardNumber;
+        destination.CardHolderName = original.CardHolderName;
+        destination.CardExpiration = original.CardExpiration;
+        destination.CardSecurityNumber = original.CardSecurityNumber;
+    }
+
+    public Order MapUserInfoIntoOrder(ApplicationUser user, Order order)
+    {
+        order.City = user.City;
+        order.Street = user.Street;
+        order.State = user.State;
+        order.Country = user.Country;
+        order.ZipCode = user.ZipCode;
+
+        order.CardNumber = user.CardNumber;
+        order.CardHolderName = user.CardHolderName;
+        order.CardExpiration = new DateTime(int.Parse("20" + user.Expiration.Split('/')[1]), int.Parse(user.Expiration.Split('/')[0]), 1);
+        order.CardSecurityNumber = user.SecurityNumber;
+
+        return order;
+    }
+
+    public BasketDTO MapOrderToBasket(Order order)
+    {
+        order.CardExpirationApiFormat();
+
+        return new BasketDTO()
+        {
+            City = order.City,
+            Street = order.Street,
+            State = order.State,
+            Country = order.Country,
+            ZipCode = order.ZipCode,
+            CardNumber = order.CardNumber,
+            CardHolderName = order.CardHolderName,
+            CardExpiration = order.CardExpiration,
+            CardSecurityNumber = order.CardSecurityNumber,
+            CardTypeId = 1,
+            Buyer = order.Buyer,
+            RequestId = order.RequestId
+        };
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Startup.cs
+namespace Microsoft.eShopOnContainers.WebMVC;
+
+public class Startup
+{
+    public Startup(IConfiguration configuration)
+    {
+        Configuration = configuration;
+    }
+
+    public IConfiguration Configuration { get; }
+
+    // This method gets called by the runtime. Use this method to add services to the IoC container.
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddControllersWithViews()
+            .Services
+            .AddAppInsight(Configuration)
+            .AddHealthChecks(Configuration)
+            .AddCustomMvc(Configuration)
+            .AddDevspaces()
+            .AddHttpClientServices(Configuration);
+
+        IdentityModelEventSource.ShowPII = true;       // Caution! Do NOT use in production: https://aka.ms/IdentityModel/PII
+
+        services.AddCustomAuthentication(Configuration);
+    }
+
+    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Remove("sub");
+        if (env.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+        }
+        else
+        {
+            app.UseExceptionHandler("/Error");
+        }
+
+        var pathBase = Configuration["PATH_BASE"];
+
+        if (!string.IsNullOrEmpty(pathBase))
+        {
+            app.UsePathBase(pathBase);
+        }
+
+        app.UseStaticFiles();
+        app.UseSession();
+
+        WebContextSeed.Seed(app, env);
+
+        // Fix samesite issue when running eShop from docker-compose locally as by default http protocol is being used
+        // Refer to https://github.com/dotnet-architecture/eShopOnContainers/issues/1391
+        app.UseCookiePolicy(new CookiePolicyOptions { MinimumSameSitePolicy = AspNetCore.Http.SameSiteMode.Lax });
+
+        app.UseRouting();
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllerRoute("default", "{controller=Catalog}/{action=Index}/{id?}");
+            endpoints.MapControllerRoute("defaultError", "{controller=Error}/{action=Error}");
+            endpoints.MapControllers();
+            endpoints.MapHealthChecks("/liveness", new HealthCheckOptions
+            {
+                Predicate = r => r.Name.Contains("self")
+            });
+            endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
+        });
+    }
+}
+
+static class ServiceCollectionExtensions
+{
+// что делает 
+    public static IServiceCollection AddAppInsight(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddApplicationInsightsTelemetry(configuration);
+        services.AddApplicationInsightsKubernetesEnricher();
+
+        return services;
+    }
+
+    public static IServiceCollection AddHealthChecks(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy())
+            .AddUrlGroup(new Uri(configuration["IdentityUrlHC"]), name: "identityapi-check", tags: new string[] { "identityapi" });
+
+        return services;
+    }
+
+    public static IServiceCollection AddCustomMvc(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions();
+        services.Configure<AppSettings>(configuration);
+        services.AddSession();
+        services.AddDistributedMemoryCache();
+
+        if (configuration.GetValue<string>("IsClusterEnv") == bool.TrueString)
+        {
+            services.AddDataProtection(opts =>
+            {
+                opts.ApplicationDiscriminator = "eshop.webmvc"; // симметричное шифрование
+            })
+            //DataProtection-Keys это список нужно проверить выполнит функцию а потом считать
+            .PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(configuration["DPConnectionString"]), "DataProtection-Keys"); 
+        }
+
+        return services;
+    }
+
+    // Adds all Http client services
+    public static IServiceCollection AddHttpClientServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+        //register delegating handlers
+        services.AddTransient<HttpClientAuthorizationDelegatingHandler>();
+        services.AddTransient<HttpClientRequestIdDelegatingHandler>();
+
+        //set 5 min as the lifetime for each HttpMessageHandler int the pool
+        services.AddHttpClient("extendedhandlerlifetime").SetHandlerLifetime(TimeSpan.FromMinutes(5)).AddDevspacesSupport();
+
+        //add http client services
+        services.AddHttpClient<IBasketService, BasketService>()
+                .SetHandlerLifetime(TimeSpan.FromMinutes(5))  //Sample. Default lifetime is 2 minutes
+                .AddHttpMessageHandler<HttpClientAuthorizationDelegatingHandler>()
+                .AddDevspacesSupport();
+
+        services.AddHttpClient<ICatalogService, CatalogService>()
+                .AddDevspacesSupport();
+
+        services.AddHttpClient<IOrderingService, OrderingService>()
+                .AddHttpMessageHandler<HttpClientAuthorizationDelegatingHandler>()
+                .AddHttpMessageHandler<HttpClientRequestIdDelegatingHandler>()
+                .AddDevspacesSupport();
+
+
+        //add custom application services
+        services.AddTransient<IIdentityParser<ApplicationUser>, IdentityParser>();
+
+        return services;
+    }
+
+
+    public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, IConfiguration configuration)
+    {
+        var identityUrl = configuration.GetValue<string>("IdentityUrl");
+        var callBackUrl = configuration.GetValue<string>("CallBackUrl");
+        var sessionCookieLifetime = configuration.GetValue("SessionCookieLifetimeMinutes", 60);
+
+        // Add Authentication services          
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+        })
+        .AddCookie(setup => setup.ExpireTimeSpan = TimeSpan.FromMinutes(sessionCookieLifetime))
+        .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
+        {
+            options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.Authority = identityUrl.ToString();
+            options.SignedOutRedirectUri = callBackUrl.ToString();
+            options.ClientId = "mvc";
+            options.ClientSecret = "secret";
+            options.ResponseType = "code";
+            options.SaveTokens = true;
+            options.GetClaimsFromUserInfoEndpoint = true;
+            options.RequireHttpsMetadata = false;
+            options.Scope.Add("openid");
+            options.Scope.Add("profile");
+            options.Scope.Add("orders");
+            options.Scope.Add("basket");
+            options.Scope.Add("webshoppingagg");
+            options.Scope.Add("orders.signalrhub");
+            options.Scope.Add("webhooks");
+        });
+
+        return services;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewComponents\Cart.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewComponents;
+
+public class Cart : ViewComponent
+{
+    private readonly IBasketService _cartSvc;
+
+    public Cart(IBasketService cartSvc) => _cartSvc = cartSvc;
+
+    public async Task<IViewComponentResult> InvokeAsync(ApplicationUser user)
+    {
+        var vm = new CartComponentViewModel();
+        try
+        {
+            var itemsInCart = await ItemsInCartAsync(user);
+            vm.ItemsCount = itemsInCart;
+            return View(vm);
+        }
+        catch
+        {
+            ViewBag.IsBasketInoperative = true;
+        }
+
+        return View(vm);
+    }
+    private async Task<int> ItemsInCartAsync(ApplicationUser user)
+    {
+        var basket = await _cartSvc.GetBasket(user);
+        return basket.Items.Count;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewComponents\CartList.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewComponents;
+
+public class CartList : ViewComponent
+{
+    private readonly IBasketService _cartSvc;
+
+    public CartList(IBasketService cartSvc) => _cartSvc = cartSvc;
+
+    public async Task<IViewComponentResult> InvokeAsync(ApplicationUser user)
+    {
+        var vm = new Basket();
+        try
+        {
+            vm = await GetItemsAsync(user);
+            return View(vm);
+        }
+        catch (Exception ex)
+        {
+            ViewBag.BasketInoperativeMsg = $"Basket Service is inoperative, please try later on. ({ex.GetType().Name} - {ex.Message}))";
+        }
+
+        return View(vm);
+    }
+
+    private Task<Basket> GetItemsAsync(ApplicationUser user) => _cartSvc.GetBasket(user);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\Annotations\CardExpiration.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels.Annotations;
+
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
+public class CardExpirationAttribute : ValidationAttribute
+{
+    public override bool IsValid(object value)
+    {
+        if (value == null)
+            return false;
+
+        var monthString = value.ToString().Split('/')[0];
+        var yearString = $"20{value.ToString().Split('/')[1]}";
+        // Use the 'out' variable initializer to simplify 
+        // the logic of validating the expiration date
+        if ((int.TryParse(monthString, out var month)) &&
+            (int.TryParse(yearString, out var year)))
+        {
+            DateTime d = new DateTime(year, month, 1);
+
+            return d > DateTime.UtcNow;
+        }
+        else
+        {
+            return false;
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\Annotations\LatitudeCoordinate.cs
+namespace WebMVC.ViewModels.Annotations;
+
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
+public class LatitudeCoordinate : ValidationAttribute
+{
+    protected override ValidationResult
+            IsValid(object value, ValidationContext validationContext)
+    {
+        double coordinate;
+        if (!double.TryParse(value.ToString(), out coordinate) || (coordinate < -90 || coordinate > 90))
+        {
+            return new ValidationResult
+                ("Latitude must be between -90 and 90 degrees inclusive.");
+        }
+
+        return ValidationResult.Success;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\Annotations\LongitudeCoordinate.cs
+namespace WebMVC.ViewModels.Annotations;
+
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
+public class LongitudeCoordinate : ValidationAttribute
+{
+    protected override ValidationResult
+            IsValid(object value, ValidationContext validationContext)
+    {
+        double coordinate;
+        if (!double.TryParse(value.ToString(), out coordinate) || (coordinate < -180 || coordinate > 180))
+        {
+            return new ValidationResult
+                ("Longitude must be between -180 and 180 degrees inclusive.");
+        }
+
+        return ValidationResult.Success;
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\ApplicationUser.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+// Add profile data for application users by adding properties to the ApplicationUser class
+public class ApplicationUser : IdentityUser
+{
+    public string CardNumber { get; set; }
+    public string SecurityNumber { get; set; }
+    public string Expiration { get; set; }
+    public string CardHolderName { get; set; }
+    public int CardType { get; set; }
+    public string Street { get; set; }
+    public string City { get; set; }
+    public string State { get; set; }
+    public string StateCode { get; set; }
+    public string Country { get; set; }
+    public string CountryCode { get; set; }
+    public string ZipCode { get; set; }
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    [Required]
+    public string Name { get; set; }
+    [Required]
+    public string LastName { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\Basket.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+public record Basket
+{
+    // Use property initializer syntax.
+    // While this is often more useful for read only 
+    // auto implemented properties, it can simplify logic
+    // for read/write properties.
+    public List<BasketItem> Items { get; init; } = new List<BasketItem>();
+    public string BuyerId { get; init; }
+
+    public decimal Total()
+    {
+        return Math.Round(Items.Sum(x => x.UnitPrice * x.Quantity), 2);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\BasketItem.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+public record BasketItem
+{
+    public string Id { get; init; }
+    public int ProductId { get; init; }
+    public string ProductName { get; init; }
+    public decimal UnitPrice { get; init; }
+    public decimal OldUnitPrice { get; init; }
+    public int Quantity { get; init; }
+    public string PictureUrl { get; init; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\Campaign.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+public record Campaign
+{
+    public int PageIndex { get; init; }
+    public int PageSize { get; init; }
+    public int Count { get; init; }
+    public List<CampaignItem> Data { get; init; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\CampaignItem.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+public record CampaignItem
+{
+    public int Id { get; init; }
+
+    public string Name { get; init; }
+
+    public string Description { get; init; }
+
+    public DateTime From { get; init; }
+
+    public DateTime To { get; init; }
+
+    public string PictureUri { get; init; }
+    public string DetailsUri { get; init; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\CartViewModels\IndexViewModel.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels.CartViewModels;
+
+public class CartComponentViewModel
+{
+    public int ItemsCount { get; set; }
+    public string Disabled => (ItemsCount == 0) ? "is-disabled" : "";
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\Catalog.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+public record Catalog
+{
+    public int PageIndex { get; init; }
+    public int PageSize { get; init; }
+    public int Count { get; init; }
+    public List<CatalogItem> Data { get; init; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\CatalogItem.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+public record CatalogItem
+{
+    public int Id { get; init; }
+    public string Name { get; init; }
+    public string Description { get; init; }
+    public decimal Price { get; init; }
+    public string PictureUri { get; init; }
+    public int CatalogBrandId { get; init; }
+    public string CatalogBrand { get; init; }
+    public int CatalogTypeId { get; init; }
+    public string CatalogType { get; init; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\CatalogViewModels\IndexViewModel.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels.CatalogViewModels;
+
+public class IndexViewModel
+{
+    public IEnumerable<CatalogItem> CatalogItems { get; set; }
+    public IEnumerable<SelectListItem> Brands { get; set; }
+    public IEnumerable<SelectListItem> Types { get; set; }
+    public int? BrandFilterApplied { get; set; }
+    public int? TypesFilterApplied { get; set; }
+    public PaginationInfo PaginationInfo { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\Converters\NumberToStringConverter.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+public class NumberToStringConverter : JsonConverter<string>
+{
+    public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Number)
+        {
+            var numberValue = reader.GetInt32();
+            return numberValue.ToString();
+        }
+        else if (reader.TokenType == JsonTokenType.String)
+        {
+            return reader.GetString();
+        }
+        else
+        {
+            throw new JsonException();
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value);
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\Header.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+public record Header
+{
+    public string Controller { get; init; }
+    public string Text { get; init; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\Order.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+public class Order
+{ 
+    [JsonConverter(typeof(NumberToStringConverter))]
+    public string OrderNumber { get; set; }
+
+    public DateTime Date { get; set; }
+
+    public string Status { get; set; }
+
+    public decimal Total { get; set; }
+
+    public string Description { get; set; }
+
+    [Required]
+    public string City { get; set; }
+    [Required]
+    public string Street { get; set; }
+    [Required]
+    public string State { get; set; }
+    [Required]
+    public string Country { get; set; }
+
+    public string ZipCode { get; set; }
+    [Required]
+    [DisplayName("Card number")]
+    public string CardNumber { get; set; }
+    [Required]
+    [DisplayName("Cardholder name")]
+    public string CardHolderName { get; set; }
+
+    public DateTime CardExpiration { get; set; }
+    [RegularExpression(@"(0[1-9]|1[0-2])\/[0-9]{2}", ErrorMessage = "Expiration should match a valid MM/YY value")]
+    [CardExpiration(ErrorMessage = "The card is expired"), Required]
+    [DisplayName("Card expiration")]
+    public string CardExpirationShort { get; set; }
+    [Required]
+    [DisplayName("Card security number")]
+    public string CardSecurityNumber { get; set; }
+
+    public int CardTypeId { get; set; }
+
+    public string Buyer { get; set; }
+
+    public List<SelectListItem> ActionCodeSelectList =>
+        GetActionCodesByCurrentState();
+                
+    public List<OrderItem> OrderItems { get; set; }
+
+    [Required]
+    public Guid RequestId { get; set; }
+
+
+    public void CardExpirationShortFormat()
+    {
+        CardExpirationShort = CardExpiration.ToString("MM/yy");
+    }
+
+    public void CardExpirationApiFormat()
+    {
+        var month = CardExpirationShort.Split('/')[0];
+        var year = $"20{CardExpirationShort.Split('/')[1]}";
+
+        CardExpiration = new DateTime(int.Parse(year), int.Parse(month), 1);
+    }
+
+    private List<SelectListItem> GetActionCodesByCurrentState()
+    {
+        var actions = new List<OrderProcessAction>();
+        switch (Status?.ToLower())
+        {
+            case "paid":
+                actions.Add(OrderProcessAction.Ship);
+                break;
+        }
+
+        var result = new List<SelectListItem>();
+        actions.ForEach(action =>
+        {
+            result.Add(new SelectListItem { Text = action.Name, Value = action.Code });
+        });
+
+        return result;
+    }
+}
+
+public enum CardType
+{
+    AMEX = 1
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\OrderItem.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels;
+
+public record OrderItem
+{
+    public int ProductId { get; init; }
+
+    public string ProductName { get; init; }
+
+    public decimal UnitPrice { get; init; }
+
+    public decimal Discount { get; init; }
+
+    public int Units { get; init; }
+
+    public string PictureUrl { get; init; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\ViewModels\Pagination\PaginationInfo.cs
+namespace Microsoft.eShopOnContainers.WebMVC.ViewModels.Pagination;
+
+public class PaginationInfo
+{
+    public int TotalItems { get; set; }
+    public int ItemsPerPage { get; set; }
+    public int ActualPage { get; set; }
+    public int TotalPages { get; set; }
+    public string Previous { get; set; }
+    public string Next { get; set; }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\web.config
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+
+  <!--
+    Configure your application settings in appsettings.json. Learn more at http://go.microsoft.com/fwlink/?LinkId=786380
+  -->
+  <system.webServer>
+    <handlers>
+      <add name="aspNetCore" path="*" verb="*" modules="AspNetCoreModule" resourceType="Unspecified"/>
+    </handlers>
+    <aspNetCore processPath="%LAUNCHER_PATH%" arguments="%LAUNCHER_ARGS%" stdoutLogEnabled="false" stdoutLogFile=".\logs\stdout" forwardWindowsAuthToken="false"/>
+  </system.webServer>
+</configuration>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\WebMVC.csproj
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <UserSecretsId>aspnet-Microsoft.eShopOnContainers-946ae052-8305-4a99-965b-ec8636ddbae3</UserSecretsId>
+    <DockerComposeProjectPath>..\..\..\docker-compose.dcproj</DockerComposeProjectPath>
+    <TypeScriptToolsVersion>3.0</TypeScriptToolsVersion>
+    <GenerateErrorForMissingTargetingPacks>false</GenerateErrorForMissingTargetingPacks>
+    <IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Setup\images.zip">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Setup\override.css">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="6.0.5" />
+    <PackageReference Include="AspNetCore.HealthChecks.Uris" Version="6.0.3" />
+    <PackageReference Include="BuildBundlerMinifier" Version="3.2.449" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0-beta1" />
+    <PackageReference Include="Microsoft.ApplicationInsights.DependencyCollector" Version="2.22.0-beta1" />
+    <PackageReference Include="Microsoft.ApplicationInsights.Kubernetes" Version="3.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="7.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.HealthChecks" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.HealthChecks" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.4.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.AzureAppServices" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Web.LibraryManager.Build" Version="2.1.175" />
+    <PackageReference Include="Serilog.AspNetCore" Version="6.1.0-dev-00289" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.1-dev-00787" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.5.0-dev-00359" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.1-dev-00896" />
+    <PackageReference Include="Serilog.Sinks.Http" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.3-dev-00260" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="ViewModels\CampaignItem.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\BuildingBlocks\Devspaces.Support\Devspaces.Support.csproj" />
+  </ItemGroup>
+
+</Project>
+
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\D-src-sharp_eshopcontainer-eShopOnContainers-src-Web-WebMVC-.--.cshtml$-content.cs
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC
+
+Search patterns:.*\.cshtml$
+Directory to include:all
+Only root dir: false
+
+Total files: 18
+_pagination.cshtml
+
+_product.cshtml
+
+Create.cshtml
+
+Default.cshtml
+Default.cshtml
+
+Detail.cshtml
+
+Error.cshtml
+
+_Header.cshtml
+
+_ViewImports.cshtml
+
+Index.cshtml
+Index.cshtml
+Index.cshtml
+Index.cshtml
+
+_OrderItems.cshtml
+
+_Layout.cshtml
+
+_LoginPartial.cshtml
+_ValidationScriptsPartial.cshtml
+
+_ViewStart.cshtml
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\_ViewImports.cshtml
+@using Microsoft.eShopOnContainers.WebMVC  // :: global
+@using Microsoft.eShopOnContainers.WebMVC.ViewModels
+@using Microsoft.AspNetCore.Identity
+
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers //:: means add all types of  typehelpers from  Microsoft.AspNetCore.Mvc.TagHelpers  assembly
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\_ViewStart.cshtml
+@{
+    Layout = "_Layout";
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Cart\Index.cshtml
+@using Microsoft.eShopOnContainers.WebMVC.Services
+@using Microsoft.eShopOnContainers.WebMVC.ViewModels
+
+@model Microsoft.eShopOnContainers.WebMVC.ViewModels.Basket
+@inject IIdentityParser<ApplicationUser> UserManager  // :: dependency resolution in the same way as in  ctor
+
+@{
+     ViewData["Title"] = "My Cart";
+     var headerList = new List<Header>() {
+          new Header() { Controller = "Catalog", Text = "Back to catalog" }};
+}
+
+<form method="post" id="cartForm">
+    <div class="esh-basket">
+        <partial name="_Header" model="headerList"/>
+
+        @await Component.InvokeAsync("CartList", new { user = UserManager.Parse(User) })
+    </div>
+</form>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Catalog\_pagination.cshtml
+@model Microsoft.eShopOnContainers.WebMVC.ViewModels.Pagination.PaginationInfo
+
+<div class="esh-pager">
+    <div class="container">
+        <article class="esh-pager-wrapper row">
+            <nav>
+                <a class="esh-pager-item esh-pager-item--navigable @Model.Previous"
+                    id="Previous"                    
+                    asp-controller="Catalog"
+                    asp-action="Index"
+                    asp-route-page="@(Model.ActualPage -1)"
+                    aria-label="Previous">
+                    Previous
+                </a>
+
+                <span class="esh-pager-item">
+                    Showing @Model.ItemsPerPage of @Model.TotalItems products - Page @(Model.ActualPage + 1) - @Model.TotalPages
+                </span>
+
+                <a class="esh-pager-item esh-pager-item--navigable @Model.Next"
+                    id="Next"                    
+                    asp-controller="Catalog"
+                    asp-action="Index"
+                    asp-route-page="@(Model.ActualPage + 1)"
+                    aria-label="Next">
+                    Next
+                </a>
+            </nav>
+        </article>
+    </div>
+</div>
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Catalog\_product.cshtml
+@model CatalogItem
+
+
+<form asp-controller="Cart" asp-action="AddToCart">
+
+    <img class="esh-catalog-thumbnail" src="@Model.PictureUri" />
+    <input class="esh-catalog-button @((!User.Identity.IsAuthenticated) ? "is-disabled" : "")" type="submit" value="[ ADD TO CART ]" />
+
+    <div class="esh-catalog-name">
+        <span>@Model.Name</span>
+    </div>
+    <div class="esh-catalog-price">
+        <span>@Model.Price.ToString("N2")</span>
+    </div>
+    <input type="hidden" asp-for="@Model.Id" name="id" />
+</form>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Catalog\Index.cshtml
+@model Microsoft.eShopOnContainers.WebMVC.ViewModels.CatalogViewModels.IndexViewModel
+
+@{
+    ViewData["Title"] = "Catalog";
+}
+<section class="esh-catalog-hero">
+    <div class="container">
+        <img class="esh-catalog-title" src="~/images/main_banner_text.png" />
+    </div>
+</section>
+
+<section class="esh-catalog-filters">
+    <div class="container">
+        <form asp-action="Index" asp-controller="Catalog" method="post">
+            <label class="esh-catalog-label" data-title="brand">
+                <select asp-for="@Model.BrandFilterApplied" asp-items="@Model.Brands" class="esh-catalog-filter"></select>
+            </label>
+            <label class="esh-catalog-label" data-title="type">
+                <select asp-for="@Model.TypesFilterApplied" asp-items="@Model.Types" class="esh-catalog-filter"></select>
+            </label>
+            <input class="esh-catalog-send" type="image" src="~/images/arrow-right.svg" />
+        </form>
+    </div>
+</section>
+
+<div class="container">
+    <div class="row">
+        <br />
+        @if(ViewBag.BasketInoperativeMsg != null)
+        {
+        <div class="alert alert-warning" role="alert">
+            &nbsp;@ViewBag.BasketInoperativeMsg
+        </div>
+        }
+    </div>
+
+    @if (Model.CatalogItems.Count() > 0)
+    {
+    <partial name="_pagination" for="PaginationInfo" />
+
+    <div class="esh-catalog-items row">
+        @foreach (var catalogItem in Model.CatalogItems)
+            {
+        <div class="esh-catalog-item col-md-4">
+            <partial name="_product" model="catalogItem" />
+        </div>
+            }
+    </div>
+
+    <partial name="_pagination" for="PaginationInfo" />
+    }
+    else
+    {
+    <div class="esh-catalog-items row">
+        THERE ARE NO RESULTS THAT MATCH YOUR SEARCH
+    </div>
+    }
+</div>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Order\_OrderItems.cshtml
+@model Microsoft.eShopOnContainers.WebMVC.ViewModels.Order
+
+
+<section class="esh-orders_new-section">
+    <article class="esh-orders_new-titles row">
+        <section class="esh-orders_new-title col-12">Order details</section>
+    </article>
+
+    @for (int i = 0; i < Model.OrderItems.Count; i++)
+    {
+        var item = Model.OrderItems[i];
+
+        <article class="esh-orders_new-items esh-orders_new-items--border row">
+            <section class="esh-orders_new-item col-md-4 hidden-md-down">
+                <img class="esh-orders_new-image" src="@item.PictureUrl">
+                <input type="hidden" value="@item.PictureUrl" name=@("orderitems[" + i + "].PictureUrl") />
+            </section>
+            <section class="esh-orders_new-item esh-orders_new-item--middle col-4">
+                @item.ProductName
+                <input type="hidden" value="@item.ProductName" name=@("orderitems[" + i + "].ProductName") />
+            </section>
+            <section class="esh-orders_new-item esh-orders_new-item--middle col-1">
+                $ @item.UnitPrice.ToString("N2")
+                <input type="hidden" value="@item.UnitPrice" name=@("orderitems[" + i + "].UnitPrice") />
+            </section>
+            <section class="esh-orders_new-item esh-orders_new-item--middle col-1">
+                @item.Units
+                <input type="hidden" value="@item.Units" name=@("orderitems[" + i + "].Units") />
+            </section>
+            <section class="esh-orders_new-item esh-orders_new-item--middle col-2">$ @Math.Round(item.Units * item.UnitPrice, 2).ToString("N2")</section>
+        </article>
+    }
+</section>
+
+<section class="esh-orders_new-section esh-orders_new-section--right">
+    <article class="esh-orders_new-titles row">
+        <section class="esh-orders_new-title col-9"></section>
+        <section class="esh-orders_new-title col-2">Total</section>
+    </article>
+
+    <article class="esh-orders_new-items row">
+        <section class="esh-orders_new-item col-9"></section>
+        <section class="esh-orders_new-item esh-orders_new-item--mark col-2">
+            $ @Model.Total.ToString("N2")
+            <input type="hidden" value="@Model.Total" name="Total"/>
+        </section>
+    </article>
+</section>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Order\Create.cshtml
+@using Microsoft.eShopOnContainers.WebMVC.Services
+@model Microsoft.eShopOnContainers.WebMVC.ViewModels.Order
+@inject IIdentityParser<ApplicationUser> UserManager
+
+@{
+     ViewData["Title"] = "New Order";
+     var headerList= new List<Header>() {
+       new Header() { Controller = "Cart", Text = "Back to cart" } };
+}
+
+<partial name="_Header" model="headerList"/>
+<div class="container">
+    <form method="post" asp-controller="Order" asp-action="Checkout">
+        <section class="esh-orders_new-section">
+            <div class="row">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(err => err.Errors)) {
+                    <div class="alert alert-warning" role="alert">                    
+                        &nbsp;@error.ErrorMessage
+                    </div>
+                }
+            </div>
+            <h4 class="esh-orders_new-title">Shipping address</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Street" class="esh-orders_new-title">Address</label>
+                        <input asp-for="Street" class="form-control form-input" type="text" placeholder="Street"/>
+                        <span asp-validation-for="Street" class="alert alert-danger" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="City" class="esh-orders_new-title">City</label>
+                        <input asp-for="City" class="form-control form-input" type="text" placeholder="City"/>
+                        <span asp-validation-for="City" class="alert alert-danger" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="State" class="esh-orders_new-title">State</label>
+                        <input asp-for="State" class="form-control form-input" type="text" placeholder="State"/>
+                        <span asp-validation-for="State" class="alert alert-danger" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Country" class="esh-orders_new-title">Country</label>
+                        <input asp-for="Country" class="form-control form-input" type="text" placeholder="Country"/>
+                        <span asp-validation-for="Country" class="alert alert-danger" />
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="esh-orders_new-section">
+            <h4 class="esh-orders_new-title">Payment method</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="CardNumber" class="esh-orders_new-title">Card number</label>
+                        <input asp-for="CardNumber" class="form-control form-input" type="text" placeholder="000000000000000"/>
+                        <span asp-validation-for="CardNumber" class="alert alert-danger" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="CardHolderName" class="esh-orders_new-title">Cardholder name</label>
+                        <input asp-for="CardHolderName" class="form-control form-input" type="text" placeholder="Cardholder"/>
+                        <span asp-validation-for="CardHolderName" class="alert alert-danger" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="CardExpirationShort" class="esh-orders_new-title">Expiration date</label>
+                        <input asp-for="CardExpirationShort" class="form-control form-input form-input-medium" type="text" placeholder="MM/YY"/>
+                        <span asp-validation-for="CardExpirationShort" class="alert alert-danger" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="CardSecurityNumber" class="esh-orders_new-title">Security code</label>
+                        <input asp-for="CardSecurityNumber" class="form-control form-input form-input-small" type="text" placeholder="000"/>
+                        <span asp-validation-for="CardSecurityNumber" class="alert alert-danger" />
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        @await Html.PartialAsync("_OrderItems")
+
+        <section class="esh-orders_new-section">
+            <div class="form-group row">
+                <div class="col-md-9">
+                </div>
+                <div class="col-md-2">
+                    <input type="submit" value="[ Place Order ]" name="action" class="btn esh-orders_new-placeOrder" />
+                </div>
+            </div>
+        </section>
+        <input asp-for="ZipCode" type="hidden" />
+        <input asp-for="RequestId" type="hidden" value="@Guid.NewGuid().ToString()"/>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Order\Detail.cshtml
+@using Microsoft.eShopOnContainers.WebMVC.ViewModels
+
+@model Microsoft.eShopOnContainers.WebMVC.ViewModels.Order
+
+@{
+     ViewData["Title"] = "Order Detail";
+     var headerList= new List<Header>() {
+     new Header() { Controller = "Catalog", Text = "Back to catalog" } };
+}
+
+<div class="esh-orders_detail">
+    <partial name="_Header" model="headerList"/>
+
+    <div class="container">
+        <section class="esh-orders_detail-section">
+            <article class="esh-orders_detail-titles row">
+                <section class="esh-orders_detail-title col-3">Order number</section>
+                <section class="esh-orders_detail-title col-3">Date</section>
+                <section class="esh-orders_detail-title col-3">Total</section>
+                <section class="esh-orders_detail-title col-3">Status</section>
+            </article>
+
+            <article class="esh-orders_detail-items row">
+                <section class="esh-orders_detail-item col-3">@Model.OrderNumber</section>
+                <section class="esh-orders_detail-item col-3">@Model.Date</section>
+                <section class="esh-orders_detail-item col-3">$@Model.Total</section>
+                <section class="esh-orders_detail-title col-3">@Model.Status</section>
+            </article>
+        </section>
+        
+        <section class="esh-orders_detail-section">
+            <article class="esh-orders_detail-titles row">
+                <section class="esh-orders_detail-title col-12">Description</section>
+            </article>
+
+            <article class="esh-orders_detail-items row">
+                <section class="esh-orders_detail-item col-12">@Model.Description</section>
+            </article>
+        </section>
+
+        <section class="esh-orders_detail-section">
+            <article class="esh-orders_detail-titles row">
+                <section class="esh-orders_detail-title col-12">Shipping address</section>
+            </article>
+
+            <article class="esh-orders_detail-items row">
+                <section class="esh-orders_detail-item col-12">@Model.Street</section>
+            </article>
+
+            <article class="esh-orders_detail-items row">
+                <section class="esh-orders_detail-item col-12">@Model.City</section>
+            </article>
+
+            <article class="esh-orders_detail-items row">
+                <section class="esh-orders_detail-item col-12">@Model.Country</section>
+            </article>
+        </section>
+
+        <section class="esh-orders_detail-section">
+            <article class="esh-orders_detail-titles row">
+                <section class="esh-orders_detail-title col-12">ORDER DETAILS</section>
+            </article>
+
+            @for (int i = 0; i < Model.OrderItems.Count; i++)
+            {
+                var item = Model.OrderItems[i];
+                <article class="esh-orders_detail-items esh-orders_detail-items--border row">
+                    <section class="esh-orders_detail-item col-md-4 hidden-md-down">
+                        <img class="esh-orders_detail-image" src="@item.PictureUrl">
+                    </section>
+                    <section class="esh-orders_detail-item esh-orders_detail-item--middle col-4">@item.ProductName</section>
+                    <section class="esh-orders_detail-item esh-orders_detail-item--middle col-1">$ @item.UnitPrice.ToString("N2")</section>
+                    <section class="esh-orders_detail-item esh-orders_detail-item--middle col-1">@item.Units</section>
+                    <section class="esh-orders_detail-item esh-orders_detail-item--middle col-2">$ @Math.Round(item.Units * item.UnitPrice, 2).ToString("N2")</section>
+                </article>
+            }
+        </section>
+
+        <section class="esh-orders_detail-section esh-orders_detail-section--right">
+            <article class="esh-orders_detail-titles esh-basket-titles--clean row">
+                <section class="esh-orders_detail-title col-9"></section>
+                <section class="esh-orders_detail-title col-2">TOTAL</section>
+            </article>
+
+            <article class="esh-orders_detail-items row">
+                <section class="esh-orders_detail-item col-9"></section>
+                <section class="esh-orders_detail-item esh-orders_detail-item--mark col-2">$ @Model.Total.ToString("N2")</section>
+            </article>
+        </section>
+    </div>
+</div>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Order\Index.cshtml
+@using Microsoft.eShopOnContainers.WebMVC.ViewModels
+
+@model IEnumerable<Microsoft.eShopOnContainers.WebMVC.ViewModels.Order>
+
+@{
+     ViewData["Title"] = "My Orders";
+     var headerList= new List<Header>() {
+        new Header() { Controller = "Catalog", Text = "Back to catalog" },
+        new Header() { Text = " / " },
+        new Header() { Controller = "OrderManagement", Text = "Orders Management" } };
+}
+
+<div class="esh-orders">
+    <partial name="_Header" model="headerList"/>
+
+    <div class="container">
+        <article class="esh-orders-titles row">
+            <section class="esh-orders-title col-2">Order number</section>
+            <section class="esh-orders-title col-4">Date</section>
+            <section class="esh-orders-title col-2">Total</section>
+            <section class="esh-orders-title col-2">Status</section>
+            <section class="esh-orders-title col-2"></section>
+        </article>
+        @if (Model != null && Model.Any())
+        {
+            foreach (var item in Model)
+            {
+                <article class="esh-orders-items row">
+                    <section class="esh-orders-item col-2">@Html.DisplayFor(modelItem => item.OrderNumber)</section>
+                    <section class="esh-orders-item col-4">@Html.DisplayFor(modelItem => item.Date)</section>
+                    <section class="esh-orders-item col-2">$ @Html.DisplayFor(modelItem => item.Total)</section>
+                    <section class="esh-orders-item col-2">@Html.DisplayFor(modelItem => item.Status)</section>
+                    <section class="esh-orders-item col-1">
+                        <a class="esh-orders-link" asp-controller="Order" asp-action="Detail" asp-route-orderId="@item.OrderNumber">Detail</a>
+                    </section>
+                    <section class="esh-orders-item col-1">
+                        @if (item.Status.ToLower() == "submitted")
+                        {
+                            <a class="esh-orders-link" asp-controller="Order" asp-action="cancel" asp-route-orderId="@item.OrderNumber">Cancel</a>
+                        }
+                    </section>
+                </article>
+            }
+        }
+    </div>
+</div>
+
+
+
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\OrderManagement\Index.cshtml
+@using Microsoft.eShopOnContainers.WebMVC.ViewModels
+
+@model IEnumerable<Microsoft.eShopOnContainers.WebMVC.ViewModels.Order>
+
+@{
+     ViewData["Title"] = "My Orders";
+     var headerList = new List<Header>() {
+          new Header() { Controller = "Catalog", Text = "Back to catalog" } };
+}
+
+<div class="esh-orders">
+    <partial name="_Header" model="headerList"/>
+
+    <div class="container">
+        <article class="esh-orders-titles row">
+            <section class="esh-orders-title col-2">Order number</section>
+            <section class="esh-orders-title col-4">Date</section>
+            <section class="esh-orders-title col-2">Total</section>
+            <section class="esh-orders-title col-2">Status</section>
+            <section class="esh-orders-title col-2"></section>
+        </article>
+
+        @foreach (var item in Model)
+        {
+            <article class="esh-orders-items row">
+                <section class="esh-orders-item col-2">@Html.DisplayFor(modelItem => item.OrderNumber)</section>
+                <section class="esh-orders-item col-4">@Html.DisplayFor(modelItem => item.Date)</section>
+                <section class="esh-orders-item col-2">$ @Html.DisplayFor(modelItem => item.Total)</section>
+                <section class="esh-orders-item col-2">@Html.DisplayFor(modelItem => item.Status)</section>
+                <section class="esh-orders-item col-2">
+                    <form asp-action="OrderProcess" id="orderForm+@item.OrderNumber" method="post">
+                        <input type="hidden" name="orderId" value="@item.OrderNumber" />
+                        <select name="actionCode" asp-items="@item.ActionCodeSelectList"
+                                disabled=@(item.Status != "paid")
+                                onchange="document.getElementById('orderForm+@item.OrderNumber').submit()">
+                            <option value="">&nbsp;&nbsp;Select Action</option>
+                            <option value="">------------------</option>
+                        </select>
+                    </form>
+                </section>
+            </article>
+        }
+    </div>
+</div>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Shared\_Header.cshtml
+
+@model IEnumerable<Microsoft.eShopOnContainers.WebMVC.ViewModels.Header>
+
+<div class="esh-header">
+    <div class="container">
+        @foreach (var header in @Model)
+        {
+            <a class="esh-header-back" asp-area="" asp-controller="@header.Controller" asp-action="Index">@header.Text</a>
+        }
+    </div>
+</div>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Shared\_Layout.cshtml
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Microsoft.eShopOnContainers.WebMVC</title>
+
+    <environment names="Development">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+        <link rel="stylesheet" href="~/css/app.css" />
+        <link rel="stylesheet" href="~/css/app.component.css" />
+        <link rel="stylesheet" href="~/css/shared/components/header/header.css" />
+        <link rel="stylesheet" href="~/css/shared/components/identity/identity.css" />
+        <link rel="stylesheet" href="~/css/shared/components/pager/pager.css" />
+        <link rel="stylesheet" href="~/css/basket/basket.component.css" />
+        <link rel="stylesheet" href="~/css/basket/basket-status/basket-status.component.css" />
+        <link rel="stylesheet" href="~/css/catalog/catalog.component.css" />
+        <link rel="stylesheet" href="~/css/orders/orders.component.css" />
+        <link rel="stylesheet" href="~/css/orders/orders-detail/orders-detail.component.css" />
+        <link rel="stylesheet" href="~/css/orders/orders-new/orders-new.component.css" />
+        <link rel="stylesheet" href="~/css/override.css" type="text/css" />
+        <link rel="stylesheet" href="~/css/site.min.css" type="text/css" />
+
+    </environment>
+    <environment names="Staging,Production">
+        <link rel="stylesheet" href="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/css/bootstrap.min.css"
+              asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
+              asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
+        <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/override.css" type="text/css" />
+    </environment>
+</head>
+<body>
+    <header class="esh-app-header">
+        <div class="container">
+            <article class="row">
+
+                <section class="col-lg-7 col-md-6 col-12">
+                    <a class="navbar-brand" routerLink="catalog">
+                        <a asp-area="" asp-controller="Catalog" asp-action="Index">
+                            <img src="~/images/brand.png" />
+                        </a>
+                    </a>
+                </section>
+
+                @await Html.PartialAsync("_LoginPartial")
+            </article>
+        </div>
+    </header>
+
+    @RenderBody()
+
+
+    <footer class="esh-app-footer">
+        <div class="container">
+            <article class="row">
+
+                <section class="col-sm-6">
+                    <img class="esh-app-footer-brand" src="~/images/brand_dark.png" />
+                </section>
+
+                <section class="col-sm-6">
+                    <img class="esh-app-footer-text hidden-xs" src="~/images/main_footer_text.png" width="335" height="26" alt="footer text image" />
+                </section>
+
+            </article>
+        </div>
+    </footer>
+
+    <environment names="Development">
+        <script src="~/lib/jquery/jquery.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="~/js/site.js" asp-append-version="true"></script>
+    </environment>
+    <environment names="Staging,Production">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"
+                asp-fallback-src="~/lib/jquery/jquery.min.js"
+                asp-fallback-test="window.jQuery">
+        </script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"
+                asp-fallback-src="~/lib/bootstrap/dist/js/bootstrap.min.js"
+                asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal">
+        </script>
+        <script src="~/js/site.min.js" asp-append-version="true"></script>
+    </environment>
+
+    @RenderSection("scripts", required: false)
+
+
+    @using Microsoft.AspNetCore.Authentication;
+    @using Microsoft.Extensions.Options
+    @inject IOptions<AppSettings> settings
+
+    <script type="text/javascript">
+        if ('@User.Identity.IsAuthenticated' === 'True') {
+            var timerId;
+
+            stablishConnection((conn) => registerNotificationHandlers(conn));                                  
+        }
+
+        function stablishConnection(cb) {
+            let connection = new signalR.HubConnectionBuilder()
+                .withUrl('@settings.Value.SignalrHubUrl/hub/notificationhub', {
+                    accessTokenFactory: () => {
+                        return "Authorization", getToken();
+                    }
+                })
+                .withAutomaticReconnect()
+                .build(); 
+            
+            connection.start().then(function () {
+                console.log('User Registered to Signalr Hub');
+                cb(connection);
+            });       
+        }
+
+        function registerNotificationHandlers(connection) {
+            connection.on("UpdatedOrderState", (message) => {
+                toastr.success('Updated to status: ' + message.status, 'Order Id: ' + message.orderId);
+                if (window.location.pathname.split("/").pop() === 'Order') {
+                    refreshOrderList();
+                }
+            });
+        }
+
+        function getToken() {
+            return '@Context.GetTokenAsync("access_token").Result';
+        }
+
+        function refreshOrderList() {
+            clearTimeout(timerId);
+            timerId = setTimeout(function () {
+                window.location.reload();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Shared\_LoginPartial.cshtml
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.eShopOnContainers.WebMVC.ViewModels
+@using Microsoft.eShopOnContainers.WebMVC.Services
+
+@inject IIdentityParser<ApplicationUser> UserManager
+
+@*@if (Context.User.Identity.IsAuthenticated)*@
+@if (User.FindFirst(x => x.Type == "preferred_username") != null)
+{
+    <section class="col-lg-4 col-md-5 col-xs-12">
+        <div class="esh-identity">
+            <form asp-area="" asp-controller="Account" asp-action="SignOut" method="post" id="logoutForm" class="navbar-right">
+                <section class="esh-identity-section">
+
+                    <div class="esh-identity-name">@User.FindFirst(x => x.Type == "preferred_username").Value</div>
+                    <img class="esh-identity-image" src="~/images/arrow-down.png">
+                </section>
+
+                <section class="esh-identity-drop">
+
+                    <a class="esh-identity-item"
+                       asp-controller="Order"
+                       asp-action="Index">
+
+                        <div class="esh-identity-name esh-identity-name--upper">My orders</div>
+                        <img class="esh-identity-image" src="~/images/my_orders.png">
+                    </a>
+
+                    <a class="esh-identity-item"
+                       href="javascript:document.getElementById('logoutForm').submit()">
+
+                        <div class="esh-identity-name esh-identity-name--upper">Log Out</div>
+                        <img class="esh-identity-image" src="~/images/logout.png">
+                    </a>
+                </section>
+            </form>
+        </div>
+    </section>
+
+    <section class="col-lg-1 col-xs-12">
+        @await Component.InvokeAsync("Cart", new { user = UserManager.Parse(User) })
+    </section>
+
+}
+else
+{
+    <section class="col-lg-4 col-md-5 col-xs-12">
+        <div class="esh-identity">
+            <section class="esh-identity-section">
+                <div class="esh-identity-item">
+
+                    <a asp-area="" asp-controller="Account" asp-action="SignIn" class="esh-identity-name esh-identity-name--upper">
+                        Login
+                    </a>
+                </div>
+            </section>
+        </div>
+    </section>
+
+    <section class="col-lg-1 col-xs-12">
+
+    </section>
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Shared\_ValidationScriptsPartial.cshtml
+<environment names="Development">
+    <script src="~/lib/jquery-validate/jquery.validate.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+</environment>
+<environment names="Staging,Production">
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"
+            asp-fallback-src="~/lib/jquery-validate/jquery.validate.min.js"
+            asp-fallback-test="window.jQuery && window.jQuery.validator">
+    </script>
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery.validation.unobtrusive/3.2.6/jquery.validate.unobtrusive.min.js"
+            asp-fallback-src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"
+            asp-fallback-test="window.jQuery && window.jQuery.validator && window.jQuery.validator.unobtrusive">
+    </script>
+</environment>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Shared\Components\Cart\Default.cshtml
+@model Microsoft.eShopOnContainers.WebMVC.ViewModels.CartViewModels.CartComponentViewModel
+
+@{
+    ViewData["Title"] = "My Cart";
+}
+
+<a class="esh-basketstatus @Model.Disabled"
+   asp-area="" 
+   asp-controller="Cart" 
+   asp-action="Index">    
+    @if (ViewBag.IsBasketInoperative == true)
+    {
+        <div class="esh-basketstatus-image">
+            <img src="~/images/cart-inoperative.png" />            
+        </div>
+        <div class="esh-basketstatus-badge-inoperative">
+            X           
+        </div>        
+    }
+    else
+    {
+        <div class="esh-basketstatus-image">
+            <img src="~/images/cart.png" />
+        </div>
+        <div class="esh-basketstatus-badge">
+            @Model.ItemsCount
+        </div>
+    }       
+</a>
+
+
+
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Shared\Components\CartList\Default.cshtml
+@model Microsoft.eShopOnContainers.WebMVC.ViewModels.Basket
+
+@{
+    ViewData["Title"] = "My Cart";
+}
+
+<div class="container">
+    @if (ViewBag.BasketInoperativeMsg != null)
+    {
+        <br />
+        <div class="alert alert-warning" role="alert">
+            &nbsp;@ViewBag.BasketInoperativeMsg
+        </div>
+    }
+    else
+    {
+        <article class="esh-basket-titles row">
+            <br />
+            @if (ViewBag.BasketInoperativeMsg != null)
+            {
+                <div class="alert alert-warning" role="alert">
+                    &nbsp;@ViewBag.BasketInoperativeMsg
+                </div>
+            }
+
+            <section class="esh-basket-title col-3">Product</section>
+            <section class="esh-basket-title col-3 hidden-lg-down"></section>
+            <section class="esh-basket-title col-2">Price</section>
+            <section class="esh-basket-title col-2">Quantity</section>
+            <section class="esh-basket-title col-2">Cost</section>
+        </article>
+
+        @for (int i = 0; i < Model.Items.Count; i++)
+        {
+            var item = Model.Items[i];
+
+        <article class="esh-basket-items  row">
+            <section class="esh-basket-item esh-basket-item--middle col-lg-3 hidden-lg-down">
+                <img class="esh-basket-image" src="@item.PictureUrl" />
+            </section>
+            <section class="esh-basket-item esh-basket-item--middle col-3">@item.ProductName</section>
+            <section class="esh-basket-item esh-basket-item--middle col-2">$ @item.UnitPrice.ToString("N2")</section>
+            <section class="esh-basket-item esh-basket-item--middle col-2">
+                <input type="hidden" name="@("quantities[" + i +"].Key")" value="@item.Id" />
+                <input type="number" class="esh-basket-input" min="1" name="@("quantities[" + i +"].Value")" value="@item.Quantity" />
+            </section>
+            <section class="esh-basket-item esh-basket-item--middle esh-basket-item--mark col-2">$ @Math.Round(item.Quantity * item.UnitPrice, 2).ToString("N2")</section>
+        </article>
+
+            <div class="esh-basket-items--border row">
+                @if (item.OldUnitPrice != 0)
+                {
+                    <div class="alert alert-warning esh-basket-margin12" role="alert">&nbsp;Note that the price of this article changed in our Catalog. The old price when you originally added it to the basket was $ @item.OldUnitPrice </div>
+                }
+            </div>
+            <br />
+        }
+
+        <div class="container">
+            <article class="esh-basket-titles esh-basket-titles--clean row">
+                <section class="esh-basket-title col-10"></section>
+                <section class="esh-basket-title col-2">Total</section>
+            </article>
+
+            <article class="esh-basket-items row">
+                <section class="esh-basket-item col-10"></section>
+                <section class="esh-basket-item esh-basket-item--mark col-2">$ @Model.Total().ToString("N2")</section>
+            </article>
+
+            <article class="esh-basket-items row">
+                <section class="esh-basket-item col-7"></section>
+                <section class="esh-basket-item col-2">
+                    <button class="btn esh-basket-checkout" name="name" value="" type="submit">[ Update ]</button>
+                </section>
+                <section class="esh-basket-item col-3">
+                    <input type="submit"
+                           class="btn esh-basket-checkout"
+                           value="[ Checkout ]" name="action" />
+                </section>
+            </article>
+        </div>
+    }
+    
+</div>
+
+    
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Web\WebMVC\Views\Shared\Error.cshtml
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="container">
+    <h1 class="text-danger">Error.</h1>
+    <h2 class="text-danger">An error occurred while processing your request.</h2>
+
+    <h3>Development Mode</h3>
+    <p>
+        Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
+    </p>
+    <p>
+        <strong>Development environment should not be enabled in deployed applications</strong>, as it can result in sensitive information from exceptions being displayed to end users. For local debugging, development environment can be enabled by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>, and restarting the application.
+    </p>
+</div>
+
+
+
+

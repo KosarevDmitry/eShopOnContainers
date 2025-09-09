@@ -1,0 +1,681 @@
+---
+// ### ROOT D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API
+
+Search patterns:
+Directory to include:all
+Only root dir: false
+
+Total files: 15
+appsettings.json
+
+azds.yaml
+
+appsettings.Development.json
+
+Dockerfile
+
+Dockerfile.develop
+
+OrderPaymentFailedIntegrationEvent.cs
+OrderPaymentSucceededIntegrationEvent.cs
+OrderStatusChangedToStockConfirmedIntegrationEvent.cs
+
+OrderStatusChangedToStockConfirmedIntegrationEventHandler.cs
+
+Payment.API.csproj
+
+Program.cs
+
+PaymentSettings.cs
+
+launchSettings.json
+
+Startup.cs
+
+GlobalUsings.cs
+---
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\appsettings.Development.json
+{
+  "Logging": {
+    "IncludeScopes": false,
+    "LogLevel": {
+      "Default": "Debug",
+      "System": "Information",
+      "Microsoft": "Information"
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\appsettings.json
+{
+  "Serilog": {
+    "SeqServerUrl": null,
+    "LogstashgUrl": null,
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "Microsoft.eShopOnContainers": "Information",
+        "System": "Warning"
+      }
+    }
+  },
+  "PaymentSucceeded": true,
+  "AzureServiceBusEnabled": false,
+  "SubscriptionClientName": "Payment",
+  "ApplicationInsights": {
+    "InstrumentationKey": ""
+  },
+  "EventBusRetryCount": 5
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\azds.yaml
+kind: helm-release
+apiVersion: 1.1
+build:
+  context: ..\..\..\..
+  dockerfile: Dockerfile
+install:
+  chart: ../../../../k8s/helm/payment-api
+  set:
+    replicaCount: 1
+    image:
+      tag: $(tag)
+      pullPolicy: Never
+    ingress:
+      annotations:
+        kubernetes.io/ingress.class: traefik-azds
+      hosts:
+      - $(spacePrefix)eshop$(hostSuffix)
+    inf:
+      k8s:
+        dns: $(spacePrefix)eshop$(hostSuffix)            
+  values:
+  - values.dev.yaml?
+  - secrets.dev.yaml?
+  - inf.yaml
+  - app.yaml
+configurations:
+  develop:
+    build:
+      useGitIgnore: true
+      dockerfile: Dockerfile.develop
+      args:
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Debug}
+    container:
+      sync:
+      - '**/Pages/**'
+      - '**/Views/**'
+      - '**/wwwroot/**'
+      - '!**/*.{sln,csproj}'
+      command:
+      - dotnet
+      - run
+      - --no-restore
+      - --no-build
+      - --no-launch-profile
+      - -c
+      - ${BUILD_CONFIGURATION:-Debug}
+      iterate:
+        processesToKill:
+        - dotnet
+        - vsdbg
+        buildCommands:
+        - - dotnet
+          - build
+          - --no-restore
+          - -c
+          - ${BUILD_CONFIGURATION:-Debug}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\Dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+WORKDIR /app
+EXPOSE 80
+
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+WORKDIR /src
+
+# It's important to keep lines from here down to "COPY . ." identical in all Dockerfiles
+# to take advantage of Docker's build cache, to speed up local container builds
+COPY "eShopOnContainers-ServicesAndWebApps.sln" "eShopOnContainers-ServicesAndWebApps.sln"
+
+COPY "ApiGateways/Mobile.Bff.Shopping/aggregator/Mobile.Shopping.HttpAggregator.csproj" "ApiGateways/Mobile.Bff.Shopping/aggregator/Mobile.Shopping.HttpAggregator.csproj"
+COPY "ApiGateways/Web.Bff.Shopping/aggregator/Web.Shopping.HttpAggregator.csproj" "ApiGateways/Web.Bff.Shopping/aggregator/Web.Shopping.HttpAggregator.csproj"
+COPY "BuildingBlocks/Devspaces.Support/Devspaces.Support.csproj" "BuildingBlocks/Devspaces.Support/Devspaces.Support.csproj"
+COPY "BuildingBlocks/EventBus/EventBus/EventBus.csproj" "BuildingBlocks/EventBus/EventBus/EventBus.csproj"
+COPY "BuildingBlocks/EventBus/EventBus.Tests/EventBus.Tests.csproj" "BuildingBlocks/EventBus/EventBus.Tests/EventBus.Tests.csproj"
+COPY "BuildingBlocks/EventBus/EventBusRabbitMQ/EventBusRabbitMQ.csproj" "BuildingBlocks/EventBus/EventBusRabbitMQ/EventBusRabbitMQ.csproj"
+COPY "BuildingBlocks/EventBus/EventBusServiceBus/EventBusServiceBus.csproj" "BuildingBlocks/EventBus/EventBusServiceBus/EventBusServiceBus.csproj"
+COPY "BuildingBlocks/EventBus/IntegrationEventLogEF/IntegrationEventLogEF.csproj" "BuildingBlocks/EventBus/IntegrationEventLogEF/IntegrationEventLogEF.csproj"
+COPY "BuildingBlocks/WebHostCustomization/WebHost.Customization/WebHost.Customization.csproj" "BuildingBlocks/WebHostCustomization/WebHost.Customization/WebHost.Customization.csproj"
+COPY "Services/Basket/Basket.API/Basket.API.csproj" "Services/Basket/Basket.API/Basket.API.csproj"
+COPY "Services/Basket/Basket.FunctionalTests/Basket.FunctionalTests.csproj" "Services/Basket/Basket.FunctionalTests/Basket.FunctionalTests.csproj"
+COPY "Services/Basket/Basket.UnitTests/Basket.UnitTests.csproj" "Services/Basket/Basket.UnitTests/Basket.UnitTests.csproj"
+COPY "Services/Catalog/Catalog.API/Catalog.API.csproj" "Services/Catalog/Catalog.API/Catalog.API.csproj"
+COPY "Services/Catalog/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj" "Services/Catalog/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj"
+COPY "Services/Catalog/Catalog.UnitTests/Catalog.UnitTests.csproj" "Services/Catalog/Catalog.UnitTests/Catalog.UnitTests.csproj"
+COPY "Services/Identity/Identity.API/Identity.API.csproj" "Services/Identity/Identity.API/Identity.API.csproj"
+COPY "Services/Ordering/Ordering.API/Ordering.API.csproj" "Services/Ordering/Ordering.API/Ordering.API.csproj"
+COPY "Services/Ordering/Ordering.BackgroundTasks/Ordering.BackgroundTasks.csproj" "Services/Ordering/Ordering.BackgroundTasks/Ordering.BackgroundTasks.csproj"
+COPY "Services/Ordering/Ordering.Domain/Ordering.Domain.csproj" "Services/Ordering/Ordering.Domain/Ordering.Domain.csproj"
+COPY "Services/Ordering/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj" "Services/Ordering/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj"
+COPY "Services/Ordering/Ordering.Infrastructure/Ordering.Infrastructure.csproj" "Services/Ordering/Ordering.Infrastructure/Ordering.Infrastructure.csproj"
+COPY "Services/Ordering/Ordering.SignalrHub/Ordering.SignalrHub.csproj" "Services/Ordering/Ordering.SignalrHub/Ordering.SignalrHub.csproj"
+COPY "Services/Ordering/Ordering.UnitTests/Ordering.UnitTests.csproj" "Services/Ordering/Ordering.UnitTests/Ordering.UnitTests.csproj"
+COPY "Services/Payment/Payment.API/Payment.API.csproj" "Services/Payment/Payment.API/Payment.API.csproj"
+COPY "Services/Webhooks/Webhooks.API/Webhooks.API.csproj" "Services/Webhooks/Webhooks.API/Webhooks.API.csproj"
+COPY "Tests/Services/Application.FunctionalTests/Application.FunctionalTests.csproj" "Tests/Services/Application.FunctionalTests/Application.FunctionalTests.csproj"
+COPY "Web/WebhookClient/WebhookClient.csproj" "Web/WebhookClient/WebhookClient.csproj"
+COPY "Web/WebMVC/WebMVC.csproj" "Web/WebMVC/WebMVC.csproj"
+COPY "Web/WebSPA/WebSPA.csproj" "Web/WebSPA/WebSPA.csproj"
+COPY "Web/WebStatus/WebStatus.csproj" "Web/WebStatus/WebStatus.csproj"
+
+COPY "docker-compose.dcproj" "docker-compose.dcproj"
+
+COPY "NuGet.config" "NuGet.config"
+
+RUN dotnet restore "eShopOnContainers-ServicesAndWebApps.sln"
+
+COPY . .
+WORKDIR /src/Services/Payment/Payment.API
+RUN dotnet publish --no-restore -c Release -o /app
+
+FROM build AS publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app .
+ENTRYPOINT ["dotnet", "Payment.API.dll"]
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\Dockerfile.develop
+FROM mcr.microsoft.com/dotnet/sdk:6.0
+ARG BUILD_CONFIGURATION=Debug
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV DOTNET_USE_POLLING_FILE_WATCHER=true
+EXPOSE 80
+
+WORKDIR /src
+COPY ["BuildingBlocks/EventBus/EventBus/EventBus.csproj", "BuildingBlocks/EventBus/EventBus/"]
+COPY ["BuildingBlocks/EventBus/EventBusRabbitMQ/EventBusRabbitMQ.csproj", "BuildingBlocks/EventBus/EventBusRabbitMQ/"]
+COPY ["BuildingBlocks/EventBus/EventBusServiceBus/EventBusServiceBus.csproj", "BuildingBlocks/EventBus/EventBusServiceBus/"]
+COPY ["BuildingBlocks/EventBus/IntegrationEventLogEF/IntegrationEventLogEF.csproj", "BuildingBlocks/EventBus/IntegrationEventLogEF/"]
+COPY ["Services/Payment/Payment.API/Payment.API.csproj", "Services/Payment/Payment.API/"]
+COPY ["NuGet.config", "NuGet.config"]
+
+RUN dotnet restore Services/Payment/Payment.API/Payment.API.csproj
+COPY . .
+WORKDIR /src/Services/Payment/Payment.API
+RUN dotnet build --no-restore -c $BUILD_CONFIGURATION
+
+ENTRYPOINT ["dotnet", "run", "--no-build", "--no-launch-profile", "-c", "$BUILD_CONFIGURATION", "--"]
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\GlobalUsings.cs
+global using Autofac.Extensions.DependencyInjection;
+global using Autofac;
+global using Azure.Core;
+global using Azure.Identity;
+global using HealthChecks.UI.Client;
+global using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+global using Microsoft.AspNetCore.Builder;
+global using Microsoft.AspNetCore;
+global using Azure.Messaging.ServiceBus;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBusRabbitMQ;
+global using Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus;
+global using Microsoft.eShopOnContainers.Payment.API.IntegrationEvents.Events;
+global using Microsoft.Extensions.Diagnostics.HealthChecks;
+global using Microsoft.Extensions.Options;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.eShopOnContainers.Payment.API.IntegrationEvents.EventHandling;
+global using Microsoft.eShopOnContainers.Payment.API;
+global using RabbitMQ.Client;
+global using Serilog.Context;
+global using Serilog;
+global using System.Threading.Tasks;
+global using System;
+global using System.IO;
+global using Microsoft.AspNetCore.Hosting;
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\IntegrationEvents\EventHandling\OrderStatusChangedToStockConfirmedIntegrationEventHandler.cs
+namespace Microsoft.eShopOnContainers.Payment.API.IntegrationEvents.EventHandling;
+    
+public class OrderStatusChangedToStockConfirmedIntegrationEventHandler :
+    IIntegrationEventHandler<OrderStatusChangedToStockConfirmedIntegrationEvent>
+{
+    private readonly IEventBus _eventBus;
+    private readonly PaymentSettings _settings;
+    private readonly ILogger<OrderStatusChangedToStockConfirmedIntegrationEventHandler> _logger;
+
+    public OrderStatusChangedToStockConfirmedIntegrationEventHandler(
+        IEventBus eventBus,
+        IOptionsSnapshot<PaymentSettings> settings,
+        ILogger<OrderStatusChangedToStockConfirmedIntegrationEventHandler> logger)
+    {
+        _eventBus = eventBus;
+        _settings = settings.Value;
+        _logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
+
+        _logger.LogTrace("PaymentSettings: {@PaymentSettings}", _settings);
+    }
+
+    public async Task Handle(OrderStatusChangedToStockConfirmedIntegrationEvent @event)
+    {
+        using (LogContext.PushProperty("IntegrationEventContext", $"{@event.Id}-{Program.AppName}"))
+        {
+            _logger.LogInformation("----- Handling integration event: {IntegrationEventId} at {AppName} - ({@IntegrationEvent})", @event.Id, Program.AppName, @event);
+
+            IntegrationEvent orderPaymentIntegrationEvent;
+
+            //Business feature comment:
+            // When OrderStatusChangedToStockConfirmed Integration Event is handled.
+            // Here we're simulating that we'd be performing the payment against any payment gateway
+            // Instead of a real payment we just take the env. var to simulate the payment 
+            // The payment can be successful or it can fail
+
+            if (_settings.PaymentSucceeded)
+            {
+                orderPaymentIntegrationEvent = new OrderPaymentSucceededIntegrationEvent(@event.OrderId);
+            }
+            else
+            {
+                orderPaymentIntegrationEvent = new OrderPaymentFailedIntegrationEvent(@event.OrderId);
+            }
+
+            _logger.LogInformation("----- Publishing integration event: {IntegrationEventId} from {AppName} - ({@IntegrationEvent})", orderPaymentIntegrationEvent.Id, Program.AppName, orderPaymentIntegrationEvent);
+
+            _eventBus.Publish(orderPaymentIntegrationEvent);
+
+            await Task.CompletedTask;
+        }
+    }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\IntegrationEvents\Events\OrderPaymentFailedIntegrationEvent.cs
+namespace Microsoft.eShopOnContainers.Payment.API.IntegrationEvents.Events;
+
+public record OrderPaymentFailedIntegrationEvent : IntegrationEvent
+{
+    public int OrderId { get; }
+
+    public OrderPaymentFailedIntegrationEvent(int orderId) => OrderId = orderId;
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\IntegrationEvents\Events\OrderPaymentSucceededIntegrationEvent.cs
+namespace Microsoft.eShopOnContainers.Payment.API.IntegrationEvents.Events;
+
+public record OrderPaymentSucceededIntegrationEvent : IntegrationEvent
+{
+    public int OrderId { get; }
+
+    public OrderPaymentSucceededIntegrationEvent(int orderId) => OrderId = orderId;
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\IntegrationEvents\Events\OrderStatusChangedToStockConfirmedIntegrationEvent.cs
+namespace Microsoft.eShopOnContainers.Payment.API.IntegrationEvents.Events;
+    
+public record OrderStatusChangedToStockConfirmedIntegrationEvent : IntegrationEvent
+{
+    public int OrderId { get; }
+
+    public OrderStatusChangedToStockConfirmedIntegrationEvent(int orderId)
+        => OrderId = orderId;
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\Payment.API.csproj
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <DockerComposeProjectPath>..\..\..\..\docker-compose.dcproj</DockerComposeProjectPath>
+    <AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wp8+wpa81;</AssetTargetFallback>
+    <GenerateErrorForMissingTargetingPacks>false</GenerateErrorForMissingTargetingPacks>
+    <IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.AzureServiceBus" Version="6.0.4" />
+    <PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" Version="6.0.2" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="6.0.5" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.2.2" />
+    <PackageReference Include="Azure.Identity" Version="1.9.0-beta.1" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0-beta1" />
+    <PackageReference Include="Microsoft.ApplicationInsights.DependencyCollector" Version="2.22.0-beta1" />
+    <PackageReference Include="Microsoft.ApplicationInsights.Kubernetes" Version="3.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.HealthChecks" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.AzureAppServices" Version="7.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="6.1.0-dev-00289" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.1-dev-00787" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.5.0-dev-00359" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.1-dev-00896" />
+    <PackageReference Include="Serilog.Sinks.Http" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.3-dev-00260" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\EventBus\EventBusRabbitMQ\EventBusRabbitMQ.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\EventBus\EventBusServiceBus\EventBusServiceBus.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\EventBus\EventBus\EventBus.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\EventBus\IntegrationEventLogEF\IntegrationEventLogEF.csproj" />
+  </ItemGroup>
+
+</Project>
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\PaymentSettings.cs
+namespace Microsoft.eShopOnContainers.Payment.API;
+
+public class PaymentSettings
+{
+    public bool PaymentSucceeded { get; set; }
+    public string EventBusConnection { get; set; }
+}
+
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\Program.cs
+var configuration = GetConfiguration();
+
+Log.Logger = CreateSerilogLogger(configuration);
+
+try
+{
+    Log.Information("Configuring web host ({ApplicationContext})...", Program.AppName);
+    var host = BuildWebHost(configuration, args);
+
+    Log.Information("Starting web host ({ApplicationContext})...", Program.AppName);
+    host.Run();
+
+    return 0;
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Program terminated unexpectedly ({ApplicationContext})!", Program.AppName);
+    return 1;
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+
+
+IWebHost BuildWebHost(IConfiguration configuration, string[] args) =>
+    WebHost.CreateDefaultBuilder(args)
+        .CaptureStartupErrors(false)
+        .ConfigureAppConfiguration(x => x.AddConfiguration(configuration))
+        .UseStartup<Startup>()
+        .UseContentRoot(Directory.GetCurrentDirectory())
+        .UseSerilog()
+        .Build();
+
+Serilog.ILogger CreateSerilogLogger(IConfiguration configuration)
+{
+    var seqServerUrl = configuration["Serilog:SeqServerUrl"];
+    var logstashUrl = configuration["Serilog:LogstashgUrl"];
+    return new LoggerConfiguration()
+        .MinimumLevel.Verbose()
+        .Enrich.WithProperty("ApplicationContext", Program.AppName)
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.Seq(string.IsNullOrWhiteSpace(seqServerUrl) ? "http://seq" : seqServerUrl)
+        .WriteTo.Http(string.IsNullOrWhiteSpace(logstashUrl) ? "http://logstash:8080" : logstashUrl, null)
+        .ReadFrom.Configuration(configuration)
+        .CreateLogger();
+}
+
+IConfiguration GetConfiguration()
+{
+    var builder = new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+        .AddEnvironmentVariables();
+
+    var config = builder.Build();
+
+    if (config.GetValue<bool>("UseVault", false))
+    {
+        TokenCredential credential = new ClientSecretCredential(
+            config["Vault:TenantId"],
+            config["Vault:ClientId"],
+            config["Vault:ClientSecret"]);
+        builder.AddAzureKeyVault(new Uri($"https://{config["Vault:Name"]}.vault.azure.net/"), credential);
+    }
+
+    return builder.Build();
+}
+
+public partial class Program
+{
+    public static string Namespace = typeof(Startup).Namespace;
+    public static string AppName = Namespace.Substring(Namespace.LastIndexOf('.', Namespace.LastIndexOf('.') - 1) + 1);
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\Properties\launchSettings.json
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:63336/",
+      "sslPort": 0
+    }
+  },
+  "profiles": {
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "launchUrl": "api/values",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "Payment.API": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "api/values",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://localhost:3331"
+    }
+  }
+}
+
+
+// ### D:\src\sharp_eshopcontainer\eShopOnContainers\src\Services\Payment\Payment.API\Startup.cs
+namespace Microsoft.eShopOnContainers.Payment.API;
+
+public class Startup
+{
+    public Startup(IConfiguration configuration)
+    {
+        Configuration = configuration;
+    }
+
+    public IConfiguration Configuration { get; }
+
+    // This method gets called by the runtime. Use this method to add services to the container.
+    public IServiceProvider ConfigureServices(IServiceCollection services)
+    {
+        services.AddCustomHealthCheck(Configuration);
+        services.Configure<PaymentSettings>(Configuration);
+
+        RegisterAppInsights(services);
+
+        if (Configuration.GetValue<bool>("AzureServiceBusEnabled"))
+        {
+            services.AddSingleton<IServiceBusPersisterConnection>(sp =>
+            {
+                var serviceBusConnectionString = Configuration["EventBusConnection"];
+                var subscriptionClientName = Configuration["SubscriptionClientName"];
+
+                return new DefaultServiceBusPersisterConnection(serviceBusConnectionString);
+            });
+        }
+        else
+        {
+            services.AddSingleton<IRabbitMQPersistentConnection>(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<DefaultRabbitMQPersistentConnection>>();
+                var factory = new ConnectionFactory()
+                {
+                    HostName = Configuration["EventBusConnection"],
+                    DispatchConsumersAsync = true
+                };
+
+                if (!string.IsNullOrEmpty(Configuration["EventBusUserName"]))
+                {
+                    factory.UserName = Configuration["EventBusUserName"];
+                }
+
+                if (!string.IsNullOrEmpty(Configuration["EventBusPassword"]))
+                {
+                    factory.Password = Configuration["EventBusPassword"];
+                }
+
+                var retryCount = 5;
+                if (!string.IsNullOrEmpty(Configuration["EventBusRetryCount"]))
+                {
+                    retryCount = int.Parse(Configuration["EventBusRetryCount"]);
+                }
+
+                return new DefaultRabbitMQPersistentConnection(factory, logger, retryCount);
+            });
+        }
+
+        RegisterEventBus(services);
+
+        var container = new ContainerBuilder();
+        container.Populate(services);
+        return new AutofacServiceProvider(container.Build());
+    }
+
+    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+    public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
+    {
+        //loggerFactory.AddAzureWebAppDiagnostics();
+        //loggerFactory.AddApplicationInsights(app.ApplicationServices, LogLevel.Trace);
+
+        var pathBase = Configuration["PATH_BASE"];
+        if (!string.IsNullOrEmpty(pathBase))
+        {
+            app.UsePathBase(pathBase);
+        }
+
+        ConfigureEventBus(app);
+
+        app.UseRouting();
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
+            endpoints.MapHealthChecks("/liveness", new HealthCheckOptions
+            {
+                Predicate = r => r.Name.Contains("self")
+            });
+        });
+    }
+
+    private void RegisterAppInsights(IServiceCollection services)
+    {
+        services.AddApplicationInsightsTelemetry(Configuration);
+        services.AddApplicationInsightsKubernetesEnricher();
+    }
+
+    private void RegisterEventBus(IServiceCollection services)
+    {
+        if (Configuration.GetValue<bool>("AzureServiceBusEnabled"))
+        {
+            services.AddSingleton<IEventBus, EventBusServiceBus>(sp =>
+            {
+                var serviceBusPersisterConnection = sp.GetRequiredService<IServiceBusPersisterConnection>();
+                var iLifetimeScope = sp.GetRequiredService<ILifetimeScope>();
+                var logger = sp.GetRequiredService<ILogger<EventBusServiceBus>>();
+                var eventBusSubcriptionsManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
+                string subscriptionName = Configuration["SubscriptionClientName"];
+
+                return new EventBusServiceBus(serviceBusPersisterConnection, logger,
+                    eventBusSubcriptionsManager, iLifetimeScope, subscriptionName);
+            });
+        }
+        else
+        {
+            services.AddSingleton<IEventBus, EventBusRabbitMQ>(sp =>
+            {
+                var subscriptionClientName = Configuration["SubscriptionClientName"];
+                var rabbitMQPersistentConnection = sp.GetRequiredService<IRabbitMQPersistentConnection>();
+                var iLifetimeScope = sp.GetRequiredService<ILifetimeScope>();
+                var logger = sp.GetRequiredService<ILogger<EventBusRabbitMQ>>();
+                var eventBusSubcriptionsManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
+
+                var retryCount = 5;
+                if (!string.IsNullOrEmpty(Configuration["EventBusRetryCount"]))
+                {
+                    retryCount = int.Parse(Configuration["EventBusRetryCount"]);
+                }
+
+                return new EventBusRabbitMQ(rabbitMQPersistentConnection, logger, iLifetimeScope, eventBusSubcriptionsManager, subscriptionClientName, retryCount);
+            });
+        }
+
+        services.AddTransient<OrderStatusChangedToStockConfirmedIntegrationEventHandler>();
+        services.AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
+    }
+
+    private void ConfigureEventBus(IApplicationBuilder app)
+    {
+        var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
+        eventBus.Subscribe<OrderStatusChangedToStockConfirmedIntegrationEvent, OrderStatusChangedToStockConfirmedIntegrationEventHandler>();
+    }
+}
+
+public static class CustomExtensionMethods
+{
+    public static IServiceCollection AddCustomHealthCheck(this IServiceCollection services, IConfiguration configuration)
+    {
+        var hcBuilder = services.AddHealthChecks();
+
+        hcBuilder.AddCheck("self", () => HealthCheckResult.Healthy());
+
+        if (configuration.GetValue<bool>("AzureServiceBusEnabled"))
+        {
+            hcBuilder
+                .AddAzureServiceBusTopic(
+                    configuration["EventBusConnection"],
+                    topicName: "eshop_event_bus",
+                    name: "payment-servicebus-check",
+                    tags: new string[] { "servicebus" });
+        }
+        else
+        {
+            hcBuilder
+                .AddRabbitMQ(
+                    $"amqp://{configuration["EventBusConnection"]}",
+                    name: "payment-rabbitmqbus-check",
+                    tags: new string[] { "rabbitmqbus" });
+        }
+
+        return services;
+    }
+}
+
+

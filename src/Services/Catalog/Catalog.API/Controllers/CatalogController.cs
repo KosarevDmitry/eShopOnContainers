@@ -82,7 +82,7 @@ public class CatalogController : ControllerBase
     }
 
     [HttpGet]
-    [Route("items/{id:int}")]
+    [Route("items/{id:int}")] // тип в route добавляем, это нормально
     [ProducesResponseType((int)HttpStatusCode.NotFound)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
     [ProducesResponseType(typeof(CatalogItem), (int)HttpStatusCode.OK)]
@@ -110,7 +110,7 @@ public class CatalogController : ControllerBase
 
     // GET api/v1/[controller]/items/withname/samplename[?pageSize=3&pageIndex=10]
     [HttpGet]
-    [Route("items/withname/{name:minlength(1)}")]
+    [Route("items/withname/{name:minlength(1)}")] // условия добавить в route
     [ProducesResponseType(typeof(PaginatedItemsViewModel<CatalogItem>), (int)HttpStatusCode.OK)]
     public async Task<ActionResult<PaginatedItemsViewModel<CatalogItem>>> ItemsWithNameAsync(string name, [FromQuery] int pageSize = 10, [FromQuery] int pageIndex = 0)
     {
@@ -204,7 +204,7 @@ public class CatalogController : ControllerBase
     //PUT api/v1/[controller]/items
     [Route("items")]
     [HttpPut]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
+    [ProducesResponseType((int)HttpStatusCode.NotFound)] // HttpStatusCode приводим к int 
     [ProducesResponseType((int)HttpStatusCode.Created)]
     public async Task<ActionResult> UpdateProductAsync([FromBody] CatalogItem productToUpdate)
     {
@@ -267,7 +267,7 @@ public class CatalogController : ControllerBase
     //DELETE api/v1/[controller]/id
     [Route("{id}")]
     [HttpDelete]
-    [ProducesResponseType((int)HttpStatusCode.NoContent)]
+    [ProducesResponseType((int)HttpStatusCode.NoContent)] // для delete
     [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<ActionResult> DeleteProductAsync(int id)
     {

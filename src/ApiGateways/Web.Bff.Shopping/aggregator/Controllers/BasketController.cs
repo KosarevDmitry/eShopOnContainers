@@ -84,10 +84,10 @@ public class BasketController : ControllerBase
         }
 
         // Retrieve the current basket
-        var currentBasket = await _basket.GetByIdAsync(data.BasketId);
+        var currentBasket = await _basket.GetByIdAsync(data.BasketId); 
         if (currentBasket == null)
         {
-            return BadRequest($"Basket with id {data.BasketId} not found.");
+            return BadRequest($"Basket with id {data.BasketId} not found."); // put только обновление
         }
 
         // Update with new quantities
@@ -110,7 +110,7 @@ public class BasketController : ControllerBase
     [HttpPost]
     [Route("items")]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.OK)] // добавление только ok 
     public async Task<ActionResult> AddBasketItemAsync([FromBody] AddBasketItemRequest data)
     {
         if (data == null || data.Quantity == 0)
